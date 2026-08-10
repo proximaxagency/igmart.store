@@ -2,40 +2,61 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  // Users (Synced with Clerk)
+  // 1. USERS (Synced with Clerk)
   users: defineTable({
     clerkId: v.string(),
     email: v.string(),
     username: v.string(),
     displayName: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
-    role: v.union(v.literal("buyer"), v.literal("seller"), v.literal("admin")),
-    createdAt: v.number(),
     
-    // Seller specific
+    // Role-based Security Matrix
+    role: v.union(
+      v.literal("buyer"),
+      v.literal("seller"),
+      v.literal("support_agent"),
+      v.literal("moderator"),
+      v.literal("admin"),
+      v.literal("super_admin")
+    ),
+    
+    status: v.union(
+      v.literal("active"),
+      v.literal("suspended"),
+      v.literal("banned"),
+      v.literal("pending")
+    ),
+    
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    lastSeenAt: v.optional(v.number()),
+    
+    // Seller Attributes
     isVerified: v.optional(v.boolean()),
     sellerSince: v.optional(v.number()),
     bio: v.optional(v.string()),
     rating: v.optional(v.number()),
     totalReviews: v.optional(v.number()),
     totalOrders: v.optional(v.number()),
+    responseRate: v.optional(v.string()),
     
-    // Wallet
+    // Financial Ledger Balances
     walletBalance: v.optional(v.number()),
     pendingBalance: v.optional(v.number()),
   })
     .index("by_clerkId", ["clerkId"])
     .index("by_username", ["username"])
-    .index("by_role", ["role"]),
+    .index("by_role", ["role"])
+    .index("by_status", ["status"]),
 
-  // Games
+  // 2. GAMES CATALOG
   games: defineTable({
     name: v.string(),
     slug: v.string(),
     description: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     coverUrl: v.optional(v.string()),
-    category: v.string(), // FPS, MMO, etc.
+    category: v.string(),
     isActive: v.boolean(),
     isPopular: v.boolean(),
     metrics: v.object({
@@ -47,7 +68,7 @@ export default defineSchema({
     .index("by_slug", ["slug"])
     .index("by_popular", ["isPopular"]),
 
-  // Marketplace Categories (Accounts, Items, Currency, Boosting, etc.)
+  // 3. CATEGORIES
   categories: defineTable({
     name: v.string(),
     slug: v.string(),
@@ -57,7 +78,7 @@ export default defineSchema({
     order: v.number(),
   }).index("by_slug", ["slug"]),
 
-  // Listings
+  // 4. LISTINGS
   listings: defineTable({
     sellerId: v.id("users"),
     gameId: v.id("games"),
@@ -68,15 +89,21 @@ export default defineSchema({
     price: v.number(),
     originalPrice: v.optional(v.number()),
     images: v.array(v.string()),
+    attributes: v.optional(v.any()),
     
-    // Specific attributes (JSON string or generic fields)
-    attributes: v.optional(v.any()), // e.g., rank, server, level
-    
-    deliveryTime: v.string(), // e.g., "Instant", "1-3 hours"
+    deliveryTime: v.string(),
     deliveryMethod: v.union(v.literal("automatic"), v.literal("manual"), v.literal("coordinate")),
-    autoDeliveryData: v.optional(v.string()), // Encrypted credentials if automatic
+    autoDeliveryData: v.optional(v.string()),
     
-    status: v.union(v.literal("active"), v.literal("sold"), v.literal("paused"), v.literal("draft")),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("pending_review"),
+      v.literal("active"),
+      v.literal("paused"),
+      v.literal("sold"),
+      v.literal("rejected"),
+      v.literal("removed")
+    ),
     views: v.number(),
     badge: v.optional(v.union(v.literal("HOT"), v.literal("SALE"), v.literal("POPULAR"), v.literal("NEW"))),
     
@@ -89,29 +116,29 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_slug", ["slug"]),
 
-  // Orders
+  // 5. ORDERS & ESCROW
   orders: defineTable({
     buyerId: v.id("users"),
     sellerId: v.id("users"),
     listingId: v.id("listings"),
     
     price: v.number(),
-    feeAmount: v.number(), // Platform fee
+    feeAmount: v.number(),
     totalAmount: v.number(),
     
     status: v.union(
       v.literal("pending_payment"),
-      v.literal("paid"), // Escrowed
+      v.literal("paid"),
       v.literal("delivering"),
-      v.literal("delivered"), // Waiting for buyer to confirm
-      v.literal("completed"), // Funds released to seller
+      v.literal("delivered"),
+      v.literal("completed"),
       v.literal("disputed"),
       v.literal("cancelled"),
       v.literal("refunded")
     ),
     
     paymentIntentId: v.optional(v.string()),
-    deliveryData: v.optional(v.string()), // E.g., credentials passed from seller
+    deliveryData: v.optional(v.string()),
     
     createdAt: v.number(),
     paidAt: v.optional(v.number()),
@@ -123,20 +150,116 @@ export default defineSchema({
     .index("by_listing", ["listingId"])
     .index("by_status", ["status"]),
 
-  // Messages (Chat between buyer & seller)
+  // 6. CONVERSATIONS (Multi-Channel Real-Time Chat System)
+  conversations: defineTable({
+    type: v.union(
+      v.literal("buyer_seller"),
+      v.literal("buyer_support"),
+      v.literal("seller_support"),
+      v.literal("order"),
+      v.literal("internal_staff")
+    ),
+    participants: v.array(v.id("users")),
+    relatedOrderId: v.optional(v.id("orders")),
+    relatedListingId: v.optional(v.id("listings")),
+    relatedTicketId: v.optional(v.id("supportTickets")),
+    
+    lastMessageText: v.optional(v.string()),
+    lastMessageAt: v.number(),
+    unreadCount: v.optional(v.any()), // Map of userId -> count
+    
+    status: v.union(v.literal("active"), v.literal("archived"), v.literal("closed"), v.literal("blocked")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_type", ["type"])
+    .index("by_order", ["relatedOrderId"])
+    .index("by_updatedAt", ["updatedAt"]),
+
+  // 7. MESSAGES (Real-Time Subscriptions)
   messages: defineTable({
-    orderId: v.optional(v.id("orders")), // Nullable if general inquiry
+    conversationId: v.id("conversations"),
     senderId: v.id("users"),
-    receiverId: v.id("users"),
     content: v.string(),
+    type: v.union(
+      v.literal("text"),
+      v.literal("image"),
+      v.literal("file"),
+      v.literal("system"),
+      v.literal("order_update"),
+      v.literal("support_note") // Internal notes visible to staff only
+    ),
     attachments: v.optional(v.array(v.string())),
+    replyToMessageId: v.optional(v.id("messages")),
+    
+    isRead: v.boolean(),
+    readBy: v.optional(v.array(v.id("users"))),
+    editedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    
+    createdAt: v.number(),
+  })
+    .index("by_conversation", ["conversationId", "createdAt"])
+    .index("by_sender", ["senderId"]),
+
+  // 8. SUPPORT TICKETS
+  supportTickets: defineTable({
+    ticketNumber: v.string(),
+    conversationId: v.id("conversations"),
+    userId: v.id("users"),
+    category: v.union(
+      v.literal("order_issue"),
+      v.literal("payment_issue"),
+      v.literal("seller_dispute"),
+      v.literal("account_issue"),
+      v.literal("technical_issue"),
+      v.literal("other")
+    ),
+    priority: v.union(v.literal("low"), v.literal("normal"), v.literal("high"), v.literal("urgent")),
+    status: v.union(
+      v.literal("open"),
+      v.literal("assigned"),
+      v.literal("waiting_for_customer"),
+      v.literal("waiting_for_seller"),
+      v.literal("resolved"),
+      v.literal("closed")
+    ),
+    assignedAgentId: v.optional(v.id("users")),
+    subject: v.string(),
+    
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_assigned", ["assignedAgentId"])
+    .index("by_priority", ["priority"]),
+
+  // 9. NOTIFICATIONS
+  notifications: defineTable({
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("new_message"),
+      v.literal("order_created"),
+      v.literal("order_updated"),
+      v.literal("payment_success"),
+      v.literal("support_reply"),
+      v.literal("listing_approved"),
+      v.literal("listing_rejected"),
+      v.literal("review_received"),
+      v.literal("security_alert")
+    ),
+    title: v.string(),
+    body: v.string(),
+    link: v.optional(v.string()),
     isRead: v.boolean(),
     createdAt: v.number(),
   })
-    .index("by_order", ["orderId"])
-    .index("by_participants", ["senderId", "receiverId"]),
+    .index("by_user", ["userId", "isRead"])
+    .index("by_createdAt", ["createdAt"]),
 
-  // Reviews
+  // 10. REVIEWS
   reviews: defineTable({
     orderId: v.id("orders"),
     buyerId: v.id("users"),
@@ -147,7 +270,7 @@ export default defineSchema({
     rating: v.number(),
     title: v.string(),
     body: v.string(),
-    isVerified: v.boolean(), // Always true if linked to order, but explicit
+    isVerified: v.boolean(),
     
     createdAt: v.number(),
   })
@@ -155,22 +278,38 @@ export default defineSchema({
     .index("by_listing", ["listingId"])
     .index("by_game", ["gameId"]),
 
-  // Disputes
-  disputes: defineTable({
-    orderId: v.id("orders"),
-    openerId: v.id("users"), // Usually buyer
+  // 11. REPORTS & MODERATION
+  reports: defineTable({
+    reporterId: v.id("users"),
+    targetType: v.union(v.literal("user"), v.literal("listing"), v.literal("message"), v.literal("conversation")),
+    targetId: v.string(),
     reason: v.string(),
     description: v.string(),
-    evidence: v.optional(v.array(v.string())),
-    
-    status: v.union(v.literal("open"), v.literal("investigating"), v.literal("resolved_buyer"), v.literal("resolved_seller")),
-    adminNotes: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("under_review"), v.literal("resolved"), v.literal("dismissed")),
+    assignedTo: v.optional(v.id("users")),
+    actionTaken: v.optional(v.string()),
     
     createdAt: v.number(),
     resolvedAt: v.optional(v.number()),
-  }).index("by_order", ["orderId"]),
+  })
+    .index("by_status", ["status"])
+    .index("by_reporter", ["reporterId"]),
 
-  // Wallet Transactions (Ledger)
+  // 12. IMMUTABLE AUDIT LOGS
+  auditLogs: defineTable({
+    actorId: v.id("users"),
+    action: v.string(),
+    targetType: v.string(),
+    targetId: v.string(),
+    metadata: v.optional(v.any()),
+    ipAddress: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_actor", ["actorId"])
+    .index("by_action", ["action"])
+    .index("by_createdAt", ["createdAt"]),
+
+  // 13. WALLET TRANSACTIONS
   transactions: defineTable({
     userId: v.id("users"),
     orderId: v.optional(v.id("orders")),
@@ -186,29 +325,27 @@ export default defineSchema({
     currency: v.string(),
     status: v.union(v.literal("pending"), v.literal("completed"), v.literal("failed")),
     description: v.string(),
-    
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
-  
-  // Guides / Blog
+
+  // 14. GUIDES
   guides: defineTable({
     title: v.string(),
     slug: v.string(),
     gameId: v.optional(v.id("games")),
-    category: v.string(), // "Guide", "News", "Safety"
-    authorId: v.id("users"), // Admin user
+    category: v.string(),
+    authorId: v.id("users"),
     imageUrl: v.string(),
     content: v.string(),
     excerpt: v.string(),
     readTime: v.string(),
     isFeatured: v.boolean(),
-    
     publishedAt: v.number(),
   })
     .index("by_slug", ["slug"])
     .index("by_game", ["gameId"]),
-    
-  // User Wishlist (Saved listings)
+
+  // 15. WISHLISTS
   wishlists: defineTable({
     userId: v.id("users"),
     listingId: v.id("listings"),

@@ -38,15 +38,19 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${manrope.variable} ${redHatDisplay.variable}`}>
       <body>
-        <Header />
-        <main id="main-content">{children}</main>
-        <Footer />
-        <CookieBanner />
-        <BackToTop />
+        <ConvexClientProvider>
+          <Header />
+          <main id="main-content">{children}</main>
+          <Footer />
+          <CookieBanner />
+          <BackToTop />
+        </ConvexClientProvider>
       </body>
     </html>
   );
