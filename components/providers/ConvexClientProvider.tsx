@@ -1,16 +1,31 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 
-const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || "https://patient-squirrel-8.convex.cloud";
-const convex = new ConvexReactClient(convexUrl);
-const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const rawConvexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+const fallbackUrl = "https://patient-squirrel-8.convex.cloud";
+
+function isValidUrl(url?: string): boolean {
+  if (!url || url === "[SENSITIVE]" || !url.startsWith("http")) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const safeConvexUrl = isValidUrl(rawConvexUrl) ? rawConvexUrl! : fallbackUrl;
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== "[SENSITIVE]" 
+  ? process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY 
+  : "pk_test_ZnVsbC13b21iYXQtNDcuY2xlcmsuYWNjb3VudHMuZGV2JA";
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
-  // If Clerk publishable key is present, use Clerk + Convex provider, otherwise fallback to plain ConvexProvider
+  const convex = useMemo(() => new ConvexReactClient(safeConvexUrl), []);
+
   if (clerkPublishableKey) {
     return (
       <ClerkProvider publishableKey={clerkPublishableKey}>
