@@ -2,16 +2,64 @@ import { v } from "convex/values";
 import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 
+const ADMIN_EMAILS = [
+  "proximaxagency@gmail.com",
+  "proximaxagency-2983@users.noreply.github.com",
+  "dev@igmart.store",
+];
+
+function isAdminEmail(email?: string) {
+  if (!email) return false;
+  const normalized = email.toLowerCase().trim();
+  return ADMIN_EMAILS.includes(normalized) || normalized.includes("proximaxagency");
+}
+
 // Helper: Get authenticated user from Clerk JWT
 export async function getAuthUser(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return null;
-  const user = await ctx.db
+
+  let user = await ctx.db
     .query("users")
     .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
     .unique();
+
+  const userEmail = identity.email || user?.email || "";
+
+  // If user record doesn't exist yet by clerkId, search by email
+  if (!user && userEmail) {
+    const byEmail = await ctx.db.query("users").collect();
+    user = byEmail.find((u) => u.email.toLowerCase() === userEmail.toLowerCase()) || null;
+  }
+
+  // If user is an admin email, ensure their role is admin
+  if (user && isAdminEmail(user.email)) {
+    if (user.role !== "admin" && user.role !== "super_admin") {
+      user = { ...user, role: "admin" };
+    }
+  }
+
+  // If user DB record doesn't exist yet but JWT identity is proximaxagency/admin email
+  if (!user && (isAdminEmail(userEmail) || identity.subject)) {
+    const isAdmin = isAdminEmail(userEmail);
+    return {
+      _id: "synthetic_admin_user" as Id<"users">,
+      clerkId: identity.subject,
+      email: userEmail || "proximaxagency@gmail.com",
+      username: identity.nickname || identity.givenName || "proximaxagency",
+      displayName: identity.name || "ProximaX Admin",
+      role: (isAdmin ? "admin" : "buyer") as Doc<"users">["role"],
+      status: "active" as Doc<"users">["status"],
+      walletBalance: 0,
+      pendingBalance: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+  }
+
   return user;
 }
+
 
 // Helper: Require authenticated user or throw
 export async function requireAuthUser(ctx: QueryCtx | MutationCtx) {
@@ -43,16 +91,7 @@ export const getCurrentUser = query({
   },
 });
 
-const ADMIN_EMAILS = [
-  "proximaxagency@gmail.com",
-  "proximaxagency-2983@users.noreply.github.com",
-  "dev@igmart.store",
-];
 
-function isAdminEmail(email: string) {
-  const normalized = email.toLowerCase().trim();
-  return ADMIN_EMAILS.includes(normalized) || normalized.includes("proximaxagency");
-}
 
 // Mutation: Sync user from Clerk identity upon sign up / login
 export const syncUser = mutation({

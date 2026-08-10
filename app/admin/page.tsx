@@ -6,6 +6,8 @@ import { StatCard, Button } from "@/components/ui/index";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
+import { useUser } from "@clerk/nextjs";
+
 type AlertType = {
   type: "info" | "danger" | "warning";
   icon: React.ReactNode;
@@ -18,14 +20,15 @@ const alerts: AlertType[] = [
   {
     type: "info",
     icon: <Users size={18} className="text-primary-hover mt-0.5 flex-shrink-0" />,
-    title: "No urgent alerts at this time",
-    desc: "System is operating normally.",
+    title: "System Status Normal",
+    desc: "All real-time marketplace & live support sockets are operational.",
     action: null,
   },
 ];
 
 export default function AdminDashboardPage() {
-  const metrics = useQuery(api.admin.getAdminMetrics);
+  const { user, isLoaded } = useUser();
+  const metrics = useQuery(api.admin.getAdminMetrics, isLoaded && user ? {} : "skip");
 
   return (
     <div>

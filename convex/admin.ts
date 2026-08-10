@@ -7,7 +7,18 @@ import { getAuthUser, requireAuthUser, requireRole } from "./users";
 export const getAdminMetrics = query({
   args: {},
   handler: async (ctx) => {
-    await requireRole(ctx, ["admin", "super_admin"]);
+    const user = await getAuthUser(ctx);
+    if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
+      return {
+        totalUsers: 0,
+        activeSellers: 0,
+        totalOrders: 0,
+        gmv: 0,
+        activeListings: 0,
+        openDisputes: 0,
+        openTickets: 0,
+      };
+    }
 
     const users = await ctx.db.query("users").collect();
     const orders = await ctx.db.query("orders").collect();
@@ -41,7 +52,10 @@ export const listUsersAdmin = query({
     statusFilter: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ["admin", "super_admin", "moderator"]);
+    const user = await getAuthUser(ctx);
+    if (!user || (user.role !== "admin" && user.role !== "super_admin" && user.role !== "moderator")) {
+      return [];
+    }
 
     let users = await ctx.db.query("users").order("desc").take(100);
 
@@ -55,6 +69,7 @@ export const listUsersAdmin = query({
     return users;
   },
 });
+
 
 // ── BAN / SUSPEND / RESTORE USER ───────────────────────────────────────
 export const setUserStatus = mutation({
@@ -92,7 +107,10 @@ export const setUserStatus = mutation({
 export const listAuditLogs = query({
   args: {},
   handler: async (ctx) => {
-    await requireRole(ctx, ["admin", "super_admin"]);
+    const user = await getAuthUser(ctx);
+    if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
+      return [];
+    }
 
     const logs = await ctx.db.query("auditLogs").withIndex("by_createdAt").order("desc").take(100);
 
