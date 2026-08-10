@@ -1,58 +1,115 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { Badge } from "@/components/ui/index";
+"use client";
 
-export const metadata: Metadata = {
-  title: "My Orders | IGMART",
-};
+import Link from "next/link";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Badge } from "@/components/ui/index";
+import { ShoppingBag, Loader2, ArrowRight } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 
 export default function OrdersPage() {
-  const mockOrders = [
-    { id: "ORD-12345", date: "Oct 12, 2026", title: "Level 100 Account", price: 150, status: "completed", seller: "ProGamer99" },
-    { id: "ORD-12346", date: "Oct 10, 2026", title: "10,000 Gold Coins", price: 45, status: "processing", seller: "GoldFarm" },
-  ];
+  const { user, isLoaded } = useUser();
+  const orders = useQuery(api.orders.getMyOrders, isLoaded && user ? {} : "skip");
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <Badge variant="popular">Completed</Badge>;
+      case "delivered":
+        return <Badge variant="hot">Delivered</Badge>;
+      case "delivering":
+        return <Badge variant="new">Delivering</Badge>;
+      case "paid":
+        return <Badge variant="new">Paid</Badge>;
+      case "disputed":
+        return <Badge variant="sale">Disputed</Badge>;
+      default:
+        return <Badge variant="default">{status}</Badge>;
+    }
+  };
 
   return (
     <div>
-      <h1 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 24, color: "#FAFAFA", marginBottom: 24 }}>My Orders</h1>
-      
-      <div style={{ background: "#171A21", border: "1px solid #272A30", borderRadius: 12, overflow: "hidden" }}>
-        {mockOrders.length > 0 ? (
-          <table style={{ width: "100%", textAlign: "left", borderCollapse: "collapse" }}>
-            <thead style={{ background: "#1F232B" }}>
-              <tr>
-                <th style={{ padding: "16px", fontSize: 13, color: "#A1A1AA", fontWeight: 600 }}>Order ID</th>
-                <th style={{ padding: "16px", fontSize: 13, color: "#A1A1AA", fontWeight: 600 }}>Item</th>
-                <th style={{ padding: "16px", fontSize: 13, color: "#A1A1AA", fontWeight: 600 }}>Seller</th>
-                <th style={{ padding: "16px", fontSize: 13, color: "#A1A1AA", fontWeight: 600 }}>Price</th>
-                <th style={{ padding: "16px", fontSize: 13, color: "#A1A1AA", fontWeight: 600 }}>Status</th>
-                <th style={{ padding: "16px", fontSize: 13, color: "#A1A1AA", fontWeight: 600 }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockOrders.map(order => (
-                <tr key={order.id} style={{ borderBottom: "1px solid #272A30" }}>
-                  <td style={{ padding: "16px", fontSize: 14, color: "#FAFAFA", fontWeight: 500 }}>{order.id}<br/><span style={{ fontSize: 11, color: "#71717A", fontWeight: 400 }}>{order.date}</span></td>
-                  <td style={{ padding: "16px", fontSize: 14, color: "#FAFAFA" }}>{order.title}</td>
-                  <td style={{ padding: "16px", fontSize: 14, color: "#3381FF", textDecoration: "underline" }}>
-                    <Link href={`/seller/${order.seller}`}>{order.seller}</Link>
-                  </td>
-                  <td style={{ padding: "16px", fontSize: 14, color: "#FAFAFA", fontWeight: 700 }}>${order.price}</td>
-                  <td style={{ padding: "16px" }}>
-                    <Badge variant={order.status === "completed" ? "popular" : "hot"}>{order.status}</Badge>
-                  </td>
-                  <td style={{ padding: "16px" }}>
-                    <button style={{ background: "transparent", border: "1px solid #3381FF", color: "#3381FF", padding: "6px 12px", borderRadius: 6, fontSize: 13, fontWeight: 600 }}>
-                      View Details
-                    </button>
-                  </td>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-heading font-black text-2xl sm:text-3xl text-text">My Orders</h1>
+          <p className="text-text-muted text-sm mt-1">Track and manage your marketplace purchases and sales</p>
+        </div>
+        <Link
+          href="/marketplace"
+          className="hidden sm:inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors"
+        >
+          Explore Marketplace <ArrowRight size={14} />
+        </Link>
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+        {orders === undefined ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Loader2 className="animate-spin text-primary" size={28} />
+            <p className="text-sm text-text-muted">Loading your orders...</p>
+          </div>
+        ) : orders.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[640px]">
+              <thead>
+                <tr className="bg-surface border-b border-border text-xs uppercase tracking-wider text-text-muted font-bold">
+                  <th className="p-4 pl-6">Order ID</th>
+                  <th className="p-4">Item</th>
+                  <th className="p-4">Party</th>
+                  <th className="p-4">Amount</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 pr-6 text-right">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {orders.map((order) => (
+                  <tr key={order._id} className="hover:bg-elevated/50 transition-colors">
+                    <td className="p-4 pl-6 text-sm font-mono font-bold text-text">
+                      #{order._id.slice(-8).toUpperCase()}
+                      <br />
+                      <span className="text-[11px] font-sans text-text-muted font-normal">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="p-4 text-sm font-semibold text-text max-w-[200px] truncate">
+                      {order.listingTitle}
+                    </td>
+                    <td className="p-4 text-sm">
+                      <span className="text-primary font-medium">{order.counterpartName}</span>
+                    </td>
+                    <td className="p-4 text-sm font-black text-text">
+                      ${order.totalAmount.toFixed(2)}
+                    </td>
+                    <td className="p-4">{getStatusBadge(order.status)}</td>
+                    <td className="p-4 pr-6 text-right">
+                      <Link
+                        href={`/messages`}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary-hover border border-primary/30 hover:border-primary px-3 py-1.5 rounded-lg transition-all"
+                      >
+                        Contact & Chat
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
-          <div style={{ padding: 64, textAlign: "center" }}>
-            <p style={{ fontSize: 16, color: "#FAFAFA", fontWeight: 600 }}>No orders yet.</p>
+          <div className="py-20 px-4 text-center max-w-md mx-auto">
+            <div className="w-16 h-16 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary">
+              <ShoppingBag size={28} />
+            </div>
+            <h3 className="font-heading font-black text-xl text-text mb-2">No orders found</h3>
+            <p className="text-text-muted text-sm leading-relaxed mb-6">
+              You haven&apos;t placed or received any orders yet. When you buy or sell items on IGMART, they will appear here.
+            </p>
+            <Link
+              href="/marketplace"
+              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm"
+            >
+              Browse Marketplace
+            </Link>
           </div>
         )}
       </div>

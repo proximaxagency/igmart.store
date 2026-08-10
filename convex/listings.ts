@@ -22,6 +22,23 @@ export const getCategories = query({
   },
 });
 
+export const listActiveListings = query({
+  args: {},
+  handler: async (ctx) => {
+    const listings = await ctx.db.query("listings").order("desc").take(50);
+    const hydrated = [];
+    for (const l of listings) {
+      const game = await ctx.db.get(l.gameId);
+      hydrated.push({
+        ...l,
+        gameName: game?.name || "Game Asset",
+      });
+    }
+    return hydrated;
+  },
+});
+
+
 export const createListing = mutation({
   args: {
     gameId: v.id("games"),

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuthUser, requireRole } from "./users";
+import { getAuthUser, requireAuthUser, requireRole } from "./users";
+
 
 // ── GET ADMIN DASHBOARD OVERVIEW METRICS ────────────────────────────────
 export const getAdminMetrics = query({
@@ -108,3 +109,90 @@ export const listAuditLogs = query({
     return hydrated;
   },
 });
+
+// ── LIST ALL SUPPORT CONVERSATIONS (ADMIN SUPPORT DESK) ─────────────
+export const listSupportConversations = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getAuthUser(ctx);
+    if (!user) return [];
+
+    const isStaff = ["admin", "super_admin", "support_agent", "moderator"].includes(user.role);
+    if (!isStaff) return [];
+
+    const conversations = await ctx.db
+      .query("conversations")
+      .withIndex("by_updatedAt")
+      .order("desc")
+      .take(100);
+
+    const hydrated = [];
+    for (const conv of conversations) {
+      // Hydrate non-staff participant details
+      let customerUser = null;
+      for (const pId of conv.participants) {
+        const p = await ctx.db.get(pId);
+        if (p && p.role !== "admin" && p.role !== "support_agent") {
+          customerUser = p;
+          break;
+        }
+      }
+
+      hydrated.push({
+        ...conv,
+        customerName: customerUser?.displayName || customerUser?.username || "Gamer",
+        customerAvatar: customerUser?.avatarUrl || null,
+        customerRole: customerUser?.role || "buyer",
+      });
+    }
+
+    return hydrated;
+  },
+});
+
+// ── ADMIN MODERATE LISTING ─────────────────────────────────────────────
+export const updateListingStatus = mutation({
+  args: {
+    listingId: v.id("listings"),
+    status: v.union(v.literal("active"), v.literal("rejected"), v.literal("removed"), v.literal("paused")),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin", "moderator"]);
+    await ctx.db.patch(args.listingId, { status: args.status, updatedAt: Date.now() });
+
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: `listing.${args.status}`,
+      targetType: "listing",
+      targetId: args.listingId,
+      createdAt: Date.now(),
+    });
+    return true;
+  },
+});
+
+// ── ADMIN RESOLVE DISPUTE ──────────────────────────────────────────────
+export const resolveDispute = mutation({
+  args: {
+    orderId: v.id("orders"),
+    resolution: v.union(v.literal("refund_buyer"), v.literal("release_to_seller")),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin", "moderator"]);
+    const order = await ctx.db.get(args.orderId);
+    if (!order) throw new Error("Order not found");
+
+    const newStatus = args.resolution === "refund_buyer" ? "refunded" : "completed";
+    await ctx.db.patch(args.orderId, { status: newStatus, completedAt: Date.now() });
+
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: `dispute.${args.resolution}`,
+      targetType: "order",
+      targetId: args.orderId,
+      createdAt: Date.now(),
+    });
+    return true;
+  },
+});
+
