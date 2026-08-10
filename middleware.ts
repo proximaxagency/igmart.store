@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 // Define public routes that do not require authentication
 const isPublicRoute = createRouteMatcher([
@@ -26,11 +27,12 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhook(.*)"
 ]);
 
-// Protect everything else (account, seller dashboard, admin, checkout, messages, etc)
 export default clerkMiddleware(async (auth, request) => {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-    return;
+  // If Clerk publishable key is not set, allow all requests to pass safely without invoking auth.protect()
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
+    return NextResponse.next();
   }
+
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
