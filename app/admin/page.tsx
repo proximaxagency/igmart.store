@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Users, Database, DollarSign, AlertTriangle, Loader2 } from "lucide-react";
 import { StatCard, Button } from "@/components/ui/index";
 import { useQuery } from "convex/react";
@@ -7,10 +8,10 @@ import { api } from "@/convex/_generated/api";
 
 type AlertType = {
   type: "info" | "danger" | "warning";
-  icon: JSX.Element;
+  icon: React.ReactNode;
   title: string;
   desc: string;
-  action: { label: string; variant: "primary" | "danger" | "default" } | null;
+  action: { label: string; variant: "primary" | "secondary" | "danger" } | null;
 };
 
 const alerts: AlertType[] = [
