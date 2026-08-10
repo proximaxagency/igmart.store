@@ -7,11 +7,12 @@ const footerCols = [
   {
     heading: "IGMART",
     links: [
-      { label: "About", href: "/about" },
+      { label: "About", href: "/#about" },
       { label: "Games", href: "/games" },
       { label: "Marketplace", href: "/marketplace" },
       { label: "Guides", href: "/guides" },
-      { label: "Contact", href: "/contact" },
+      { label: "Contact", href: "/support" },
+      { label: "Sitemap", href: "/sitemap" },
     ],
   },
   {
@@ -29,10 +30,10 @@ const footerCols = [
     heading: "Support",
     links: [
       { label: "Help Center", href: "/support" },
-      { label: "Contact Support", href: "/support/contact" },
+      { label: "Contact Support", href: "/support" },
       { label: "Orders", href: "/account/orders" },
-      { label: "Disputes", href: "/disputes" },
-      { label: "Buyer Protection", href: "/buyer-protection" },
+      { label: "Disputes", href: "/support" },
+      { label: "Buyer Protection", href: "/legal" },
     ],
   },
   {
@@ -40,17 +41,17 @@ const footerCols = [
     links: [
       { label: "Start Selling", href: "/sell" },
       { label: "Seller Dashboard", href: "/seller/dashboard" },
-      { label: "Seller Fees", href: "/fees" },
-      { label: "Create Listing", href: "/sell/create" },
+      { label: "Seller Fees", href: "/faq" },
+      { label: "Create Listing", href: "/sell" },
     ],
   },
   {
     heading: "Legal",
     links: [
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Cookies", href: "/cookies" },
-      { label: "Refund Policy", href: "/refund-policy" },
+      { label: "Terms of Service", href: "/legal/terms" },
+      { label: "Privacy Policy", href: "/legal/privacy" },
+      { label: "Cookies", href: "/legal/cookies" },
+      { label: "Refund Policy", href: "/faq" },
     ],
   },
 ];

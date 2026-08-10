@@ -1,102 +1,192 @@
-import type { Metadata } from "next";
-import { Search, MoreVertical, Send, Image as ImageIcon } from "lucide-react";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Messages | IGMART",
-};
+import { useState, useRef, useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { Search, MoreVertical, Send, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 
 export default function MessagesPage() {
-  const conversations = [
-    { id: 1, user: "ProGamer99", lastMessage: "Yes, the account is still available.", time: "10:30 AM", unread: true, active: true },
-    { id: 2, user: "GoldFarm", lastMessage: "I have delivered the gold. Please check.", time: "Yesterday", unread: false, active: false },
-    { id: 3, user: "BoostMaster", lastMessage: "Thanks for the order!", time: "Oct 10", unread: false, active: false },
-  ];
+  const { user } = useUser();
+  const [activeConvId, setActiveConvId] = useState<Id<"conversations"> | null>(null);
+  const [messageText, setMessageText] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const conversations = useQuery(api.conversations.listMyConversations);
+  const messages = useQuery(
+    api.conversations.listMessages,
+    activeConvId ? { conversationId: activeConvId } : "skip"
+  );
+  
+  const sendMessage = useMutation(api.conversations.sendMessage);
+
+  const activeConv = conversations?.find((c) => c._id === activeConvId);
+
+  // Auto-scroll to bottom of messages
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageText.trim() || !activeConvId) return;
+
+    const content = messageText.trim();
+    setMessageText("");
+
+    try {
+      await sendMessage({
+        conversationId: activeConvId,
+        content,
+        type: "text"
+      });
+    } catch (err) {
+      console.error("Failed to send message:", err);
+      // fallback handling here
+    }
+  };
 
   return (
     <div className="container py-8 max-w-7xl h-[calc(100vh-76px)]">
-      <div style={{ display: "flex", height: "100%", background: "#171A21", border: "1px solid #272A30", borderRadius: 12, overflow: "hidden" }}>
+      <div className="flex h-full bg-surface border border-border rounded-xl overflow-hidden shadow-2xl">
         
         {/* Sidebar */}
-        <div style={{ width: 320, borderRight: "1px solid #272A30", display: "flex", flexDirection: "column" }}>
-          <div style={{ padding: 20, borderBottom: "1px solid #272A30" }}>
-            <h1 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 20, color: "#FAFAFA", marginBottom: 16 }}>Messages</h1>
-            <div style={{ background: "#0F1116", border: "1px solid #272A30", borderRadius: 8, padding: "8px 12px", display: "flex", alignItems: "center" }}>
-              <Search size={16} color="#71717A" style={{ marginRight: 8 }} />
-              <input placeholder="Search conversations..." style={{ background: "transparent", border: "none", outline: "none", color: "#FAFAFA", fontSize: 13, width: "100%" }} />
+        <div className="w-[320px] border-r border-border flex flex-col bg-background/50">
+          <div className="p-5 border-b border-border">
+            <h1 className="font-heading font-bold text-xl text-text mb-4">Messages</h1>
+            <div className="bg-elevated border border-border rounded-lg px-3 py-2 flex items-center">
+              <Search size={16} className="text-text-muted mr-2" />
+              <input 
+                placeholder="Search conversations..." 
+                className="bg-transparent border-none outline-none text-text text-[13px] w-full placeholder:text-text-muted" 
+              />
             </div>
           </div>
           
-          <div style={{ flex: 1, overflowY: "auto" }}>
-            {conversations.map(conv => (
-              <div key={conv.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", cursor: "pointer", background: conv.active ? "rgba(51,129,255,0.05)" : "transparent", borderLeft: conv.active ? "3px solid #3381FF" : "3px solid transparent", borderBottom: "1px solid #272A30" }}>
-                <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg,#2563EB,#06B6D4)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "white", flexShrink: 0 }}>
-                  {conv.user.slice(0, 2).toUpperCase()}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                    <p style={{ fontSize: 14, fontWeight: conv.unread ? 700 : 500, color: "#FAFAFA", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{conv.user}</p>
-                    <span style={{ fontSize: 11, color: conv.unread ? "#3381FF" : "#71717A", fontWeight: conv.unread ? 600 : 400 }}>{conv.time}</span>
+          <div className="flex-1 overflow-y-auto">
+            {conversations === undefined ? (
+              <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
+            ) : conversations.length === 0 ? (
+              <div className="text-center p-8 text-text-muted text-sm">No conversations yet.</div>
+            ) : (
+              conversations.map((conv) => {
+                const isActive = activeConvId === conv._id;
+                const otherName = conv.otherUser?.displayName || "Unknown";
+                const isUnread = false; // Add unread logic later
+
+                return (
+                  <div 
+                    key={conv._id} 
+                    onClick={() => setActiveConvId(conv._id)}
+                    className={`flex items-center gap-3 p-4 cursor-pointer border-l-[3px] border-b border-b-border transition-colors ${
+                      isActive ? "bg-primary/5 border-l-primary" : "bg-transparent border-l-transparent hover:bg-elevated/50"
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0 shadow-sm" style={{ background: "var(--gradient-brand)" }}>
+                      {otherName.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center mb-1">
+                        <p className={`text-[14px] truncate ${isUnread ? "font-bold text-text" : "font-semibold text-text-secondary"}`}>
+                          {otherName}
+                        </p>
+                        <span className={`text-[11px] ${isUnread ? "text-primary font-semibold" : "text-text-muted"}`}>
+                          {new Date(conv.lastMessageAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className={`text-[13px] truncate ${isUnread ? "text-text font-medium" : "text-text-muted"}`}>
+                        {conv.lastMessageText || "No messages yet"}
+                      </p>
+                    </div>
                   </div>
-                  <p style={{ fontSize: 13, color: conv.unread ? "#FAFAFA" : "#A1A1AA", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{conv.lastMessage}</p>
-                </div>
-              </div>
-            ))}
+                );
+              })
+            )}
           </div>
         </div>
 
         {/* Chat Area */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#0F1116" }}>
-          {/* Chat Header */}
-          <div style={{ padding: "16px 24px", borderBottom: "1px solid #272A30", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#171A21" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg,#2563EB,#06B6D4)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "white" }}>
-                PR
-              </div>
-              <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: "#FAFAFA" }}>ProGamer99</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4ADE80" }} />
-                  <span style={{ fontSize: 12, color: "#A1A1AA" }}>Online</span>
+        <div className="flex-1 flex flex-col bg-background">
+          {!activeConvId ? (
+            <div className="flex-1 flex items-center justify-center text-text-muted">
+              Select a conversation to start messaging
+            </div>
+          ) : (
+            <>
+              {/* Chat Header */}
+              <div className="p-4 px-6 border-b border-border flex items-center justify-between bg-surface">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm" style={{ background: "var(--gradient-brand)" }}>
+                    {activeConv?.otherUser?.displayName?.substring(0,2).toUpperCase() || "UN"}
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-bold text-text">{activeConv?.otherUser?.displayName || "Unknown User"}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="w-2 h-2 rounded-full bg-success shadow-[0_0_8px_var(--color-success)]" />
+                      <span className="text-[12px] text-text-muted font-medium">Online</span>
+                    </div>
+                  </div>
                 </div>
+                <button className="text-text-muted hover:text-text transition-colors"><MoreVertical size={20} /></button>
               </div>
-            </div>
-            <button style={{ color: "#A1A1AA" }}><MoreVertical size={20} /></button>
-          </div>
 
-          {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ alignSelf: "center", background: "#1F232B", padding: "4px 12px", borderRadius: 99, fontSize: 11, color: "#71717A", fontWeight: 600 }}>
-              TODAY
-            </div>
-            
-            <div style={{ alignSelf: "flex-end", maxWidth: "70%" }}>
-              <div style={{ background: "#3381FF", color: "white", padding: "12px 16px", borderRadius: "16px 16px 4px 16px", fontSize: 14, lineHeight: 1.5 }}>
-                Hi, is the Level 100 account still available? I'm interested in buying it today.
+              {/* Messages */}
+              <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+                {messages === undefined ? (
+                  <div className="flex-1 flex justify-center items-center"><Loader2 className="animate-spin text-primary" /></div>
+                ) : messages.length === 0 ? (
+                  <div className="flex-1 flex justify-center items-center text-text-muted text-sm">Send a message to start the conversation!</div>
+                ) : (
+                  messages.map((msg) => {
+                    const isMe = msg.isMe;
+                    return (
+                      <div key={msg._id} className={`max-w-[75%] ${isMe ? "self-end" : "self-start"}`}>
+                        <div 
+                          className={`p-3 px-4 text-[14px] leading-relaxed shadow-sm ${
+                            isMe 
+                              ? "bg-primary text-white rounded-2xl rounded-br-sm" 
+                              : "bg-elevated border border-border text-text rounded-2xl rounded-bl-sm"
+                          }`}
+                        >
+                          {msg.content}
+                        </div>
+                        <p className={`text-[11px] text-text-muted mt-1.5 ${isMe ? "text-right" : "text-left"}`}>
+                          {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </p>
+                      </div>
+                    );
+                  })
+                )}
               </div>
-              <p style={{ fontSize: 11, color: "#71717A", marginTop: 6, textAlign: "right" }}>10:25 AM</p>
-            </div>
-            
-            <div style={{ alignSelf: "flex-start", maxWidth: "70%" }}>
-              <div style={{ background: "#1F232B", border: "1px solid #272A30", color: "#FAFAFA", padding: "12px 16px", borderRadius: "16px 16px 16px 4px", fontSize: 14, lineHeight: 1.5 }}>
-                Yes, the account is still available. It has all the items mentioned in the description. Let me know if you have any questions!
-              </div>
-              <p style={{ fontSize: 11, color: "#71717A", marginTop: 6 }}>10:30 AM</p>
-            </div>
-          </div>
 
-          {/* Input Area */}
-          <div style={{ padding: 20, borderTop: "1px solid #272A30", background: "#171A21" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#0F1116", border: "1px solid #272A30", borderRadius: 12, padding: "8px 16px" }}>
-              <button style={{ color: "#A1A1AA", padding: 8 }}><ImageIcon size={20} /></button>
-              <input type="text" placeholder="Type a message..." style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#FAFAFA", fontSize: 14 }} />
-              <button style={{ background: "#3381FF", color: "white", padding: 10, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Send size={18} />
-              </button>
-            </div>
-            <p style={{ fontSize: 11, color: "#71717A", textAlign: "center", marginTop: 12 }}>
-              Keep all communication on IGMART. Do not share external contact info to stay protected by our escrow system.
-            </p>
-          </div>
+              {/* Input Area */}
+              <div className="p-5 border-t border-border bg-surface">
+                <form onSubmit={handleSend} className="flex items-center gap-3 bg-background border border-border rounded-xl p-2 pl-4 focus-within:border-primary/50 transition-colors shadow-sm">
+                  <button type="button" className="text-text-muted hover:text-primary transition-colors"><ImageIcon size={20} /></button>
+                  <input 
+                    type="text" 
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    placeholder="Type a message..." 
+                    className="flex-1 bg-transparent border-none outline-none text-text text-[14px]" 
+                  />
+                  <button 
+                    type="submit" 
+                    disabled={!messageText.trim()}
+                    className="bg-primary text-white p-2.5 rounded-lg flex items-center justify-center hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Send size={18} />
+                  </button>
+                </form>
+                <p className="text-[11px] text-text-muted text-center mt-3 font-medium">
+                  Keep all communication on IGMART. Do not share external contact info to stay protected by our escrow system.
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

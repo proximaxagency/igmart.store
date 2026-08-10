@@ -176,7 +176,7 @@ export default function SellerProfilePage({ params }: Props) {
                   </div>
                 ))}
                 <div className="p-4 border-t border-border">
-                  <Link href="#" className="text-sm font-semibold text-primary-hover hover:underline">
+                  <Link href="#reviews" className="text-sm font-semibold text-primary-hover hover:underline">
                     View all reviews →
                   </Link>
                 </div>

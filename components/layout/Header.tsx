@@ -5,8 +5,12 @@ import { usePathname } from "next/navigation";
 import {
   Search, Bell, ShoppingBag, Menu, X, User, Heart,
   MessageSquare, LayoutDashboard, Shield, Settings, LogOut,
-  Package, Wallet, ChevronRight
+  Package, Wallet, ChevronRight, Check
 } from "lucide-react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+import { useUser, useClerk } from "@clerk/nextjs";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -18,9 +22,19 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Mock user — replace with real auth
-  const user = { name: "ProGamer99", role: "user" };
-  // const user = null;
+  const { user: clerkUser, isLoaded } = useUser();
+  const { signOut } = useClerk();
+
+  const notifications = useQuery(api.notifications.getMyNotifications, clerkUser ? {} : "skip");
+  const markAsRead = useMutation(api.notifications.markAsRead);
+  const markAllAsRead = useMutation(api.notifications.markAllAsRead);
+
+  // Map real Clerk user to the UI format
+  const user = clerkUser ? {
+    name: clerkUser.username || clerkUser.fullName || clerkUser.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "User",
+    role: "User",
+    imageUrl: clerkUser.imageUrl
+  } : null;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 16);
@@ -179,13 +193,74 @@ export default function Header() {
           {user ? (
             <div className="flex items-center gap-1">
               {/* Notifications */}
-              <button
-                aria-label="View notifications"
-                className="relative hidden sm:flex items-center justify-center w-10 h-10 text-text-muted hover:text-text hover:bg-elevated rounded-lg transition-colors"
+              <div
+                className="relative hidden sm:block"
+                onMouseEnter={() => setActiveDropdown("notifications")}
+                onMouseLeave={handleDropdownLeave}
               >
-                <Bell size={19} />
-                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-danger rounded-full" aria-hidden="true" />
-              </button>
+                <button
+                  aria-label="View notifications"
+                  aria-expanded={activeDropdown === "notifications"}
+                  className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${activeDropdown === "notifications" ? "text-text bg-elevated" : "text-text-muted hover:text-text hover:bg-elevated"}`}
+                >
+                  <Bell size={19} />
+                  {notifications && notifications.filter(n => !n.isRead).length > 0 && (
+                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-danger rounded-full" aria-hidden="true" />
+                  )}
+                </button>
+
+                {activeDropdown === "notifications" && (
+                  <div
+                    className="absolute top-[calc(100%+8px)] right-0 z-[200]"
+                    onMouseEnter={() => setActiveDropdown("notifications")}
+                    onMouseLeave={handleDropdownLeave}
+                  >
+                    <div className="bg-surface border border-border rounded-xl w-[320px] shadow-[var(--shadow-xl)] overflow-hidden flex flex-col">
+                      <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-background">
+                        <p className="text-sm font-bold text-text">Notifications</p>
+                        {notifications && notifications.some(n => !n.isRead) && (
+                          <button 
+                            onClick={() => markAllAsRead()}
+                            className="text-[11px] font-semibold text-primary hover:underline"
+                          >
+                            Mark all as read
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-[360px] overflow-y-auto">
+                        {notifications === undefined ? (
+                          <div className="p-8 text-center text-text-muted text-sm">Loading...</div>
+                        ) : notifications.length === 0 ? (
+                          <div className="p-8 text-center text-text-muted text-sm">No notifications yet.</div>
+                        ) : (
+                          notifications.map((n) => (
+                            <Link
+                              key={n._id}
+                              href={n.link || "#"}
+                              onClick={(e) => {
+                                if (!n.isRead) markAsRead({ notificationId: n._id });
+                                setActiveDropdown(null);
+                              }}
+                              className={`block p-4 border-b border-border hover:bg-elevated/50 transition-colors ${!n.isRead ? "bg-primary/5" : ""}`}
+                            >
+                              <div className="flex gap-3">
+                                {!n.isRead && <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />}
+                                <div>
+                                  <p className={`text-sm ${!n.isRead ? "font-bold text-text" : "font-medium text-text-secondary"}`}>{n.title}</p>
+                                  <p className="text-xs text-text-muted mt-1 leading-relaxed">{n.body}</p>
+                                  <p className="text-[10px] text-text-muted mt-2 font-medium">
+                                    {new Date(n.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </Link>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Orders */}
               <Link
@@ -240,7 +315,7 @@ export default function Header() {
                         </Link>
                       ))}
                       <div className="border-t border-border mt-1 pt-1">
-                        <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-danger hover:bg-danger/8 w-full transition-colors text-left">
+                        <button onClick={() => signOut({ redirectUrl: "/" })} className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-danger hover:bg-danger/8 w-full transition-colors text-left">
                           <LogOut size={15} />
                           Sign Out
                         </button>
@@ -376,8 +451,9 @@ export default function Header() {
                     >
                       <Wallet size={17} /> Wallet
                     </Link>
-                    <button className="flex items-center gap-3 py-2.5 px-3 text-sm font-medium text-danger hover:bg-danger/8 rounded-lg transition-colors text-left mt-1">
-                      <LogOut size={17} /> Sign Out
+                    <button onClick={() => { signOut({ redirectUrl: "/" }); setMenuOpen(false); }} className="flex w-full items-center gap-3 p-3 rounded-xl text-sm font-semibold text-danger hover:bg-danger/10 transition-colors text-left">
+                      <LogOut size={18} />
+                      Sign Out
                     </button>
                   </div>
                 ) : (

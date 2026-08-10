@@ -19,9 +19,10 @@ function isValidUrl(url?: string): boolean {
 }
 
 const safeConvexUrl = isValidUrl(rawConvexUrl) ? rawConvexUrl! : fallbackUrl;
-const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== "[SENSITIVE]" 
-  ? process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY 
-  : "pk_test_ZnVsbC13b21iYXQtNDcuY2xlcmsuYWNjb3VudHMuZGV2JA";
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+if (!clerkPublishableKey) {
+  throw new Error("Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable");
+}
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   const convex = useMemo(() => new ConvexReactClient(safeConvexUrl), []);
