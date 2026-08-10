@@ -28,6 +28,9 @@ const isPublicRoute = createRouteMatcher([
 
 // Protect everything else (account, seller dashboard, admin, checkout, messages, etc)
 export default clerkMiddleware(async (auth, request) => {
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return;
+  }
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
