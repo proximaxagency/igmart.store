@@ -26,6 +26,8 @@ if (!clerkPublishableKey && process.env.NODE_ENV === "development") {
   console.warn("[IGMART] Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY — running without Clerk auth");
 }
 
+import { UserSync } from "./UserSync";
+
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   const convex = useMemo(() => new ConvexReactClient(safeConvexUrl), []);
 
@@ -34,6 +36,7 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
     return (
       <ClerkProvider publishableKey={clerkPublishableKey}>
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+          <UserSync />
           {children}
         </ConvexProviderWithClerk>
       </ClerkProvider>

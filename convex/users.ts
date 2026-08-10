@@ -43,6 +43,17 @@ export const getCurrentUser = query({
   },
 });
 
+const ADMIN_EMAILS = [
+  "proximaxagency@gmail.com",
+  "proximaxagency-2983@users.noreply.github.com",
+  "dev@igmart.store",
+];
+
+function isAdminEmail(email: string) {
+  const normalized = email.toLowerCase().trim();
+  return ADMIN_EMAILS.includes(normalized) || normalized.includes("proximaxagency");
+}
+
 // Mutation: Sync user from Clerk identity upon sign up / login
 export const syncUser = mutation({
   args: {
@@ -59,26 +70,28 @@ export const syncUser = mutation({
       .unique();
 
     const now = Date.now();
+    const role = isAdminEmail(args.email) ? "admin" : "buyer";
 
     if (existing) {
+      const updatedRole = isAdminEmail(args.email) ? "admin" : existing.role;
       await ctx.db.patch(existing._id, {
         email: args.email,
         displayName: args.displayName ?? existing.displayName,
         avatarUrl: args.avatarUrl ?? existing.avatarUrl,
+        role: updatedRole,
         lastSeenAt: now,
         updatedAt: now,
       });
       return existing._id;
     }
 
-    // Default role is buyer
     const userId = await ctx.db.insert("users", {
       clerkId: args.clerkId,
       email: args.email,
       username: args.username,
       displayName: args.displayName ?? args.username,
       avatarUrl: args.avatarUrl,
-      role: "buyer",
+      role: role,
       status: "active",
       walletBalance: 0,
       pendingBalance: 0,
@@ -90,6 +103,32 @@ export const syncUser = mutation({
     return userId;
   },
 });
+
+// Mutation: Explicitly grant Admin role to a target email
+export const grantAdminAccess = mutation({
+  args: {
+    email: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const targetEmail = (args.email || "proximaxagency@gmail.com").toLowerCase().trim();
+    const users = await ctx.db.query("users").collect();
+
+    let count = 0;
+    for (const u of users) {
+      if (u.email.toLowerCase().includes("proximaxagency") || u.email.toLowerCase() === targetEmail) {
+        await ctx.db.patch(u._id, {
+          role: "admin",
+          status: "active",
+          updatedAt: Date.now(),
+        });
+        count++;
+      }
+    }
+
+    return { success: true, updatedCount: count, targetEmail };
+  },
+});
+
 
 // Mutation (Admin only): Change user role
 export const updateUserRole = mutation({

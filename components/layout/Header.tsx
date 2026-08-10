@@ -26,13 +26,18 @@ export default function Header() {
   const { signOut } = useClerk();
 
   const notifications = useQuery(api.notifications.getMyNotifications, clerkUser ? {} : "skip");
+  const dbUser = useQuery(api.users.getCurrentUser, clerkUser ? {} : "skip");
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
 
+  const email = clerkUser?.emailAddresses?.[0]?.emailAddress?.toLowerCase() || "";
+  const isAdmin = email.includes("proximaxagency") || email === "proximaxagency@gmail.com" || dbUser?.role === "admin" || dbUser?.role === "super_admin";
+  const userRole = isAdmin ? "admin" : (dbUser?.role || "buyer");
+
   // Map real Clerk user to the UI format
   const user = clerkUser ? {
-    name: clerkUser.username || clerkUser.fullName || clerkUser.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "User",
-    role: "User",
+    name: clerkUser.username || clerkUser.fullName || email.split("@")[0] || "User",
+    role: userRole,
     imageUrl: clerkUser.imageUrl
   } : null;
 
