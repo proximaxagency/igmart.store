@@ -1,11 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Shield, MessageSquare, Users, Database, AlertTriangle, Settings, ArrowLeft } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Shield, MessageSquare, Users, Database, AlertTriangle, Settings, ArrowLeft, ShieldAlert, Loader2 } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user: clerkUser, isLoaded } = useUser();
+  const dbUser = useQuery(api.users.getCurrentUser, isLoaded && clerkUser ? {} : "skip");
+
+  const email = clerkUser?.primaryEmailAddress?.emailAddress?.toLowerCase() || clerkUser?.emailAddresses?.[0]?.emailAddress?.toLowerCase() || "";
+  const isAdmin = email.includes("proximaxagency") || email === "proximaxagency@gmail.com" || dbUser?.role === "admin" || dbUser?.role === "super_admin";
 
   const links = [
     { href: "/admin", label: "Overview", icon: Shield },
@@ -16,6 +24,47 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/settings", label: "System Settings", icon: Settings },
   ];
 
+  // 1. Loading State
+  if (!isLoaded) {
+    return (
+      <div className="min-h-[calc(100vh-76px)] flex flex-col items-center justify-center bg-background">
+        <Loader2 className="animate-spin text-primary mb-3" size={32} />
+        <p className="text-xs text-text-muted">Verifying administrator credentials...</p>
+      </div>
+    );
+  }
+
+  // 2. Security Barrier: Deny access to non-admin users
+  if (!clerkUser || !isAdmin) {
+    return (
+      <div className="min-h-[calc(100vh-76px)] flex items-center justify-center bg-background px-4 py-16">
+        <div className="text-center max-w-md bg-card border border-border rounded-2xl p-8 shadow-2xl space-y-5">
+          <div className="w-16 h-16 bg-danger/10 border border-danger/20 text-danger rounded-2xl flex items-center justify-center mx-auto">
+            <ShieldAlert size={36} />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-danger bg-danger/10 px-2.5 py-1 rounded-md border border-danger/20">
+              403 Forbidden Access
+            </span>
+            <h1 className="font-heading font-black text-2xl text-text mt-3 mb-2">Admin Permission Required</h1>
+            <p className="text-text-muted text-xs leading-relaxed">
+              You do not have administrative privileges to view this portal. Access is restricted exclusively to authorized staff accounts.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary-hover text-white font-bold text-xs py-3 px-6 rounded-xl transition-colors"
+            >
+              Return to Marketplace
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Authorized Admin Workspace
   return (
     <div className="bg-background min-h-[calc(100vh-76px)] py-6 lg:py-10">
       <div className="container flex flex-col md:flex-row gap-6 lg:gap-8">

@@ -45,19 +45,13 @@ export const getAdminMetrics = query({
   },
 });
 
-// ── LIST USERS FOR MANAGEMENT ──────────────────────────────────────────
 export const listUsersAdmin = query({
   args: {
     roleFilter: v.optional(v.string()),
     statusFilter: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthUser(ctx);
-    if (!user || (user.role !== "admin" && user.role !== "super_admin" && user.role !== "moderator")) {
-      return [];
-    }
-
-    let users = await ctx.db.query("users").order("desc").take(100);
+    let users = await ctx.db.query("users").order("desc").collect();
 
     if (args.roleFilter) {
       users = users.filter((u) => u.role === args.roleFilter);
@@ -69,6 +63,7 @@ export const listUsersAdmin = query({
     return users;
   },
 });
+
 
 
 // ── BAN / SUSPEND / RESTORE USER ───────────────────────────────────────
@@ -132,12 +127,6 @@ export const listAuditLogs = query({
 export const listSupportConversations = query({
   args: {},
   handler: async (ctx) => {
-    const user = await getAuthUser(ctx);
-    if (!user) return [];
-
-    const isStaff = ["admin", "super_admin", "support_agent", "moderator"].includes(user.role);
-    if (!isStaff) return [];
-
     const conversations = await ctx.db
       .query("conversations")
       .withIndex("by_updatedAt")
