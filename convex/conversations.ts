@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuthUser, requireRole } from "./users";
+import { getAuthUser, requireAuthUser } from "./users";
 
 // ── GET OR CREATE CONVERSATION ──────────────────────────────────────────
 export const getOrCreateConversation = mutation({
@@ -56,7 +56,9 @@ export const getOrCreateConversation = mutation({
 export const listMyConversations = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireAuthUser(ctx);
+    // Use getAuthUser (returns null) instead of requireAuthUser (throws)
+    const user = await getAuthUser(ctx);
+    if (!user) return [];
 
     const conversations = await ctx.db
       .query("conversations")
@@ -93,6 +95,7 @@ export const listMyConversations = query({
     return filtered;
   },
 });
+
 
 // ── SEND REAL-TIME MESSAGE ─────────────────────────────────────────────
 export const sendMessage = mutation({
