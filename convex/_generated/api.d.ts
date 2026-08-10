@@ -10,6 +10,9 @@
 
 import type * as admin from "../admin.js";
 import type * as conversations from "../conversations.js";
+import type * as listings from "../listings.js";
+import type * as notifications from "../notifications.js";
+import type * as seed from "../seed.js";
 import type * as tickets from "../tickets.js";
 import type * as users from "../users.js";
 
@@ -22,6 +25,9 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   conversations: typeof conversations;
+  listings: typeof listings;
+  notifications: typeof notifications;
+  seed: typeof seed;
   tickets: typeof tickets;
   users: typeof users;
 }>;

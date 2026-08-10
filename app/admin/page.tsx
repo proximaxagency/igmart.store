@@ -5,9 +5,17 @@ import { StatCard, Button } from "@/components/ui/index";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-const alerts = [
+type AlertType = {
+  type: "info" | "danger" | "warning";
+  icon: JSX.Element;
+  title: string;
+  desc: string;
+  action: { label: string; variant: "primary" | "danger" | "default" } | null;
+};
+
+const alerts: AlertType[] = [
   {
-    type: "info" as const,
+    type: "info",
     icon: <Users size={18} className="text-primary-hover mt-0.5 flex-shrink-0" />,
     title: "No urgent alerts at this time",
     desc: "System is operating normally.",
