@@ -116,12 +116,17 @@ export default function Header() {
   ];
 
   const userMenuLinks = [
-    { icon: Package, label: "Orders", href: "/account/orders" },
+    ...(user?.role === "admin" ? [
+      { icon: Shield, label: "Admin Operations", href: "/admin" },
+      { icon: LayoutDashboard, label: "Seller Panel", href: "/seller/dashboard" },
+      { icon: MessageSquare, label: "Live Support Desk", href: "/admin/support" },
+    ] : user?.role === "seller" ? [
+      { icon: LayoutDashboard, label: "Seller Dashboard", href: "/seller/dashboard" },
+    ] : []),
+    { icon: Package, label: "My Orders", href: "/account/orders" },
     { icon: Heart, label: "Wishlist", href: "/account/wishlist" },
     { icon: MessageSquare, label: "Messages", href: "/messages" },
     { icon: Wallet, label: "Wallet", href: "/account/wallet" },
-    ...(user?.role === "seller" ? [{ icon: LayoutDashboard, label: "Seller Dashboard", href: "/seller/dashboard" }] : []),
-    ...(user?.role === "admin" ? [{ icon: Shield, label: "Admin", href: "/admin" }] : []),
     { icon: Settings, label: "Settings", href: "/account/settings" },
   ];
 

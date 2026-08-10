@@ -71,12 +71,15 @@ export async function requireAuthUser(ctx: QueryCtx | MutationCtx) {
   return user;
 }
 
-// Helper: Require specific role or throw
+// Helper: Require specific role or throw (Admins & Super Admins have omni-permission access to all panels)
 export async function requireRole(
   ctx: QueryCtx | MutationCtx,
   allowedRoles: Array<Doc<"users">["role"]>
 ) {
   const user = await requireAuthUser(ctx);
+  if (user.role === "admin" || user.role === "super_admin") {
+    return user;
+  }
   if (!allowedRoles.includes(user.role)) {
     throw new Error(`Forbidden: Access requires one of [${allowedRoles.join(", ")}]`);
   }

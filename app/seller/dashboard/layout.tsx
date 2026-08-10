@@ -2,12 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShieldCheck, Box, DollarSign, BarChart3, MessageSquare, Settings, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, ShieldCheck, Box, DollarSign, BarChart3, MessageSquare, Settings, ArrowLeft, Shield } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export default function SellerDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user: clerkUser } = useUser();
+  const dbUser = useQuery(api.users.getCurrentUser, clerkUser ? {} : "skip");
+
+  const email = clerkUser?.emailAddresses?.[0]?.emailAddress?.toLowerCase() || "";
+  const isAdmin = email.includes("proximaxagency") || email === "proximaxagency@gmail.com" || dbUser?.role === "admin" || dbUser?.role === "super_admin";
 
   const links = [
+    ...(isAdmin ? [{ href: "/admin", label: "Admin Operations", icon: Shield, badge: "STAFF" }] : []),
     { href: "/seller/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/seller/verification", label: "Identity Verification", icon: ShieldCheck, badge: "KYC" },
     { href: "/seller/inventory", label: "Inventory Vault", icon: Box },
