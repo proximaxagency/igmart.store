@@ -203,3 +203,132 @@ export const resolveDispute = mutation({
   },
 });
 
+// ── LIST PENDING SELLER KYC VERIFICATIONS ──────────────────────────────
+export const listPendingVerifications = query({
+  args: {},
+  handler: async (ctx) => {
+    const verifications = await ctx.db
+      .query("sellerVerifications")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .order("desc")
+      .take(50);
+
+    const hydrated = [];
+    for (const v of verifications) {
+      const u = await ctx.db.get(v.userId);
+      hydrated.push({
+        ...v,
+        username: u?.username || "Seller",
+        userEmail: u?.email || "",
+      });
+    }
+
+    return hydrated;
+  },
+});
+
+// ── REVIEW SELLER KYC VERIFICATION ─────────────────────────────────────
+export const reviewVerification = mutation({
+  args: {
+    verificationId: v.id("sellerVerifications"),
+    status: v.union(v.literal("approved"), v.literal("rejected"), v.literal("more_info_needed")),
+    adminNotes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin"]);
+    const verification = await ctx.db.get(args.verificationId);
+    if (!verification) throw new Error("Verification application not found");
+
+    const now = Date.now();
+    await ctx.db.patch(args.verificationId, {
+      status: args.status,
+      adminNotes: args.adminNotes,
+      updatedAt: now,
+    });
+
+    if (args.status === "approved") {
+      await ctx.db.patch(verification.userId, {
+        isVerified: true,
+        sellerSince: now,
+        role: "seller",
+        updatedAt: now,
+      });
+    }
+
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: `seller.kyc_${args.status}`,
+      targetType: "sellerVerification",
+      targetId: args.verificationId,
+      createdAt: now,
+    });
+
+    return true;
+  },
+});
+
+// ── LIST PENDING WITHDRAWALS ───────────────────────────────────────────
+export const listWithdrawalRequests = query({
+  args: {},
+  handler: async (ctx) => {
+    const withdrawals = await ctx.db
+      .query("withdrawalRequests")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .order("desc")
+      .take(50);
+
+    const hydrated = [];
+    for (const w of withdrawals) {
+      const u = await ctx.db.get(w.userId);
+      hydrated.push({
+        ...w,
+        username: u?.username || "Seller",
+        userEmail: u?.email || "",
+      });
+    }
+
+    return hydrated;
+  },
+});
+
+// ── REVIEW WITHDRAWAL REQUEST ──────────────────────────────────────────
+export const reviewWithdrawal = mutation({
+  args: {
+    withdrawalId: v.id("withdrawalRequests"),
+    status: v.union(v.literal("completed"), v.literal("rejected")),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin"]);
+    const withdrawal = await ctx.db.get(args.withdrawalId);
+    if (!withdrawal) throw new Error("Withdrawal request not found");
+
+    const now = Date.now();
+    await ctx.db.patch(args.withdrawalId, {
+      status: args.status,
+      processedAt: now,
+    });
+
+    // If rejected, refund back to seller wallet
+    if (args.status === "rejected") {
+      const seller = await ctx.db.get(withdrawal.userId);
+      if (seller) {
+        await ctx.db.patch(seller._id, {
+          walletBalance: (seller.walletBalance ?? 0) + withdrawal.amount,
+          updatedAt: now,
+        });
+      }
+    }
+
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: `withdrawal.${args.status}`,
+      targetType: "withdrawalRequest",
+      targetId: args.withdrawalId,
+      createdAt: now,
+    });
+
+    return true;
+  },
+});
+
+

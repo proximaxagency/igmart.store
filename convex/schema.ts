@@ -354,4 +354,67 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_listing", ["listingId"])
     .index("by_user_listing", ["userId", "listingId"]),
+
+  // 16. SELLER VERIFICATIONS (KYC & Identity Onboarding)
+  sellerVerifications: defineTable({
+    userId: v.id("users"),
+    fullName: v.string(),
+    country: v.string(),
+    idType: v.string(),
+    idDocumentUrl: v.string(),
+    addressProofUrl: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected"), v.literal("more_info_needed")),
+    adminNotes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
+
+  // 17. INVENTORY VAULT (Automated Stock Delivery)
+  inventoryItems: defineTable({
+    sellerId: v.id("users"),
+    listingId: v.id("listings"),
+    secretData: v.string(), // Account credentials or digital key
+    status: v.union(v.literal("available"), v.literal("reserved"), v.literal("sold")),
+    orderId: v.optional(v.id("orders")),
+    createdAt: v.number(),
+    soldAt: v.optional(v.number()),
+  })
+    .index("by_listing", ["listingId", "status"])
+    .index("by_seller", ["sellerId"]),
+
+  // 18. WITHDRAWAL REQUESTS (Payout System)
+  withdrawalRequests: defineTable({
+    userId: v.id("users"),
+    amount: v.number(),
+    method: v.union(v.literal("bank"), v.literal("payoneer"), v.literal("skrill"), v.literal("crypto")),
+    payoutDetails: v.string(),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected"), v.literal("completed")),
+    processedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
+
+  // 19. DISPUTE EVIDENCE
+  disputeEvidence: defineTable({
+    orderId: v.id("orders"),
+    uploaderId: v.id("users"),
+    role: v.union(v.literal("buyer"), v.literal("seller"), v.literal("staff")),
+    fileUrl: v.string(),
+    description: v.string(),
+    createdAt: v.number(),
+  }).index("by_order", ["orderId"]),
+
+  // 20. RISK SIGNALS
+  riskSignals: defineTable({
+    targetUserId: v.id("users"),
+    signalType: v.string(), // e.g., "high_velocity", "suspicious_ip", "chargeback_risk"
+    severity: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("critical")),
+    description: v.string(),
+    isResolved: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_user", ["targetUserId"]),
 });
+

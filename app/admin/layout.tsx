@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Shield, MessageSquare, Users, Database, AlertTriangle, Settings, ArrowLeft, ShieldAlert, Loader2 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Shield, MessageSquare, Users, Database, AlertTriangle, Settings, ArrowLeft, ShieldAlert, Loader2, ShieldCheck, DollarSign, FileText } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+
+
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,9 +20,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const links = [
     { href: "/admin", label: "Overview", icon: Shield },
     { href: "/admin/support", label: "Live Support Desk", icon: MessageSquare, badge: "LIVE" },
+    { href: "/admin/verifications", label: "Seller KYC Queue", icon: ShieldCheck },
+    { href: "/admin/finance", label: "Finance & Payouts", icon: DollarSign },
     { href: "/admin/users", label: "User Management", icon: Users },
     { href: "/admin/listings", label: "Listing Moderation", icon: Database },
     { href: "/admin/disputes", label: "Disputes & Escrow", icon: AlertTriangle },
+    { href: "/admin/risk", label: "Risk Operations", icon: ShieldAlert },
+    { href: "/admin/audit", label: "System Audit Logs", icon: FileText },
     { href: "/admin/settings", label: "System Settings", icon: Settings },
   ];
 
