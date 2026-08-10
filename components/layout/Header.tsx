@@ -10,7 +10,7 @@ import {
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useUser, useClerk, SignInButton, SignUpButton } from "@clerk/nextjs";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -327,19 +327,19 @@ export default function Header() {
             </div>
           ) : (
             <div className="hidden sm:flex items-center gap-2 ml-1">
-              <Link
-                href="/login"
-                className="text-sm font-semibold text-text-secondary hover:text-text transition-colors px-3 py-2 rounded-lg hover:bg-elevated"
-              >
-                Log In
-              </Link>
-              <Link
-                href="/register"
-                className="text-sm font-semibold text-white px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
-                style={{ background: "var(--gradient-brand)" }}
-              >
-                Sign Up
-              </Link>
+              <SignInButton mode="modal">
+                <button className="text-sm font-semibold text-text-secondary hover:text-text transition-colors px-3 py-2 rounded-lg hover:bg-elevated cursor-pointer">
+                  Log In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button
+                  className="text-sm font-semibold text-white px-4 py-2 rounded-lg transition-opacity hover:opacity-90 cursor-pointer"
+                  style={{ background: "var(--gradient-brand)" }}
+                >
+                  Sign Up
+                </button>
+              </SignUpButton>
             </div>
           )}
         </div>
@@ -458,21 +458,23 @@ export default function Header() {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2.5 pb-4">
-                    <Link
-                      href="/login"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex items-center justify-center w-full py-3 rounded-xl border border-border font-semibold text-sm text-text hover:bg-elevated transition-colors"
-                    >
-                      Log In
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex items-center justify-center w-full py-3 rounded-xl font-semibold text-sm text-white hover:opacity-90 transition-opacity"
-                      style={{ background: "var(--gradient-brand)" }}
-                    >
-                      Create Account
-                    </Link>
+                    <SignInButton mode="modal">
+                      <button
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center justify-center w-full py-3 rounded-xl border border-border font-semibold text-sm text-text hover:bg-elevated transition-colors cursor-pointer"
+                      >
+                        Log In
+                      </button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <button
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center justify-center w-full py-3 rounded-xl font-semibold text-sm text-white hover:opacity-90 transition-opacity cursor-pointer"
+                        style={{ background: "var(--gradient-brand)" }}
+                      >
+                        Create Account
+                      </button>
+                    </SignUpButton>
                   </div>
                 )}
               </div>

@@ -8,15 +8,15 @@ import { Search, MoreVertical, Send, Image as ImageIcon, Loader2 } from "lucide-
 import { useUser } from "@clerk/nextjs";
 
 export default function MessagesPage() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const [activeConvId, setActiveConvId] = useState<Id<"conversations"> | null>(null);
   const [messageText, setMessageText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const conversations = useQuery(api.conversations.listMyConversations);
+  const conversations = useQuery(api.conversations.listMyConversations, isLoaded && user ? {} : "skip");
   const messages = useQuery(
     api.conversations.listMessages,
-    activeConvId ? { conversationId: activeConvId } : "skip"
+    activeConvId && isLoaded && user ? { conversationId: activeConvId } : "skip"
   );
   
   const sendMessage = useMutation(api.conversations.sendMessage);

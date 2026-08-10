@@ -20,13 +20,16 @@ function isValidUrl(url?: string): boolean {
 
 const safeConvexUrl = isValidUrl(rawConvexUrl) ? rawConvexUrl! : fallbackUrl;
 const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-if (!clerkPublishableKey) {
-  throw new Error("Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable");
+
+// Log warning in dev — do NOT throw, which would crash the entire React tree
+if (!clerkPublishableKey && process.env.NODE_ENV === "development") {
+  console.warn("[IGMART] Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY — running without Clerk auth");
 }
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   const convex = useMemo(() => new ConvexReactClient(safeConvexUrl), []);
 
+  // If Clerk key is available, use authenticated Convex provider
   if (clerkPublishableKey) {
     return (
       <ClerkProvider publishableKey={clerkPublishableKey}>
@@ -37,6 +40,7 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
     );
   }
 
+  // Fallback: unauthenticated Convex — site still renders, auth features disabled
   return (
     <ConvexProvider client={convex}>
       {children}

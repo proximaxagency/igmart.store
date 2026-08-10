@@ -1,12 +1,8 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
 import { SectionHeading } from "@/components/ui/index";
 import { MessageSquare, Mail, Phone, FileText, Clock, Shield } from "lucide-react";
-
-export const metadata: Metadata = {
-  title: "Support Center | IGMART",
-  description: "Get help with buying, selling, disputes and account issues on IGMART.",
-};
 
 const SUPPORT_CATEGORIES = [
   {
