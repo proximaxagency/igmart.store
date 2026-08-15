@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuthUser } from "./users";
+import { getAuthUser, requireAuthUser } from "./users";
 import { Doc, Id } from "./_generated/dataModel";
 
 // Generate a simple URL-friendly slug
@@ -56,7 +56,10 @@ export const createListing = mutation({
   handler: async (ctx, args) => {
     const user = await requireAuthUser(ctx);
     if (user.role !== "seller" && user.role !== "admin" && user.role !== "super_admin") {
-      throw new Error("Only sellers can create listings.");
+      if ((user._id as string) !== "synthetic_admin_user") {
+        await ctx.db.patch(user._id, { role: "seller", updatedAt: Date.now() });
+        user.role = "seller";
+      }
     }
 
     const listingId = await ctx.db.insert("listings", {
@@ -76,7 +79,10 @@ export const createListing = mutation({
 export const getMyListings = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireAuthUser(ctx);
+    const user = await getAuthUser(ctx);
+    if (!user) return [];
+    if ((user._id as string) === "synthetic_admin_user") return [];
+
     const listings = await ctx.db
       .query("listings")
       .withIndex("by_seller", (q) => q.eq("sellerId", user._id))

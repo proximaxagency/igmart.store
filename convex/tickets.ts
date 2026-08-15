@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuthUser, requireRole } from "./users";
+import { getAuthUser, requireAuthUser, requireRole } from "./users";
 
 // ── CREATE SUPPORT TICKET ──────────────────────────────────────────────
 export const createTicket = mutation({
@@ -69,7 +69,8 @@ export const listTickets = query({
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthUser(ctx);
+    const user = await getAuthUser(ctx);
+    if (!user) return [];
     const isStaff = ["support_agent", "moderator", "admin", "super_admin"].includes(user.role);
 
     let tickets;

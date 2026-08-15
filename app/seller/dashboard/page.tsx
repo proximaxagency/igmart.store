@@ -1,23 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { TrendingUp, DollarSign, Package, Star, Plus } from "lucide-react";
-import { StatCard, Badge } from "@/components/ui/index";
+import { 
+  TrendingUp, DollarSign, Package, Star, Plus, ShieldCheck, Box, 
+  ArrowUpRight, AlertCircle, CheckCircle2, Store, Zap, Loader2, Sparkles, MessageSquare
+} from "lucide-react";
+import { Badge } from "@/components/ui/index";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-
-const stats = [
-  { label: "Total Revenue", value: "$0.00", icon: <DollarSign size={16} />, iconColor: "#4ade80", change: "0%", positive: true },
-  { label: "Active Orders", value: "0", icon: <Package size={16} />, iconColor: "#3b82f6", change: "0%", positive: false },
-  { label: "Total Sales", value: "0", icon: <TrendingUp size={16} />, iconColor: "#a78bfa", change: "0%", positive: true },
-  { label: "Avg Rating", value: "0.0", icon: <Star size={16} />, iconColor: "#f59e0b", change: "0", positive: true },
-];
-
-const actionItems = [
-  { step: 1, title: "Verify Identity", desc: "Required to withdraw funds.", done: true },
-  { step: 2, title: "Add Payout Method", desc: "Link your bank or crypto wallet.", done: false },
-  { step: 3, title: "Create a Listing", desc: "Start selling to earn money.", done: false },
-];
+import { useUser, SignInButton } from "@clerk/nextjs";
 
 const statusVariant: Record<string, "success" | "warning" | "danger" | "default"> = {
   active: "success",
@@ -29,120 +20,275 @@ const statusVariant: Record<string, "success" | "warning" | "danger" | "default"
 };
 
 export default function SellerDashboardPage() {
-  const listings = useQuery(api.listings.getMyListings);
+  const { user, isLoaded } = useUser();
+
+  const listings = useQuery(
+    api.listings.getMyListings,
+    isLoaded && user ? {} : "skip"
+  );
+
+  const analytics = useQuery(
+    api.seller.getSellerAnalytics,
+    isLoaded && user ? {} : "skip"
+  );
+
+  const balances = useQuery(
+    api.transactions.getMyBalances,
+    isLoaded && user ? {} : "skip"
+  );
+
+  const kycStatus = useQuery(
+    api.seller.getKYCStatus,
+    isLoaded && user ? {} : "skip"
+  );
+
+  if (!isLoaded) {
+    return (
+      <div className="flex flex-col items-center justify-center p-16 bg-card border border-border rounded-2xl">
+        <Loader2 className="animate-spin text-primary mb-3" size={32} />
+        <p className="text-sm font-semibold text-text-muted">Loading your Seller Workspace...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="bg-card border border-border rounded-2xl p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-xl">
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center mx-auto mb-5 shadow-sm">
+          <Store size={32} />
+        </div>
+        <h2 className="font-heading font-black text-2xl sm:text-3xl text-text mb-3">
+          Sign In to Access Seller Center
+        </h2>
+        <p className="text-text-muted text-sm sm:text-base leading-relaxed mb-8">
+          Join thousands of verified merchants on IGMART. Manage your active listings, automated instant delivery inventory, and withdraw earnings.
+        </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <SignInButton mode="modal">
+            <button className="w-full sm:w-auto bg-primary hover:bg-primary-hover text-white font-bold px-8 py-3 rounded-xl transition-all shadow-lg shadow-primary/25 cursor-pointer">
+              Sign In to Store
+            </button>
+          </SignInButton>
+          <Link
+            href="/sell"
+            className="w-full sm:w-auto bg-elevated hover:bg-border text-text font-semibold px-6 py-3 rounded-xl transition-colors border border-border"
+          >
+            Learn How Selling Works
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const activeCount = listings?.filter((l) => l.status === "active").length ?? 0;
+  const totalRev = analytics?.totalRevenue ?? 0;
+  const totalOrders = analytics?.totalOrders ?? 0;
+  const availableBal = balances?.walletBalance ?? 0;
+
+  const stats = [
+    { label: "Available Payout", value: `$${availableBal.toFixed(2)}`, icon: <DollarSign size={16} />, iconColor: "#4ade80", sub: "Ready for withdrawal" },
+    { label: "Total Revenue", value: `$${totalRev.toFixed(2)}`, icon: <TrendingUp size={16} />, iconColor: "#a78bfa", sub: "Lifetime gross sales" },
+    { label: "Active Listings", value: `${activeCount}`, icon: <Package size={16} />, iconColor: "#3b82f6", sub: "Live on marketplace" },
+    { label: "Completed Orders", value: `${totalOrders}`, icon: <Star size={16} />, iconColor: "#f59e0b", sub: "100% Escrow fulfilled" },
+  ];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-heading font-bold text-2xl text-text">Dashboard</h1>
-        <Link
-          href="/sell/create"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-white px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
-          style={{ background: "var(--gradient-brand)" }}
-        >
-          <Plus size={16} /> New Listing
-        </Link>
+    <div className="space-y-6">
+      
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-heading font-black text-2xl sm:text-3xl text-text flex items-center gap-2.5">
+            <Store className="text-primary" size={28} /> Merchant Dashboard
+          </h1>
+          <p className="text-text-muted text-xs sm:text-sm mt-1">
+            Welcome back, <span className="font-bold text-text">{user.fullName || user.username || "Seller"}</span>! Monitor live sales and manage deliveries.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/sell/create"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-accent-secondary text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl hover:opacity-95 shadow-md shadow-primary/20 transition-all cursor-pointer"
+          >
+            <Plus size={16} /> New Listing
+          </Link>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      {/* KYC Alert if not verified */}
+      {(!kycStatus || kycStatus.status !== "approved") && (
+        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <h4 className="font-heading font-bold text-sm text-text">Verify Identity & Unlock Instant Withdrawals</h4>
+              <p className="text-xs text-text-muted mt-0.5">
+                Complete a 2-minute identity verification to earn the <span className="text-success font-bold">Verified Merchant</span> badge and lower fee rates.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/seller/verification"
+            className="shrink-0 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer"
+          >
+            {kycStatus?.status === "pending" ? "Check Status (Pending)" : "Verify Identity"}
+          </Link>
+        </div>
+      )}
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((s) => (
-          <StatCard key={s.label} {...s} />
+          <div key={s.label} className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-text-muted text-xs font-bold uppercase tracking-wider">{s.label}</span>
+              <div className="p-1.5 rounded-lg bg-surface border border-border" style={{ color: s.iconColor }}>
+                {s.icon}
+              </div>
+            </div>
+            <p className="font-heading font-black text-xl sm:text-2xl text-text">{s.value}</p>
+            <p className="text-[11px] text-text-muted mt-1">{s.sub}</p>
+          </div>
         ))}
       </div>
 
-      {/* Two-column grid */}
-      <div className="grid lg:grid-cols-3 gap-5">
-
-        {/* Live Listings */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-heading font-bold text-lg text-text">My Active Listings</h2>
-            <button className="text-sm font-semibold text-primary-hover hover:underline">View All</button>
-          </div>
-
-          {listings === undefined ? (
-            <div className="text-center py-8 text-text-muted">Loading listings...</div>
-          ) : listings.length === 0 ? (
-            <div className="text-center py-8 border-2 border-dashed border-border rounded-xl">
-              <p className="text-text-muted mb-3">You don't have any listings yet.</p>
-              <Link href="/sell/create" className="text-primary font-bold hover:underline">Create your first listing</Link>
+      {/* Two-column workspace */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        
+        {/* Main Column: Listings */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-heading font-bold text-base sm:text-lg text-text flex items-center gap-2">
+                <Package className="text-primary" size={18} /> My Active Listings ({listings?.length || 0})
+              </h2>
+              <Link href="/sell/create" className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                <Plus size={13} /> Add Item
+              </Link>
             </div>
-          ) : (
-            <>
-              {/* Desktop table */}
-              <div className="hidden sm:block overflow-x-auto">
+
+            {listings === undefined ? (
+              <div className="text-center py-10 text-text-muted text-xs flex justify-center items-center gap-2">
+                <Loader2 className="animate-spin text-primary" size={18} /> Loading listings...
+              </div>
+            ) : listings.length === 0 ? (
+              <div className="text-center py-10 border-2 border-dashed border-border rounded-2xl p-6">
+                <div className="w-12 h-12 rounded-xl bg-surface border border-border text-text-muted flex items-center justify-center mx-auto mb-3">
+                  <Box size={24} />
+                </div>
+                <p className="font-bold text-sm text-text mb-1">No Listings Created Yet</p>
+                <p className="text-xs text-text-muted mb-4 max-w-sm mx-auto">
+                  List game accounts, coins, items, or boosting services across Clash of Clans, Free Fire, BGMI, PUBG, Roblox and more.
+                </p>
+                <Link
+                  href="/sell/create"
+                  className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm"
+                >
+                  <Plus size={14} /> Create First Listing
+                </Link>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-border">
-                      <th className="pb-3 text-xs font-bold text-text-muted uppercase tracking-wider">Title</th>
-                      <th className="pb-3 text-xs font-bold text-text-muted uppercase tracking-wider">Price</th>
-                      <th className="pb-3 text-xs font-bold text-text-muted uppercase tracking-wider">Views</th>
-                      <th className="pb-3 text-xs font-bold text-text-muted uppercase tracking-wider">Status</th>
+                    <tr className="border-b border-border text-text-muted text-[11px] font-bold uppercase tracking-wider">
+                      <th className="pb-3 pr-4">Item Details</th>
+                      <th className="pb-3 pr-4">Price</th>
+                      <th className="pb-3 pr-4">Views</th>
+                      <th className="pb-3">Status</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {listings.map((listing, i) => (
-                      <tr key={listing._id} className={i < listings.length - 1 ? "border-b border-border" : ""}>
-                        <td className="py-4 pr-4">
-                          <p className="text-sm font-semibold text-text">{listing.title}</p>
-                          <p className="text-xs text-text-muted mt-0.5 truncate max-w-[200px]">{listing.description}</p>
+                  <tbody className="divide-y divide-border/60 text-xs">
+                    {listings.map((l) => (
+                      <tr key={l._id} className="hover:bg-elevated/40 transition-colors">
+                        <td className="py-3.5 pr-4">
+                          <p className="font-bold text-text truncate max-w-[220px]">{l.title}</p>
+                          <p className="text-[11px] text-text-muted truncate max-w-[220px] mt-0.5">{l.description}</p>
                         </td>
-                        <td className="py-4 text-sm font-bold text-text pr-4">${listing.price.toFixed(2)}</td>
-                        <td className="py-4 text-sm font-medium text-text-muted pr-4">{listing.views}</td>
-                        <td className="py-4">
-                          <Badge variant={statusVariant[listing.status] ?? "default"}>{listing.status}</Badge>
+                        <td className="py-3.5 pr-4 font-bold text-text">${l.price.toFixed(2)}</td>
+                        <td className="py-3.5 pr-4 text-text-muted">{l.views || 0}</td>
+                        <td className="py-3.5">
+                          <Badge variant={statusVariant[l.status] ?? "default"} size="sm">
+                            {l.status}
+                          </Badge>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-
-              {/* Mobile card view */}
-              <div className="flex flex-col gap-3 sm:hidden">
-                {listings.map((listing) => (
-                  <div key={listing._id} className="bg-elevated border border-border rounded-xl p-4">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-text leading-snug">{listing.title}</p>
-                      </div>
-                      <Badge variant={statusVariant[listing.status] ?? "default"}>{listing.status}</Badge>
-                    </div>
-                    <div className="flex justify-between items-center mt-2">
-                      <p className="text-base font-bold text-text">${listing.price.toFixed(2)}</p>
-                      <p className="text-xs text-text-muted">{listing.views} views</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Action items */}
-        <div className="bg-card border border-border rounded-xl p-5">
-          <h2 className="font-heading font-bold text-lg text-text mb-5">Action Items</h2>
-          <div className="flex flex-col gap-4">
-            {actionItems.map((item) => (
-              <div key={item.step} className="flex items-start gap-3">
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 ${
-                    item.done || (item.step === 3 && listings && listings.length > 0) ? "bg-primary text-white" : "bg-primary/10 text-primary-hover border border-primary/30"
-                  }`}
-                >
-                  {item.done || (item.step === 3 && listings && listings.length > 0) ? "✓" : item.step}
-                </div>
-                <div>
-                  <p className={`text-sm font-semibold mb-0.5 ${item.done || (item.step === 3 && listings && listings.length > 0) ? "text-text-muted line-through" : "text-text"}`}>
-                    {item.title}
-                  </p>
-                  <p className="text-xs text-text-muted">{item.desc}</p>
-                </div>
-              </div>
-            ))}
+            )}
           </div>
         </div>
+
+        {/* Right Sidebar: Shortcuts & Escrow Security */}
+        <div className="space-y-6">
+          {/* Quick Hub Controls */}
+          <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+            <h3 className="font-heading font-bold text-sm text-text mb-4 flex items-center gap-2">
+              <Zap className="text-primary" size={16} /> Quick Actions
+            </h3>
+            <div className="space-y-2.5">
+              <Link
+                href="/seller/inventory"
+                className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border hover:border-primary/40 transition-all text-xs font-semibold text-text group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Box size={16} className="text-primary group-hover:scale-110 transition-transform" />
+                  <span>Instant Delivery Vault</span>
+                </div>
+                <ArrowUpRight size={14} className="text-text-muted group-hover:text-primary transition-colors" />
+              </Link>
+
+              <Link
+                href="/seller/earnings"
+                className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border hover:border-primary/40 transition-all text-xs font-semibold text-text group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <DollarSign size={16} className="text-success group-hover:scale-110 transition-transform" />
+                  <span>Withdraw Earnings</span>
+                </div>
+                <ArrowUpRight size={14} className="text-text-muted group-hover:text-primary transition-colors" />
+              </Link>
+
+              <Link
+                href="/messages"
+                className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border hover:border-primary/40 transition-all text-xs font-semibold text-text group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <MessageSquare size={16} className="text-purple-400 group-hover:scale-110 transition-transform" />
+                  <span>Buyer Messages</span>
+                </div>
+                <ArrowUpRight size={14} className="text-text-muted group-hover:text-primary transition-colors" />
+              </Link>
+
+              <Link
+                href="/seller/analytics"
+                className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border hover:border-primary/40 transition-all text-xs font-semibold text-text group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <TrendingUp size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
+                  <span>Store Analytics</span>
+                </div>
+                <ArrowUpRight size={14} className="text-text-muted group-hover:text-primary transition-colors" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Seller Protection Guarantee */}
+          <div className="bg-surface/60 border border-border rounded-2xl p-5 text-xs text-text-muted space-y-2.5">
+            <h4 className="font-heading font-bold text-text flex items-center gap-2">
+              <ShieldCheck className="text-success" size={16} /> 100% Seller Protection
+            </h4>
+            <p className="leading-relaxed">
+              Every buyer deposit is held in strict escrow before you deliver credentials. Once confirmed, funds automatically clear to your balance.
+            </p>
+          </div>
+        </div>
+
       </div>
     </div>
   );
