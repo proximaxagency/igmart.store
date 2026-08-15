@@ -66,18 +66,27 @@ export const listMyConversations = query({
       .order("desc")
       .take(50);
 
-    const filtered = [];
-    for (const conv of conversations) {
+    // ── Batch-fetch all participant user records (avoids N+1) ──────────
+    const relevantConvs = conversations.filter((conv) => {
       const isParticipant = conv.participants.includes(user._id);
-      const isStaffAccess = ["admin", "support_agent", "moderator", "super_admin"].includes(user.role) && 
-                            (conv.type === "buyer_support" || conv.type === "seller_support" || conv.type === "internal_staff" || conv.type === "dispute_arbitration" || conv.isEscalated);
-      
-      if (isParticipant || isStaffAccess) {
-        // Fetch participant details
+      const isStaffAccess = ["admin", "support_agent", "moderator", "super_admin"].includes(user.role) &&
+        (conv.type === "buyer_support" || conv.type === "seller_support" || conv.type === "internal_staff" || conv.type === "dispute_arbitration" || conv.isEscalated);
+      return isParticipant || isStaffAccess;
+    });
+
+    const allParticipantIds = [
+      ...new Set(relevantConvs.flatMap((c) => c.participants).filter((p) => p !== user._id)),
+    ];
+    const participantRecords = await Promise.all(allParticipantIds.map((id) => ctx.db.get(id)));
+    const participantMap = new Map(allParticipantIds.map((id, i) => [id, participantRecords[i]]));
+
+    const filtered = [];
+    for (const conv of relevantConvs) {
+      {
         const otherParticipantId = conv.participants.find((p) => p !== user._id);
         let otherUser = null;
         if (otherParticipantId) {
-          otherUser = await ctx.db.get(otherParticipantId);
+          otherUser = participantMap.get(otherParticipantId) ?? null;
         }
 
         // Fetch support agent details if present

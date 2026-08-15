@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, ShieldCheck, Box, DollarSign, BarChart3,
+  LayoutDashboard, ShieldCheck, Box, Package, DollarSign, BarChart3,
   MessageSquare, Settings, ArrowLeft, Shield, Menu, X, ChevronRight
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
@@ -27,6 +27,7 @@ export default function SellerDashboardLayout({ children }: { children: React.Re
   const allLinks = [
     ...(isAdmin ? [{ href: "/admin", label: "Admin", icon: Shield, badge: "STAFF" }] : []),
     { href: "/seller/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/seller/listings", label: "Listings", icon: Package, badge: undefined },
     { href: "/seller/verification", label: "KYC", icon: ShieldCheck, badge: "KYC" },
     { href: "/seller/inventory", label: "Inventory", icon: Box },
     { href: "/seller/dashboard/orders", label: "Orders", icon: DollarSign },

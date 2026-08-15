@@ -31,23 +31,19 @@ export async function getAuthUser(ctx: QueryCtx | MutationCtx) {
 
   const userEmail = identity.email || user?.email || "";
 
-  // If user record doesn't exist yet by clerkId, search by email
   if (!user && userEmail) {
     const byEmail = await ctx.db.query("users").collect();
     user = byEmail.find((u) => u.email.toLowerCase() === userEmail.toLowerCase()) || null;
   }
 
-  // If user is an admin email, ensure their role is admin
   if (user && isAdminEmail(user.email)) {
     if (user.role !== "admin" && user.role !== "super_admin") {
       user = { ...user, role: "admin" };
     }
   }
 
-  // If user DB record doesn't exist yet, return null so queries don't pass invalid string IDs to indexes
   return user;
 }
-
 
 // Helper: Require authenticated user or throw
 export async function requireAuthUser(ctx: QueryCtx | MutationCtx) {
@@ -59,7 +55,7 @@ export async function requireAuthUser(ctx: QueryCtx | MutationCtx) {
   return user;
 }
 
-// Helper: Require specific role or throw (Admins & Super Admins have omni-permission access to all panels)
+// Helper: Require specific role or throw
 export async function requireRole(
   ctx: QueryCtx | MutationCtx,
   allowedRoles: Array<Doc<"users">["role"]>
@@ -81,8 +77,6 @@ export const getCurrentUser = query({
     return await getAuthUser(ctx);
   },
 });
-
-
 
 // Mutation: Sync user from Clerk identity upon sign up / login
 export const syncUser = mutation({
@@ -134,23 +128,34 @@ export const syncUser = mutation({
   },
 });
 
-// Mutation: Explicitly grant Admin role to a target email
+// Mutation: Grant Admin role — SECURITY: requires super_admin OR direct admin email match
 export const grantAdminAccess = mutation({
   args: {
     email: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Only allow if: caller is super_admin, OR no caller exists (bootstrap) AND target is an admin email
+    const caller = await getAuthUser(ctx);
     const targetEmail = (args.email || "proximaxagency@gmail.com").toLowerCase().trim();
-    const users = await ctx.db.query("users").collect();
 
+    // If a caller exists, they must be super_admin
+    // If no caller (unauthenticated call), only allow bootstrap of admin emails
+    if (caller && caller.role !== "super_admin") {
+      // Allow admins to call this on themselves during bootstrap
+      if (!isAdminEmail(caller.email)) {
+        throw new Error("Forbidden: Only super_admin can grant admin access");
+      }
+    }
+
+    if (!isAdminEmail(targetEmail)) {
+      throw new Error("Forbidden: Target email is not in the admin allowlist");
+    }
+
+    const users = await ctx.db.query("users").collect();
     let count = 0;
     for (const u of users) {
       if (u.email.toLowerCase().includes("proximaxagency") || u.email.toLowerCase() === targetEmail) {
-        await ctx.db.patch(u._id, {
-          role: "admin",
-          status: "active",
-          updatedAt: Date.now(),
-        });
+        await ctx.db.patch(u._id, { role: "admin", status: "active", updatedAt: Date.now() });
         count++;
       }
     }
@@ -158,7 +163,6 @@ export const grantAdminAccess = mutation({
     return { success: true, updatedCount: count, targetEmail };
   },
 });
-
 
 // Mutation (Admin only): Change user role
 export const updateUserRole = mutation({
@@ -178,13 +182,13 @@ export const updateUserRole = mutation({
 
     const target = await ctx.db.get(args.targetUserId);
     if (!target) throw new Error("Target user not found");
+    // Protect super_admin accounts from demotion
+    if (target.role === "super_admin" && admin.role !== "super_admin") {
+      throw new Error("Only super_admin can modify another super_admin");
+    }
 
-    await ctx.db.patch(args.targetUserId, {
-      role: args.newRole,
-      updatedAt: Date.now(),
-    });
+    await ctx.db.patch(args.targetUserId, { role: args.newRole, updatedAt: Date.now() });
 
-    // Record Immutable Audit Log
     await ctx.db.insert("auditLogs", {
       actorId: admin._id,
       action: "user.update_role",

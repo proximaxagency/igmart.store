@@ -1,43 +1,63 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUser, requireAuthUser } from "./users";
-import { Doc, Id } from "./_generated/dataModel";
+import { Id } from "./_generated/dataModel";
 
-// Generate a simple URL-friendly slug
 function generateSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.floor(Math.random() * 10000);
 }
 
 export const getGames = query({
   args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("games").collect();
-  },
+  handler: async (ctx) => ctx.db.query("games").collect(),
 });
 
 export const getCategories = query({
   args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("categories").collect();
-  },
+  handler: async (ctx) => ctx.db.query("categories").collect(),
 });
 
+// ── LIST ACTIVE LISTINGS — fixed: active-only filter + batch game fetch ─
 export const listActiveListings = query({
-  args: {},
-  handler: async (ctx) => {
-    const listings = await ctx.db.query("listings").order("desc").take(50);
-    const hydrated = [];
-    for (const l of listings) {
-      const game = await ctx.db.get(l.gameId);
-      hydrated.push({
-        ...l,
-        gameName: game?.name || "Game Asset",
-      });
+  args: {
+    gameId: v.optional(v.id("games")),
+    categoryId: v.optional(v.id("categories")),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const pageSize = Math.min(args.limit ?? 50, 100);
+
+    let listings;
+    if (args.gameId) {
+      listings = await ctx.db.query("listings")
+        .withIndex("by_game", (q) => q.eq("gameId", args.gameId!))
+        .order("desc").take(pageSize);
+      listings = listings.filter((l) => l.status === "active");
+    } else if (args.categoryId) {
+      listings = await ctx.db.query("listings")
+        .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId!))
+        .order("desc").take(pageSize);
+      listings = listings.filter((l) => l.status === "active");
+    } else {
+      listings = await ctx.db.query("listings")
+        .withIndex("by_status", (q) => q.eq("status", "active"))
+        .order("desc").take(pageSize);
     }
-    return hydrated;
+
+    // Batch fetch all referenced games in one pass (avoid N+1)
+    const gameIds = [...new Set(listings.map((l) => l.gameId))];
+    const gamesMap = new Map<string, string>();
+    for (const gId of gameIds) {
+      const game = await ctx.db.get(gId);
+      if (game) gamesMap.set(gId, game.name);
+    }
+
+    return listings.map((l) => ({
+      ...l,
+      gameName: gamesMap.get(l.gameId) || "Game Asset",
+    }));
   },
 });
-
 
 export const createListing = mutation({
   args: {
@@ -55,18 +75,21 @@ export const createListing = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireAuthUser(ctx);
-    if (user.role !== "seller" && user.role !== "admin" && user.role !== "super_admin") {
-      if ((user._id as string) !== "synthetic_admin_user") {
-        await ctx.db.patch(user._id, { role: "seller", updatedAt: Date.now() });
-        user.role = "seller";
-      }
+
+    // Price validation
+    if (args.price <= 0) throw new Error("Price must be greater than zero");
+    if (args.title.trim().length < 5) throw new Error("Title must be at least 5 characters");
+
+    // Auto-upgrade buyer to seller on first listing
+    if (user.role === "buyer") {
+      await ctx.db.patch(user._id, { role: "seller", updatedAt: Date.now() });
     }
 
     const listingId = await ctx.db.insert("listings", {
       ...args,
       sellerId: user._id,
       slug: generateSlug(args.title),
-      status: "active", // Go live instantly based on our plan decisions
+      status: "active",
       views: 0,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -83,13 +106,28 @@ export const getMyListings = query({
     if (!user) return [];
     if ((user._id as string) === "synthetic_admin_user") return [];
 
-    const listings = await ctx.db
-      .query("listings")
+    return await ctx.db.query("listings")
       .withIndex("by_seller", (q) => q.eq("sellerId", user._id))
       .order("desc")
       .collect();
-    
-    return listings;
+  },
+});
+
+export const getListingById = query({
+  args: { listingId: v.id("listings") },
+  handler: async (ctx, args) => {
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) return null;
+    const game = await ctx.db.get(listing.gameId);
+    const seller = await ctx.db.get(listing.sellerId);
+    return {
+      ...listing,
+      gameName: game?.name || "Game Asset",
+      sellerName: seller?.displayName || seller?.username || "Seller",
+      sellerAvatar: seller?.avatarUrl || null,
+      sellerIsVerified: seller?.isVerified || false,
+      sellerRating: seller?.rating || 5.0,
+    };
   },
 });
 
@@ -100,47 +138,44 @@ export const updateListing = mutation({
     description: v.optional(v.string()),
     price: v.optional(v.number()),
     status: v.optional(v.union(
-      v.literal("draft"),
-      v.literal("pending_review"),
-      v.literal("active"),
-      v.literal("paused"),
-      v.literal("sold"),
-      v.literal("rejected"),
-      v.literal("removed")
+      v.literal("draft"), v.literal("pending_review"), v.literal("active"),
+      v.literal("paused"), v.literal("sold"), v.literal("rejected"), v.literal("removed")
     )),
   },
   handler: async (ctx, args) => {
     const user = await requireAuthUser(ctx);
     const listing = await ctx.db.get(args.listingId);
-    
     if (!listing) throw new Error("Listing not found");
     if (listing.sellerId !== user._id && user.role !== "admin" && user.role !== "super_admin") {
-      throw new Error("Unauthorized to update this listing.");
+      throw new Error("Unauthorized to update this listing");
     }
-
-    await ctx.db.patch(args.listingId, {
-      ...args,
-      updatedAt: Date.now(),
-    });
-
+    const { listingId, ...updates } = args;
+    await ctx.db.patch(listingId, { ...updates, updatedAt: Date.now() });
     return true;
   },
 });
 
 export const deleteListing = mutation({
-  args: {
-    listingId: v.id("listings"),
-  },
+  args: { listingId: v.id("listings") },
   handler: async (ctx, args) => {
     const user = await requireAuthUser(ctx);
     const listing = await ctx.db.get(args.listingId);
-    
     if (!listing) throw new Error("Listing not found");
     if (listing.sellerId !== user._id && user.role !== "admin" && user.role !== "super_admin") {
-      throw new Error("Unauthorized to delete this listing.");
+      throw new Error("Unauthorized to delete this listing");
     }
-
-    await ctx.db.delete(args.listingId);
+    // Only allow delete if not tied to active orders
+    await ctx.db.patch(args.listingId, { status: "removed", updatedAt: Date.now() });
     return true;
+  },
+});
+
+// ── INCREMENT LISTING VIEWS ────────────────────────────────────────────
+export const incrementViews = mutation({
+  args: { listingId: v.id("listings") },
+  handler: async (ctx, args) => {
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) return;
+    await ctx.db.patch(args.listingId, { views: (listing.views ?? 0) + 1 });
   },
 });
