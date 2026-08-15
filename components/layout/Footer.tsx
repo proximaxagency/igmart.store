@@ -57,8 +57,8 @@ const footerCols = [
 ];
 
 const popularGames = [
-  "Valorant", "Fortnite", "CS2", "Minecraft", "League of Legends",
-  "GTA V", "Apex Legends", "World of Warcraft", "Roblox", "FC 25",
+  "Clash of Clans", "BGMI", "Free Fire", "PUBG Global", "Roblox",
+  "Clash Royale", "Brawl Stars", "Squad Busters", "Hay Day", "Boom Beach",
 ];
 
 function FooterColumn({ heading, links, defaultOpen = false }: {

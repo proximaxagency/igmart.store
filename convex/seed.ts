@@ -27,10 +27,16 @@ export const seedDatabase = mutation({
 
     // 2. Seed Games
     const gamesData = [
-      { name: "Valorant", slug: "valorant", category: "FPS", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800", metrics: { activeListings: 1420, totalSellers: 320, rating: 4.9 } },
-      { name: "Fortnite", slug: "fortnite", category: "Battle Royale", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?w=800", metrics: { activeListings: 2150, totalSellers: 540, rating: 4.8 } },
-      { name: "Counter-Strike 2", slug: "cs2", category: "FPS", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=800", metrics: { activeListings: 3100, totalSellers: 890, rating: 4.9 } },
-      { name: "League of Legends", slug: "lol", category: "MOBA", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1560253023-3ec5d502959f?w=800", metrics: { activeListings: 1890, totalSellers: 410, rating: 4.7 } },
+      { name: "Clash of Clans", slug: "clash-of-clans", category: "Strategy", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1614294149010-950b698f72c0?w=800", metrics: { activeListings: 14500, totalSellers: 840, rating: 4.9 } },
+      { name: "BGMI", slug: "bgmi", category: "Battle Royale", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800", metrics: { activeListings: 21400, totalSellers: 980, rating: 4.9 } },
+      { name: "Free Fire", slug: "free-fire", category: "Battle Royale", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800", metrics: { activeListings: 24800, totalSellers: 1150, rating: 4.9 } },
+      { name: "PUBG Global", slug: "pubg-global", category: "Battle Royale", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=800", metrics: { activeListings: 18900, totalSellers: 870, rating: 4.8 } },
+      { name: "Roblox", slug: "roblox", category: "Sandbox", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=800", metrics: { activeListings: 34500, totalSellers: 1420, rating: 4.7 } },
+      { name: "Clash Royale", slug: "clash-royale", category: "Card Battler", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1563089145-599997674d42?w=800", metrics: { activeListings: 9800, totalSellers: 620, rating: 4.8 } },
+      { name: "Brawl Stars", slug: "brawl-stars", category: "Action MOBA", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800", metrics: { activeListings: 11200, totalSellers: 590, rating: 4.9 } },
+      { name: "Squad Busters", slug: "squad-busters", category: "Action Party", isActive: true, isPopular: true, imageUrl: "https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=800", metrics: { activeListings: 6500, totalSellers: 430, rating: 4.8 } },
+      { name: "Hay Day", slug: "hay-day", category: "Farming Simulation", isActive: true, isPopular: false, imageUrl: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800", metrics: { activeListings: 3400, totalSellers: 210, rating: 4.7 } },
+      { name: "Boom Beach", slug: "boom-beach", category: "Combat Strategy", isActive: true, isPopular: false, imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800", metrics: { activeListings: 2800, totalSellers: 180, rating: 4.6 } },
     ];
 
     const gameIds: Record<string, any> = {};
@@ -86,14 +92,14 @@ export const seedDatabase = mutation({
     // 4. Seed Demo Listings
     const listingId = await ctx.db.insert("listings", {
       sellerId,
-      gameId: gameIds["valorant"],
+      gameId: gameIds["clash-of-clans"],
       categoryId: categoryIds["accounts"],
-      title: "Radiant / Immortal 3 Peak — Champions 2023 Vandal + Prime Bundle",
-      slug: "valorant-radiant-immortal-3-champions-vandal",
-      description: "Full access account with original recovery email included. Clean history, no bans or restrictions. Includes rare Champions 2023 Vandal and Prime 2.0 bundle.",
+      title: "TH16 Maxed Base — 95/95/70/45 Heroes + All Equipments Lv 27",
+      slug: "coc-th16-maxed-base-all-heroes",
+      description: "Full access TH16 account with Supercell ID change ready. Max heroes, epic equipments maxed, 10k gems and champion sceneries.",
       price: 249.99,
       originalPrice: 299.99,
-      images: ["https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800"],
+      images: ["https://images.unsplash.com/photo-1614294149010-950b698f72c0?w=800"],
       deliveryTime: "< 15 mins",
       deliveryMethod: "manual",
       status: "active",
@@ -134,7 +140,7 @@ export const seedDatabase = mutation({
     await ctx.db.insert("messages", {
       conversationId,
       senderId: buyerId,
-      content: "Hi ProGamer99, just placed order #ORD-1001 for the Radiant account. Is delivery instant?",
+      content: "Hi ProGamer99, just placed order #ORD-1001 for the TH16 Clash of Clans account. Is delivery instant?",
       type: "text",
       isRead: true,
       readBy: [buyerId, sellerId],
