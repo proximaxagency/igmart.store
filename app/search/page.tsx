@@ -10,12 +10,13 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: { q?: string; tab?: string };
+  searchParams: Promise<{ q?: string; tab?: string }>;
 }
 
-export default function SearchPage({ searchParams }: Props) {
-  const query = searchParams.q?.toLowerCase() || "";
-  const tab = searchParams.tab || "listings"; // 'listings' or 'games'
+export default async function SearchPage({ searchParams }: Props) {
+  const resolvedParams = await searchParams;
+  const query = resolvedParams.q?.toLowerCase() || "";
+  const tab = resolvedParams.tab || "listings"; // 'listings' or 'games'
 
   const matchedGames = GAMES.filter(g => g.name.toLowerCase().includes(query) || g.category.toLowerCase().includes(query));
   const matchedListings = LISTINGS.filter(l => l.title.toLowerCase().includes(query) || l.game.toLowerCase().includes(query) || l.seller.toLowerCase().includes(query));
