@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CookieBanner from "@/components/layout/CookieBanner";
 import BackToTop from "@/components/layout/BackToTop";
+import { FloatingChatWidget } from "@/components/chat";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <CookieBanner />
           <BackToTop />
+          <FloatingChatWidget />
         </ConvexClientProvider>
       </body>
     </html>

@@ -157,9 +157,13 @@ export default defineSchema({
       v.literal("buyer_support"),
       v.literal("seller_support"),
       v.literal("order"),
-      v.literal("internal_staff")
+      v.literal("internal_staff"),
+      v.literal("dispute_arbitration")
     ),
     participants: v.array(v.id("users")),
+    supportAgentId: v.optional(v.id("users")),
+    isEscalated: v.optional(v.boolean()),
+    escalationReason: v.optional(v.string()),
     relatedOrderId: v.optional(v.id("orders")),
     relatedListingId: v.optional(v.id("listings")),
     relatedTicketId: v.optional(v.id("supportTickets")),
@@ -187,8 +191,10 @@ export default defineSchema({
       v.literal("file"),
       v.literal("system"),
       v.literal("order_update"),
-      v.literal("support_note") // Internal notes visible to staff only
+      v.literal("support_note"), // Internal notes visible to staff only
+      v.literal("credential_vault") // Masked credentials
     ),
+    metadata: v.optional(v.any()),
     attachments: v.optional(v.array(v.string())),
     replyToMessageId: v.optional(v.id("messages")),
     
