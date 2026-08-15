@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getAuthUser, requireAuthUser } from "./users";
+import { getAuthUser, requireAuthUser, isDbUser } from "./users";
 
 // ── KYC VERIFICATION SUBMISSION ────────────────────────────────────────
 export const submitKYCVerification = mutation({
@@ -54,7 +54,7 @@ export const getKYCStatus = query({
   args: {},
   handler: async (ctx) => {
     const user = await getAuthUser(ctx);
-    if (!user) return null;
+    if (!isDbUser(user)) return null;
 
     return await ctx.db
       .query("sellerVerifications")
@@ -91,7 +91,7 @@ export const getInventory = query({
   },
   handler: async (ctx, args) => {
     const user = await getAuthUser(ctx);
-    if (!user) return [];
+    if (!isDbUser(user)) return [];
 
     if (args.listingId) {
       return await ctx.db
@@ -160,7 +160,16 @@ export const getSellerAnalytics = query({
   args: {},
   handler: async (ctx) => {
     const user = await getAuthUser(ctx);
-    if (!user) return null;
+    if (!isDbUser(user)) {
+      return {
+        totalRevenue: 0,
+        totalOrders: 0,
+        activeListingsCount: 0,
+        totalViews: 0,
+        rating: 5.0,
+        sellerLevel: "Starter",
+      };
+    }
 
     const orders = await ctx.db
       .query("orders")

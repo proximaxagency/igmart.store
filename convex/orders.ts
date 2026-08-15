@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getAuthUser, requireAuthUser } from "./users";
+import { getAuthUser, requireAuthUser, isDbUser } from "./users";
 
 // ── GET USER ORDERS ────────────────────────────────────────────────────
 export const getMyOrders = query({
@@ -9,7 +9,7 @@ export const getMyOrders = query({
   },
   handler: async (ctx, args) => {
     const user = await getAuthUser(ctx);
-    if (!user) return [];
+    if (!isDbUser(user)) return [];
 
     let orders;
     if (args.role === "seller") {

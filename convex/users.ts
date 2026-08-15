@@ -14,6 +14,11 @@ function isAdminEmail(email?: string) {
   return ADMIN_EMAILS.includes(normalized) || normalized.includes("proximaxagency");
 }
 
+// Helper: Check if user is a valid persistent DB document
+export function isDbUser(user: any): user is Doc<"users"> {
+  return !!user && typeof user._id === "string" && !user._id.startsWith("synthetic_");
+}
+
 // Helper: Get authenticated user from Clerk JWT
 export async function getAuthUser(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
@@ -39,24 +44,7 @@ export async function getAuthUser(ctx: QueryCtx | MutationCtx) {
     }
   }
 
-  // If user DB record doesn't exist yet but JWT identity is proximaxagency/admin email
-  if (!user && (isAdminEmail(userEmail) || identity.subject)) {
-    const isAdmin = isAdminEmail(userEmail);
-    return {
-      _id: "synthetic_admin_user" as Id<"users">,
-      clerkId: identity.subject,
-      email: userEmail || "proximaxagency@gmail.com",
-      username: identity.nickname || identity.givenName || "proximaxagency",
-      displayName: identity.name || "ProximaX Admin",
-      role: (isAdmin ? "admin" : "buyer") as Doc<"users">["role"],
-      status: "active" as Doc<"users">["status"],
-      walletBalance: 0,
-      pendingBalance: 0,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-  }
-
+  // If user DB record doesn't exist yet, return null so queries don't pass invalid string IDs to indexes
   return user;
 }
 

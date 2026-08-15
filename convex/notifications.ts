@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getAuthUser, requireAuthUser } from "./users";
+import { getAuthUser, requireAuthUser, isDbUser } from "./users";
 
 
 export const getMyNotifications = query({
@@ -9,7 +9,7 @@ export const getMyNotifications = query({
     // Use getAuthUser (returns null) instead of requireAuthUser (throws)
     // This prevents crash when Clerk user hasn't been synced to Convex yet
     const user = await getAuthUser(ctx);
-    if (!user) return [];
+    if (!isDbUser(user)) return [];
     
     return await ctx.db
       .query("notifications")

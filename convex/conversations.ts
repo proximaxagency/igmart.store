@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getAuthUser, requireAuthUser } from "./users";
+import { getAuthUser, requireAuthUser, isDbUser } from "./users";
 
 // ── GET OR CREATE CONVERSATION ──────────────────────────────────────────
 export const getOrCreateConversation = mutation({
@@ -58,7 +58,7 @@ export const listMyConversations = query({
   args: {},
   handler: async (ctx) => {
     const user = await getAuthUser(ctx);
-    if (!user) return [];
+    if (!isDbUser(user)) return [];
 
     const conversations = await ctx.db
       .query("conversations")
