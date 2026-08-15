@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx convex deploy --yes && next build",
+    "build": "next build",
     "build:local": "next build",
     "start": "next start",
     "lint": "eslint",
     "convex:dev": "npx convex dev",
-    "convex:deploy": "npx convex deploy --yes"
+    "convex:deploy": "npx convex deploy --yes",
+    "build:with-convex": "npx convex deploy --yes && next build",
+    "deploy:convex": "npx convex deploy --yes"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.7.1",
