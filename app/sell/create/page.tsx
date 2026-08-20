@@ -56,52 +56,6 @@ const GAME_FIELDS: Record<string, { emoji: string; color: string; fields: GameFi
       { key: "supercellIdReady", label: "Supercell ID Transfer Ready", type: "toggle", icon: "✅", required: true },
     ],
   },
-  "brawl-stars": {
-    emoji: "💥",
-    color: "from-orange-500/20 to-red-500/10 border-orange-500/30",
-    fields: [
-      { key: "trophies", label: "Total Trophies", type: "number", placeholder: "e.g. 85000", icon: "🏆", required: true },
-      { key: "brawlers", label: "Brawlers Unlocked", type: "number", placeholder: "e.g. 80", icon: "🎮" },
-      { key: "maxBrawlers", label: "Max Power Brawlers", type: "number", placeholder: "e.g. 35", icon: "⭐" },
-      { key: "gems", label: "Gems", type: "number", placeholder: "e.g. 1500", icon: "💎" },
-      { key: "coins", label: "Coins", type: "number", placeholder: "e.g. 200000", icon: "🪙" },
-      { key: "legendaryBrawlers", label: "Legendary Brawlers", type: "number", placeholder: "e.g. 5", icon: "🔱" },
-      { key: "mastery", label: "Mastery Rank", type: "select", options: ["Bronze","Silver","Gold","Diamond","Mythic","Legendary","Masters","Prestige"], icon: "🥇" },
-      { key: "supercellIdReady", label: "Supercell ID Transfer Ready", type: "toggle", icon: "✅", required: true },
-    ],
-  },
-  "squad-busters": {
-    emoji: "🌟",
-    color: "from-cyan-500/20 to-blue-500/10 border-cyan-500/30",
-    fields: [
-      { key: "chests", label: "Total Chests Opened", type: "number", placeholder: "e.g. 500", icon: "📦", required: true },
-      { key: "gems", label: "Gems", type: "number", placeholder: "e.g. 3000", icon: "💎" },
-      { key: "coins", label: "Coins", type: "number", placeholder: "e.g. 100000", icon: "🪙" },
-      { key: "characterCount", label: "Characters Unlocked", type: "number", placeholder: "e.g. 30", icon: "🎭" },
-      { key: "supercellIdReady", label: "Supercell ID Transfer Ready", type: "toggle", icon: "✅", required: true },
-    ],
-  },
-  "hay-day": {
-    emoji: "🌾",
-    color: "from-green-500/20 to-emerald-500/10 border-green-500/30",
-    fields: [
-      { key: "farmLevel", label: "Farm Level", type: "number", placeholder: "e.g. 120", icon: "🌾", required: true },
-      { key: "diamonds", label: "Diamonds", type: "number", placeholder: "e.g. 500", icon: "💎" },
-      { key: "coins", label: "Coins", type: "number", placeholder: "e.g. 2000000", icon: "🪙" },
-      { key: "neighborhoodLevel", label: "Neighborhood Level", type: "number", placeholder: "e.g. 50", icon: "🏘️" },
-      { key: "supercellIdReady", label: "Supercell ID Transfer Ready", type: "toggle", icon: "✅", required: true },
-    ],
-  },
-  "boom-beach": {
-    emoji: "💣",
-    color: "from-blue-500/20 to-teal-500/10 border-blue-500/30",
-    fields: [
-      { key: "hqLevel", label: "HQ Level", type: "number", placeholder: "e.g. 70", icon: "🏢", required: true },
-      { key: "diamonds", label: "Diamonds", type: "number", placeholder: "e.g. 2000", icon: "💎" },
-      { key: "goldStorage", label: "Gold Storage Level", type: "number", placeholder: "e.g. 20", icon: "🪙" },
-      { key: "supercellIdReady", label: "Supercell ID Transfer Ready", type: "toggle", icon: "✅", required: true },
-    ],
-  },
   "free-fire": {
     emoji: "🔥",
     color: "from-red-500/20 to-orange-500/10 border-red-500/30",
@@ -117,33 +71,18 @@ const GAME_FIELDS: Record<string, { emoji: string; color: string; fields: GameFi
       { key: "bindingRemoved", label: "Binding Removable / Guest Account", type: "toggle", icon: "🔓" },
     ],
   },
-  "bgmi": {
+  "pubg-mobile": {
     emoji: "🎯",
-    color: "from-yellow-500/20 to-amber-500/10 border-yellow-500/30",
-    fields: [
-      { key: "tier", label: "Current Tier", type: "select", options: ["Bronze","Silver","Gold","Platinum","Diamond","Crown","Ace","Conqueror"], icon: "🏆", required: true },
-      { key: "tierPoints", label: "Tier Points / RP", type: "number", placeholder: "e.g. 4500", icon: "📈" },
-      { key: "uc", label: "UC (Unknown Cash)", type: "number", placeholder: "e.g. 3000", icon: "💰" },
-      { key: "outfits", label: "Outfit Sets", type: "number", placeholder: "e.g. 40", icon: "👗" },
-      { key: "gunSkins", label: "Gun Skins (Legendary)", type: "number", placeholder: "e.g. 20", icon: "🔫" },
-      { key: "royalPass", label: "Royal Pass Season", type: "number", placeholder: "e.g. Season 28 RP", icon: "👑" },
-      { key: "achievementPoints", label: "Achievement Points", type: "number", placeholder: "e.g. 8500", icon: "⭐" },
-      { key: "region", label: "Account Region", type: "select", options: ["India (BGMI)","Asia","Europe","NA","Other"], icon: "🌍" },
-      { key: "emailLinked", label: "Email Linked / Changeable", type: "toggle", icon: "📧" },
-    ],
-  },
-  "pubg-global": {
-    emoji: "🌐",
     color: "from-amber-600/20 to-yellow-600/10 border-amber-600/30",
     fields: [
+      { key: "version", label: "Game Version", type: "select", options: ["BGMI (India)", "PUBG Mobile (Global)", "PUBG Mobile (KR/JP)", "PUBG Mobile (VN)"], icon: "🌐", required: true },
       { key: "tier", label: "Current Tier", type: "select", options: ["Bronze","Silver","Gold","Platinum","Diamond","Crown","Ace","Conqueror"], icon: "🏆", required: true },
-      { key: "tierPoints", label: "Tier Points", type: "number", placeholder: "e.g. 5500", icon: "📈" },
-      { key: "gc", label: "G-Coin Balance", type: "number", placeholder: "e.g. 2000", icon: "💰" },
-      { key: "outfits", label: "Outfit Sets (Legendary)", type: "number", placeholder: "e.g. 35", icon: "👗" },
-      { key: "gunSkins", label: "Gun Skins (Legendary)", type: "number", placeholder: "e.g. 18", icon: "🔫" },
-      { key: "vehicleSkins", label: "Vehicle Skins", type: "number", placeholder: "e.g. 10", icon: "🚗" },
-      { key: "season", label: "Season Highest Tier", type: "text", placeholder: "e.g. Conqueror Season 28", icon: "🥇" },
-      { key: "platform", label: "Platform", type: "select", options: ["Mobile (Global)","PC (Steam)","Console (Xbox/PS)"], icon: "📱" },
+      { key: "tierPoints", label: "Tier Points / RP", type: "number", placeholder: "e.g. 4500", icon: "📈" },
+      { key: "uc", label: "UC / Currency Balance", type: "number", placeholder: "e.g. 3000", icon: "💰" },
+      { key: "outfits", label: "Outfit Sets (X-Suit/Mythic)", type: "number", placeholder: "e.g. 40", icon: "👗" },
+      { key: "gunSkins", label: "Gun Skins (Glacier / Upgradable)", type: "number", placeholder: "e.g. 20", icon: "🔫" },
+      { key: "royalPass", label: "Royal Pass Season", type: "number", placeholder: "e.g. Season 28 RP", icon: "👑" },
+      { key: "achievementPoints", label: "Achievement Points", type: "number", placeholder: "e.g. 8500", icon: "⭐" },
       { key: "emailLinked", label: "Email Linked / Changeable", type: "toggle", icon: "📧" },
     ],
   },
@@ -192,7 +131,8 @@ export default function CreateListingPage() {
 
   const gameConfig = useMemo(() => {
     if (!selectedGame) return null;
-    return GAME_FIELDS[selectedGame.slug] || null;
+    const slug = selectedGame.slug === "bgmi" || selectedGame.slug === "pubg-global" ? "pubg-mobile" : selectedGame.slug;
+    return GAME_FIELDS[slug] || null;
   }, [selectedGame]);
 
   const handleGameChange = (gameId: string) => {
@@ -215,11 +155,12 @@ export default function CreateListingPage() {
       return `${g.townHallLevel} Clash of Clans Account${heroes ? " — " + heroes : ""}${g.gems ? " + " + g.gems + " Gems" : ""}`;
     }
     if (slug === "free-fire" && g.rank) return `${g.rank} Rank FF Account — Lv.${g.accountLevel || "?"}  ${g.diamonds ? g.diamonds + " Diamonds" : ""}`;
-    if (slug === "bgmi" && g.tier) return `BGMI ${g.tier} Tier Account — ${g.uc ? g.uc + " UC" : ""}${g.outfits ? " | " + g.outfits + " Outfits" : ""}`;
-    if (slug === "pubg-global" && g.tier) return `PUBG Global ${g.tier} — ${g.gunSkins ? g.gunSkins + " Legendary Skins" : "Premium Account"}`;
+    if ((slug === "pubg-mobile" || slug === "bgmi" || slug === "pubg-global") && g.tier) {
+      const prefix = g.version ? g.version.split(" ")[0] : "PUBG/BGMI";
+      return `${prefix} ${g.tier} Tier Account — ${g.uc ? g.uc + " UC" : ""}${g.outfits ? " | " + g.outfits + " Outfits" : ""}${g.gunSkins ? " | " + g.gunSkins + " Gun Skins" : ""}`;
+    }
     if (slug === "roblox" && g.accountAge) return `Roblox Account — ${g.accountAge}yr Old${g.robux ? " | " + g.robux + " Robux" : ""}${g.premiumActive ? " | Premium Active" : ""}`;
     if (slug === "clash-royale" && g.kingLevel) return `Clash Royale KL${g.kingLevel} — ${g.trophies ? g.trophies + " Trophies" : ""}${g.legendaryCards ? " | " + g.legendaryCards + " Legendaries" : ""}`;
-    if (slug === "brawl-stars" && g.trophies) return `Brawl Stars ${g.trophies} Trophies — ${g.brawlers ? g.brawlers + " Brawlers" : ""}`;
     return `${selectedGame.name} Account`;
   }, [selectedGame, gameDetails]);
 

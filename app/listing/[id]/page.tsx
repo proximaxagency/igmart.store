@@ -6,6 +6,7 @@ import { Shield, MessageSquare, Zap, CheckCircle2, ChevronRight } from "lucide-r
 import { LISTINGS, SELLERS } from "@/lib/data/igmartData";
 import { Badge, Stars, PriceDisplay, SellerAvatar, Button, Alert } from "@/components/ui/index";
 import { ListingCard } from "@/components/shared/ListingCard";
+import { JsonLd, getProductSchema, getBreadcrumbSchema } from "@/components/seo/JsonLd";
 
 interface Props {
   params: { id: string };
@@ -16,7 +17,21 @@ export function generateMetadata({ params }: Props): Metadata {
   if (!listing) return { title: "Listing Not Found" };
   return {
     title: `${listing.title} | IGMART`,
-    description: `Buy ${listing.title} for ${listing.game} on IGMART. Verified seller, secure escrow, instant delivery.`,
+    description: `Buy ${listing.title} for ${listing.game} on IGMART. Verified seller, secure escrow, instant delivery. Price: $${listing.price.toFixed(2)}.`,
+    alternates: { canonical: `https://igmart.store/listing/${listing.id}` },
+    openGraph: {
+      title: listing.title,
+      description: `Buy ${listing.title} for ${listing.game} — $${listing.price.toFixed(2)}`,
+      url: `https://igmart.store/listing/${listing.id}`,
+      images: [{ url: listing.image, width: 1200, height: 630, alt: listing.title }],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: listing.title,
+      description: `Buy ${listing.title} for ${listing.game} on IGMART — $${listing.price.toFixed(2)}`,
+      images: [listing.image],
+    },
   };
 }
 
@@ -33,8 +48,29 @@ export default function ListingPage({ params }: Props) {
   const seller = SELLERS.find((s) => s.username === listing.seller) || SELLERS[0];
   const relatedListings = LISTINGS.filter((l) => l.game === listing.game && l.id !== listing.id).slice(0, 4);
 
+  const productSchema = getProductSchema({
+    id: listing.id,
+    title: listing.title,
+    description: listing.description,
+    image: listing.image,
+    price: listing.price,
+    rating: listing.rating,
+    reviews: listing.reviews,
+    seller: listing.seller,
+    game: listing.game,
+  });
+
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Marketplace", url: "/marketplace" },
+    { name: listing.game, url: `/games/${listing.game.toLowerCase().replace(/\s+/g, "-")}` },
+    { name: listing.title, url: `/listing/${listing.id}` },
+  ]);
+
   return (
     <div className="bg-background min-h-screen pb-28 lg:pb-16">
+      <JsonLd data={productSchema} />
+      <JsonLd data={breadcrumbSchema} />
       <div className="container py-6 sm:py-8">
 
         {/* Breadcrumbs */}
@@ -60,7 +96,7 @@ export default function ListingPage({ params }: Props) {
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 65vw"
-                  className="object-cover"
+                  className="object-cover object-top"
                 />
                 {listing.badge && (
                   <div className="absolute top-3 left-3">
@@ -151,7 +187,7 @@ export default function ListingPage({ params }: Props) {
                 {/* Desktop CTA */}
                 <div className="hidden lg:flex flex-col gap-3">
                   <Link
-                    href="/checkout"
+                    href={`/checkout?listing=${listing.id}`}
                     className="flex items-center justify-center gap-2 font-semibold text-[15px] text-white w-full py-3.5 rounded-xl hover:opacity-90 transition-opacity"
                     style={{ background: "var(--gradient-brand)" }}
                   >
@@ -215,7 +251,7 @@ export default function ListingPage({ params }: Props) {
         <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
           <PriceDisplay price={listing.price} originalPrice={listing.originalPrice} size="md" showDiscount />
           <Link
-            href="/checkout"
+            href={`/checkout?listing=${listing.id}`}
             className="flex-shrink-0 inline-flex items-center justify-center font-semibold text-sm text-white px-6 py-3 rounded-xl hover:opacity-90 transition-opacity min-h-[44px]"
             style={{ background: "var(--gradient-brand)" }}
           >

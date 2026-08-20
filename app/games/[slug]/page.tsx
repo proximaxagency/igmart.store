@@ -11,20 +11,27 @@ interface Props {
   params: { slug: string };
 }
 
+function getNormalizedSlug(slug: string) {
+  if (slug === "bgmi" || slug === "pubg-global" || slug === "pubg") return "pubg-mobile";
+  return slug;
+}
+
 export function generateMetadata({ params }: Props): Metadata {
-  const game = GAMES.find((g) => g.slug === params.slug);
+  const normalizedSlug = getNormalizedSlug(params.slug);
+  const game = GAMES.find((g) => g.slug === normalizedSlug);
   if (!game) return { title: "Game Not Found" };
   return {
-    title: `${game.name} Marketplace`,
-    description: `Buy and sell ${game.name} accounts, items, and services on IGMART.`,
+    title: `${game.name} Accounts Marketplace | IGMART`,
+    description: `Buy and sell verified ${game.name} accounts with escrow protection on IGMART.`,
   };
 }
 
 export default function GameDetailPage({ params }: Props) {
-  const game = GAMES.find((g) => g.slug === params.slug);
+  const normalizedSlug = getNormalizedSlug(params.slug);
+  const game = GAMES.find((g) => g.slug === normalizedSlug);
   if (!game) notFound();
 
-  const gameListings = LISTINGS.filter((l) => l.game === game.name);
+  const gameListings = LISTINGS.filter((l) => l.game === game.name || (game.slug === "pubg-mobile" && (l.game === "BGMI" || l.game === "PUBG Global" || l.game === "PUBG Mobile / BGMI")));
 
   return (
     <div className="bg-background min-h-screen">
@@ -36,13 +43,13 @@ export default function GameDetailPage({ params }: Props) {
           fill 
           sizes="100vw"
           priority
-          className="object-cover z-0 opacity-30" 
+          className="object-cover object-top z-0 opacity-35" 
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-[1]" />
         
         <div className="container relative z-10">
           <div className="flex items-center gap-2 sm:gap-3 mb-4">
-            <Link href="/games" className="text-text-muted text-xs sm:text-sm font-semibold hover:text-text transition-colors">Games</Link>
+            <Link href="/marketplace" className="text-text-muted text-xs sm:text-sm font-semibold hover:text-text transition-colors">Marketplace</Link>
             <span className="text-border-strong">/</span>
             <span className="text-text text-xs sm:text-sm font-bold">{game.name}</span>
           </div>

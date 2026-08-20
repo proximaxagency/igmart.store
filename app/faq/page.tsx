@@ -3,15 +3,25 @@ import Link from "next/link";
 import { FAQ_ITEMS } from "@/lib/data/igmartData";
 import { SectionHeading } from "@/components/ui/index";
 import HomepageClient from "@/components/home/HomepageClient";
+import { JsonLd, getFAQSchema } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions | IGMART",
-  description: "Find answers to the most common questions about buying and selling on IGMART.",
+  description: "Find answers to the most common questions about buying and selling on IGMART. Learn about escrow protection, seller verification, delivery times, and dispute resolution.",
+  alternates: { canonical: "https://igmart.store/faq" },
+  openGraph: {
+    title: "FAQ — Frequently Asked Questions | IGMART",
+    description: "Get answers about buying, selling, escrow, and seller verification on IGMART.",
+    url: "https://igmart.store/faq",
+  },
 };
 
 export default function FAQPage() {
+  const faqSchema = getFAQSchema(FAQ_ITEMS.map((item) => ({ question: item.q, answer: item.a })));
+
   return (
     <div className="bg-background min-h-[calc(100vh-76px)] py-12 lg:py-20">
+      <JsonLd data={faqSchema} />
       <div className="container max-w-3xl">
         <SectionHeading 
           eyebrow="Help Center" 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { GUIDES } from "@/lib/data/igmartData";
 import { ArrowLeft, Clock, Share2 } from "lucide-react";
+import { JsonLd, getArticleSchema } from "@/components/seo/JsonLd";
 
 interface Props {
   params: { slug: string };
@@ -14,6 +15,20 @@ export function generateMetadata({ params }: Props): Metadata {
   return {
     title: `${guide.title} | IGMART Guides`,
     description: guide.excerpt,
+    alternates: { canonical: `https://igmart.store/guides/${guide.slug}` },
+    openGraph: {
+      title: guide.title,
+      description: guide.excerpt,
+      url: `https://igmart.store/guides/${guide.slug}`,
+      type: "article",
+      images: [{ url: guide.image, width: 1200, height: 630, alt: guide.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: guide.title,
+      description: guide.excerpt,
+      images: [guide.image],
+    },
   };
 }
 
@@ -21,12 +36,22 @@ export default function GuideDetailPage({ params }: Props) {
   const guide = GUIDES.find((g) => g.slug === params.slug);
   if (!guide) notFound();
 
+  const articleSchema = getArticleSchema({
+    title: guide.title,
+    description: guide.excerpt,
+    slug: guide.slug,
+    publishedDate: new Date(guide.date).toISOString(),
+    authorName: guide.author,
+    imageUrl: guide.image,
+  });
+
   return (
     <article className="pb-24">
+      <JsonLd data={articleSchema} />
       {/* Hero */}
       <div style={{ position: "relative", height: 400, display: "flex", alignItems: "flex-end", paddingBottom: 48 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={guide.image} alt={guide.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }} />
+        <img src={guide.image} alt={guide.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", zIndex: 0 }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0F1116 0%, rgba(15,17,22,0.8) 50%, transparent 100%)", zIndex: 1 }} />
         
         <div className="container relative z-10 max-w-4xl">

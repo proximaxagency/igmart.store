@@ -1,144 +1,144 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { GAMES, CATEGORIES, LISTINGS, SELLERS, REVIEWS, GUIDES, FAQ_ITEMS } from "@/lib/data/igmartData";
+import { GAMES, LISTINGS, SELLERS, REVIEWS, GUIDES, FAQ_ITEMS } from "@/lib/data/igmartData";
 import { Badge, Stars, SectionHeading, Button } from "@/components/ui/index";
 import { GameCard } from "@/components/shared/GameCard";
 import { ListingCard } from "@/components/shared/ListingCard";
 import HomepageClient from "@/components/home/HomepageClient";
-import { Zap, ShieldCheck, MessageSquare, Scale, Star, ArrowRight } from "lucide-react";
+import { Zap, ShieldCheck, MessageSquare, Scale, Star, ArrowRight, BadgeCheck, Clock, Wallet } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "IGMART — The #1 Gaming Marketplace | Buy & Sell Gaming Assets",
-  description: "Buy, sell and trade gaming accounts, items, currency and boosting services across 300+ games. Secure escrow, verified sellers, 24/7 support. Join 3M+ gamers.",
+  title: "IGMART — #1 Gaming Account Marketplace | Buy & Sell Game Accounts",
+  description: "Buy and sell verified gaming accounts across 300+ games. Secure escrow, instant delivery, verified sellers. Join 3M+ gamers on IGMART.",
 };
 
 const trustItems = [
-  { icon: ShieldCheck, title: "Escrow Protection", desc: "Funds are held securely until you confirm delivery. Risk-free every time." },
-  { icon: Star, title: "Verified Sellers", desc: "Every seller passes identity verification, history review, and delivery monitoring." },
-  { icon: MessageSquare, title: "24/7 Support", desc: "Our team is available around the clock to help resolve any issue." },
-  { icon: Scale, title: "Fair Disputes", desc: "Independent dispute resolution with a fair outcome for both parties." },
+  { icon: ShieldCheck, title: "Escrow Protection", desc: "Your payment is held securely until you confirm delivery. 100% risk-free." },
+  { icon: BadgeCheck, title: "Verified Sellers", desc: "Every seller passes KYC identity checks, history review, and delivery monitoring." },
+  { icon: MessageSquare, title: "24/7 Live Support", desc: "Real humans available around the clock to resolve any issue instantly." },
+  { icon: Scale, title: "Fair Dispute System", desc: "Independent resolution team ensures a fair outcome for every dispute." },
 ];
 
 const howItWorks = [
-  { step: "01", title: "Find What You Need", desc: "Search across 300+ games and thousands of listings. Filter by game, category, price, and delivery speed.", action: { label: "Browse Marketplace", href: "/marketplace" } },
-  { step: "02", title: "Buy Securely", desc: "Pay with confidence. Your funds are held in escrow until you receive exactly what was promised.", action: { label: "How It Works", href: "/how-it-works" } },
-  { step: "03", title: "Trade & Earn", desc: "Become a seller and earn from your gaming expertise. Create a listing in minutes and start earning.", action: { label: "Start Selling", href: "/sell" } },
+  { step: "01", title: "Find Your Account", desc: "Search across 300+ games. Filter by game, price, hero level, rank, and delivery speed.", action: { label: "Browse Accounts", href: "/marketplace/accounts" } },
+  { step: "02", title: "Pay with Escrow", desc: "Your funds are held safely until you receive and confirm the account is exactly as described.", action: { label: "How It Works", href: "/how-it-works" } },
+  { step: "03", title: "Sell & Earn", desc: "List your gaming accounts in minutes. Join 18K+ verified sellers and start earning from your assets.", action: { label: "Start Selling", href: "/sell" } },
+];
+
+const whyBuyHere = [
+  { icon: BadgeCheck, label: "100% Verified Accounts", sub: "Every listing is reviewed by our team" },
+  { icon: Wallet, label: "Secure Escrow Payment", sub: "Funds released only on your approval" },
+  { icon: Zap, label: "Instant Delivery", sub: "Most accounts transferred within minutes" },
+  { icon: Clock, label: "24/7 Dispute Cover", sub: "Full support if anything goes wrong" },
 ];
 
 export default function HomePage() {
-  const popularGames = GAMES.filter((g) => g.popular).slice(0, 8);
+  const popularGames = GAMES.filter((g) => g.popular).slice(0, 10);
   const featuredListings = LISTINGS.slice(0, 8);
   const featuredSellers = SELLERS;
   const featuredGuides = GUIDES.slice(0, 5);
 
   return (
     <>
-      {/* ═════════════════════════════════════════
+      {/* ══════════════════════════════════════════
           1. HERO
       ══════════════════════════════════════════ */}
       <section
         aria-label="Hero"
-        className="relative overflow-hidden min-h-[560px] flex items-center py-20 lg:py-28"
-        style={{ background: "linear-gradient(180deg, #0A0C12 0%, var(--color-background) 70%, var(--color-surface) 100%)" }}
+        className="relative overflow-hidden min-h-[580px] flex items-center py-20 lg:py-32"
+        style={{ background: "linear-gradient(180deg, #07080f 0%, #0a0c14 60%, var(--color-surface) 100%)" }}
       >
-        {/* Background image — low opacity */}
-        <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
+        {/* Ambient glow blobs */}
+        <div aria-hidden="true" className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full pointer-events-none z-0"
+          style={{ background: "radial-gradient(ellipse, rgba(99,60,255,0.13) 0%, transparent 70%)" }} />
+        <div aria-hidden="true" className="absolute bottom-0 right-0 w-[500px] h-[300px] pointer-events-none z-0"
+          style={{ background: "radial-gradient(ellipse, rgba(37,99,235,0.08) 0%, transparent 70%)" }} />
+
+        {/* Background hero image */}
+        <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
           <Image src="/images/hero-space.png" alt="" fill className="object-cover" priority />
         </div>
-        {/* Gradient overlays */}
-        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-background/70 via-background/60 to-surface pointer-events-none" />
-        <div
-          aria-hidden="true"
-          className="absolute top-[25%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full z-[1] pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(37,99,235,0.14) 0%, transparent 70%)" }}
-        />
+        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-transparent via-background/20 to-surface pointer-events-none" />
 
         <div className="container relative z-10 text-center">
-          {/* Trust badge */}
+          {/* Trust pill */}
           <div className="flex justify-center mb-6">
-            <span className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/25 text-primary-hover px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide">
-              <ShieldCheck size={13} aria-hidden="true" />
-              Trade-Protected Marketplace
+            <span className="inline-flex items-center gap-2 bg-primary/10 border border-primary/25 text-primary-hover px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase">
+              <ShieldCheck size={12} aria-hidden="true" />
+              Verified Accounts · Escrow Protected
             </span>
           </div>
 
           {/* Headline */}
-          <h1 className="font-heading font-black text-[clamp(2.25rem,6vw,4.5rem)] uppercase text-text leading-[1.05] tracking-tight max-w-4xl mx-auto mb-5">
-            Your Gaming{" "}
-            <span className="text-gradient-brand">Marketplace</span>
+          <h1 className="font-heading font-black text-[clamp(2.4rem,6.5vw,5rem)] uppercase text-text leading-[1.04] tracking-tight max-w-4xl mx-auto mb-5">
+            Buy & Sell{" "}
+            <span className="text-gradient-brand">Game Accounts</span>
+            <br className="hidden sm:block" /> The Safe Way
           </h1>
 
-          {/* Subheading */}
+          {/* Sub */}
           <p className="text-text-muted text-base sm:text-lg max-w-xl mx-auto mb-8 leading-relaxed">
-            Buy, sell and trade gaming accounts, items, currency and services across{" "}
-            <strong className="text-text font-semibold">300+ games</strong> with 3M+ verified players worldwide.
+            The #1 marketplace for verified gaming accounts across{" "}
+            <strong className="text-text font-semibold">300+ games</strong> — with escrow protection, instant delivery, and 3M+ trusted players.
           </p>
 
           <HomepageClient action="search" />
 
-          {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mt-10">
+          {/* Stats strip */}
+          <div className="flex flex-wrap justify-center gap-5 sm:gap-10 mt-10">
             {[
               { label: "3M+ Gamers", icon: "🎮" },
               { label: "300+ Games", icon: "🕹️" },
+              { label: "45K+ Accounts", icon: "👤" },
               { label: "Instant Delivery", icon: "⚡" },
-              { label: "24/7 Support", icon: "💬" },
             ].map((b) => (
               <div key={b.label} className="flex items-center gap-2" aria-hidden="true">
                 <span className="text-lg">{b.icon}</span>
-                <span className="text-text-secondary text-sm font-medium">{b.label}</span>
+                <span className="text-text-secondary text-sm font-semibold">{b.label}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═════════════════════════════════════════
-          2. CATEGORIES
+      {/* ══════════════════════════════════════════
+          2. WHY BUY HERE — value strip
       ══════════════════════════════════════════ */}
-      <section aria-labelledby="cat-heading" className="bg-surface py-10 lg:py-14 border-b border-border">
+      <section aria-label="Why buy on IGMART" className="bg-surface border-y border-border py-8">
         <div className="container">
-          <div className="flex items-center justify-between mb-6">
-            <h2 id="cat-heading" className="font-heading font-black text-xl text-text">Browse by Category</h2>
-            <Link href="/marketplace" className="text-primary-hover text-sm font-semibold flex items-center gap-1 hover:gap-1.5 transition-all">
-              View all <ArrowRight size={15} />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/marketplace/${cat.slug}`}
-                className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-elevated hover:-translate-y-0.5 transition-all duration-150 text-center group"
-              >
-                <span className="text-2xl sm:text-3xl mb-2 group-hover:scale-105 transition-transform duration-200" aria-hidden="true">
-                  {cat.icon}
-                </span>
-                <span className="text-[12px] sm:text-sm font-semibold text-text-muted group-hover:text-text transition-colors leading-tight">
-                  {cat.name}
-                </span>
-                <span className="text-[10px] font-medium text-text-muted mt-0.5 opacity-70">
-                  {(cat.count / 1000).toFixed(0)}K+
-                </span>
-              </Link>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {whyBuyHere.map((item) => (
+              <div key={item.label} className="flex items-center gap-3.5 p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <item.icon size={20} className="text-primary-hover" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-bold text-text leading-snug">{item.label}</p>
+                  <p className="text-[11px] text-text-muted leading-snug mt-0.5">{item.sub}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═════════════════════════════════════════
+      {/* ══════════════════════════════════════════
           3. POPULAR GAMES
       ══════════════════════════════════════════ */}
-      <section aria-labelledby="games-heading" className="bg-background py-12 lg:py-20">
+      <section aria-labelledby="games-heading" className="bg-background py-14 lg:py-20">
         <div className="container">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
-            <SectionHeading eyebrow="Trending Now" title="Popular Games" subtitle="The most traded games on IGMART right now." />
+            <SectionHeading
+              eyebrow="Browse by Game"
+              title="Popular Games"
+              subtitle="Find accounts for the most traded games on IGMART."
+            />
             <Link href="/games" className="text-primary-hover text-sm font-semibold flex items-center gap-1 hover:gap-1.5 transition-all pb-2 flex-shrink-0">
               All games <ArrowRight size={15} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
             {popularGames.map((game) => (
               <GameCard key={game.id} id={game.id} name={game.name} slug={game.slug} image={game.image} sellers={game.sellers} />
             ))}
@@ -146,15 +146,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═════════════════════════════════════════
+      {/* ══════════════════════════════════════════
           4. FEATURED LISTINGS
       ══════════════════════════════════════════ */}
-      <section aria-labelledby="listings-heading" className="bg-surface py-12 lg:py-20 border-t border-border">
+      <section aria-labelledby="listings-heading" className="bg-surface py-14 lg:py-20 border-t border-border">
         <div className="container">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
-            <SectionHeading eyebrow="Marketplace" title="Featured Listings" subtitle="Hand-picked listings from our top verified sellers." />
-            <Link href="/marketplace" className="text-primary-hover text-sm font-semibold flex items-center gap-1 hover:gap-1.5 transition-all pb-2 flex-shrink-0">
-              All listings <ArrowRight size={15} />
+            <SectionHeading
+              eyebrow="Hot Right Now"
+              title="Featured Accounts"
+              subtitle="Hand-picked listings from our top verified sellers."
+            />
+            <Link href="/marketplace/accounts" className="text-primary-hover text-sm font-semibold flex items-center gap-1 hover:gap-1.5 transition-all pb-2 flex-shrink-0">
+              All accounts <ArrowRight size={15} />
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -165,28 +169,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═════════════════════════════════════════
+      {/* ══════════════════════════════════════════
           5. TRUST / SECURITY
       ══════════════════════════════════════════ */}
       <section
         aria-labelledby="trust-heading"
-        className="bg-background py-12 lg:py-20 border-t border-border relative overflow-hidden"
+        className="bg-background py-14 lg:py-20 border-t border-border relative overflow-hidden"
       >
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at 50% -10%, rgba(37,99,235,0.08) 0%, transparent 65%)" }}
-        />
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at 50% -10%, rgba(99,60,255,0.09) 0%, transparent 65%)" }} />
         <div className="container relative z-10">
           <SectionHeading
             eyebrow="The IGMART Difference"
             title="Your Security Is Our Priority"
-            subtitle="Every transaction on IGMART is monitored and protected. We vet every seller, hold funds in escrow, and provide 24/7 dispute resolution."
+            subtitle="Every transaction is monitored and protected. We vet every seller, hold funds in escrow, and provide 24/7 dispute resolution."
             center
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
             {trustItems.map((item, idx) => (
-              <div key={idx} className="bg-card border border-border rounded-xl p-5 sm:p-6 text-center hover:border-primary/30 transition-colors">
+              <div key={idx} className="bg-card border border-border rounded-2xl p-6 text-center hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200">
                 <div className="mx-auto w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4">
                   <item.icon size={24} aria-hidden="true" />
                 </div>
@@ -198,17 +199,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═════════════════════════════════════════
+      {/* ══════════════════════════════════════════
           6. HOW IT WORKS
       ══════════════════════════════════════════ */}
-      <section aria-labelledby="how-heading" className="bg-surface py-12 lg:py-20 border-t border-border">
+      <section aria-labelledby="how-heading" className="bg-surface py-14 lg:py-20 border-t border-border">
         <div className="container">
           <SectionHeading eyebrow="Getting Started" title="How IGMART Works" center />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-            {howItWorks.map((s) => (
-              <div key={s.step} className="text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+            {howItWorks.map((s, i) => (
+              <div key={s.step} className="relative text-center">
+                {/* Connector line */}
+                {i < howItWorks.length - 1 && (
+                  <div aria-hidden="true" className="hidden md:block absolute top-7 left-[calc(50%+2rem)] right-[-50%] h-px bg-gradient-to-r from-border via-primary/30 to-transparent" />
+                )}
                 <div
-                  className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center font-heading font-black text-xl text-white mb-5 shadow-[var(--shadow-md)]"
+                  className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center font-heading font-black text-xl text-white mb-5 shadow-lg"
                   style={{ background: "var(--gradient-brand)" }}
                   aria-hidden="true"
                 >
@@ -225,22 +230,22 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═════════════════════════════════════════
+      {/* ══════════════════════════════════════════
           7. TOP SELLERS
       ══════════════════════════════════════════ */}
-      <section aria-labelledby="sellers-heading" className="bg-background py-12 lg:py-20 border-t border-border">
+      <section aria-labelledby="sellers-heading" className="bg-background py-14 lg:py-20 border-t border-border">
         <div className="container">
           <SectionHeading eyebrow="Top Sellers" title="Meet Our Best Sellers" center />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
             {featuredSellers.map((seller) => (
               <Link
                 key={seller.id}
                 href={`/seller/${seller.username}`}
-                className="block rounded-xl border border-border bg-card p-5 hover:border-border-strong hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] transition-all duration-200"
+                className="block rounded-2xl border border-border bg-card p-5 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] transition-all duration-200 group"
               >
-                <div className="flex items-center gap-3.5 mb-4">
+                <div className="flex items-center gap-3.5 mb-5">
                   <div
-                    className="w-11 h-11 rounded-full flex items-center justify-center font-heading font-black text-base text-white flex-shrink-0"
+                    className="w-12 h-12 rounded-full flex items-center justify-center font-heading font-black text-base text-white flex-shrink-0 shadow-md"
                     style={{ background: "var(--gradient-brand)" }}
                     aria-hidden="true"
                   >
@@ -248,10 +253,10 @@ export default function HomePage() {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-heading font-bold text-[15px] text-text truncate">{seller.displayName}</p>
+                      <p className="font-heading font-bold text-[15px] text-text truncate group-hover:text-primary-hover transition-colors">{seller.displayName}</p>
                       {seller.verified && <Badge variant="verified" size="sm">✓</Badge>}
                     </div>
-                    <p className="text-xs text-text-muted font-medium">Member since {seller.memberSince}</p>
+                    <p className="text-xs text-text-muted font-medium mt-0.5">Member since {seller.memberSince}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -260,7 +265,7 @@ export default function HomePage() {
                     { label: "Orders", val: seller.orders.toLocaleString() },
                     { label: "Response", val: seller.responseTime },
                   ].map((m) => (
-                    <div key={m.label} className="bg-elevated rounded-lg p-2.5 text-center">
+                    <div key={m.label} className="bg-elevated rounded-xl p-2.5 text-center">
                       <p className="font-heading font-black text-sm text-text">{m.val}</p>
                       <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider mt-0.5">{m.label}</p>
                     </div>
@@ -272,31 +277,33 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═════════════════════════════════════════
+      {/* ══════════════════════════════════════════
           8. SELL CTA
       ══════════════════════════════════════════ */}
       <section
         aria-labelledby="sell-cta-heading"
-        className="py-16 lg:py-24 border-y border-border"
-        style={{ background: "linear-gradient(135deg, #141e35 0%, #12151c 50%, #131840 100%)" }}
+        className="py-20 lg:py-28 border-y border-border relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #10163a 0%, #0d1020 50%, #12183f 100%)" }}
       >
-        <div className="container text-center">
-          <p className="text-xs font-bold tracking-[0.1em] uppercase text-primary-hover mb-4">For Gamers</p>
-          <h2 id="sell-cta-heading" className="font-heading font-black text-3xl sm:text-4xl lg:text-[2.75rem] text-text mb-4 uppercase tracking-tight">
-            Start Earning From Your{" "}
-            <span className="text-gradient-brand">Gaming Skills</span>
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(99,60,255,0.12) 0%, transparent 60%)" }} />
+        <div className="container text-center relative z-10">
+          <p className="text-xs font-bold tracking-[0.15em] uppercase text-primary-hover mb-4">For Gamers · By Gamers</p>
+          <h2 id="sell-cta-heading" className="font-heading font-black text-3xl sm:text-4xl lg:text-[2.75rem] text-text mb-4 uppercase tracking-tight leading-tight">
+            Turn Your Accounts Into{" "}
+            <span className="text-gradient-brand">Real Money</span>
           </h2>
           <p className="text-text-muted text-base max-w-xl mx-auto mb-8 leading-relaxed">
-            Join 18,000+ verified sellers on IGMART. List your gaming accounts, items, services and earn money doing what you love.
+            Join 18,000+ verified sellers on IGMART. List your gaming accounts in minutes and earn from assets you no longer use.
           </p>
           <HomepageClient action="sellcta" />
         </div>
       </section>
 
-      {/* ═════════════════════════════════════════
+      {/* ══════════════════════════════════════════
           9. REVIEWS
       ══════════════════════════════════════════ */}
-      <section aria-labelledby="reviews-heading" className="bg-surface py-12 lg:py-20">
+      <section aria-labelledby="reviews-heading" className="bg-surface py-14 lg:py-20">
         <div className="container">
           <SectionHeading eyebrow="Community Trust" title="What Gamers Say" center />
           <div className="flex flex-col items-center mb-8">
@@ -305,9 +312,9 @@ export default function HomePage() {
               <strong className="text-text font-bold">4.8/5</strong> — based on verified marketplace reviews
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {REVIEWS.map((r) => (
-              <div key={r.id} className="bg-card border border-border rounded-xl p-4 sm:p-5 flex flex-col h-full">
+              <div key={r.id} className="bg-card border border-border rounded-2xl p-5 flex flex-col h-full hover:border-border-strong transition-colors">
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="font-semibold text-sm text-text">{r.author}</p>
@@ -324,18 +331,13 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-          <div className="text-center mt-8">
-            <Link href="/reviews" className="text-primary-hover text-sm font-semibold inline-flex items-center gap-1 hover:gap-1.5 transition-all">
-              View All Reviews <ArrowRight size={15} />
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* ═════════════════════════════════════════
+      {/* ══════════════════════════════════════════
           10. GUIDES
       ══════════════════════════════════════════ */}
-      <section aria-labelledby="guides-heading" className="bg-background py-12 lg:py-20 border-t border-border">
+      <section aria-labelledby="guides-heading" className="bg-background py-14 lg:py-20 border-t border-border">
         <div className="container">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
             <SectionHeading eyebrow="Gaming Guides" title="Read Our Latest Guides" />
@@ -343,12 +345,12 @@ export default function HomePage() {
               All guides <ArrowRight size={15} />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {featuredGuides.map((guide) => (
               <Link
                 key={guide.id}
                 href={`/guides/${guide.slug}`}
-                className="group block rounded-xl overflow-hidden border border-border bg-card hover:border-border-strong hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] transition-all duration-200"
+                className="group block rounded-2xl overflow-hidden border border-border bg-card hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] transition-all duration-200"
               >
                 <div className="aspect-video relative overflow-hidden bg-elevated">
                   <Image
@@ -356,8 +358,9 @@ export default function HomePage() {
                     alt={guide.title}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
-                    className="object-cover group-hover:scale-[1.03] transition-transform duration-300"
+                    className="object-cover object-top group-hover:scale-[1.04] transition-transform duration-300"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute top-2 left-2">
                     <Badge variant="hot" size="sm">{guide.category}</Badge>
                   </div>
@@ -374,10 +377,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═════════════════════════════════════════
+      {/* ══════════════════════════════════════════
           11. FAQ
       ══════════════════════════════════════════ */}
-      <section aria-labelledby="faq-heading" className="bg-surface py-12 lg:py-20 border-t border-border">
+      <section aria-labelledby="faq-heading" className="bg-surface py-14 lg:py-20 border-t border-border">
         <div className="container max-w-3xl">
           <SectionHeading eyebrow="FAQ" title="Frequently Asked Questions" center />
           <HomepageClient action="faq" faqItems={FAQ_ITEMS} />

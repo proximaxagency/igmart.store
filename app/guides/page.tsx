@@ -22,7 +22,7 @@ export default function GuidesPage() {
         <Link href={`/guides/${featuredGuide.slug}`} className="group block mb-12">
           <div style={{ position: "relative", borderRadius: 24, overflow: "hidden", minHeight: 400, display: "flex", alignItems: "flex-end" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={featuredGuide.image} alt={featuredGuide.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 700ms" }} className="group-hover:scale-105" />
+            <img src={featuredGuide.image} alt={featuredGuide.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", transition: "transform 700ms" }} className="group-hover:scale-105" />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,17,22,1) 0%, rgba(15,17,22,0.4) 50%, transparent 100%)" }} />
             
             <div style={{ position: "relative", zIndex: 10, padding: 40, width: "100%", maxWidth: 800 }}>
@@ -50,7 +50,7 @@ export default function GuidesPage() {
           <Link key={guide.id} href={`/guides/${guide.slug}`} className="group block" style={{ background: "#171A21", border: "1px solid #272A30", borderRadius: 16, overflow: "hidden" }}>
             <div style={{ aspectRatio: "16/9", position: "relative", overflow: "hidden" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={guide.image} alt={guide.title} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 500ms" }} className="group-hover:scale-110" />
+              <img src={guide.image} alt={guide.title} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", transition: "transform 500ms" }} className="group-hover:scale-110" />
               <div style={{ position: "absolute", top: 12, left: 12, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#FAFAFA", textTransform: "uppercase" }}>
                 {guide.category}
               </div>

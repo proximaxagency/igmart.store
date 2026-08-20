@@ -105,10 +105,12 @@ export default function Header() {
     dropdownTimeoutRef.current = setTimeout(() => setActiveDropdown(null), 120);
   };
 
-  const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
+  const isActive = (path: string) => {
+    if (path === "/marketplace") return pathname === "/marketplace" || pathname.startsWith("/marketplace/") || pathname.startsWith("/games/");
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
 
   const mainLinks = [
-    { label: "Games", href: "/games" },
     { label: "Marketplace", href: "/marketplace" },
     { label: "Sell", href: "/sell" },
     { label: "Guides", href: "/guides" },
