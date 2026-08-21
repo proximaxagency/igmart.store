@@ -7,7 +7,7 @@ import { Badge, Stars, PriceDisplay, Button, Alert } from "@/components/ui/index
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { useEffect } from "react";
 
 function getBadgeVariant(badge: string): "hot" | "sale" | "popular" | "new" {
@@ -17,15 +17,19 @@ function getBadgeVariant(badge: string): "hot" | "sale" | "popular" | "new" {
   return "popular";
 }
 
-export default function ListingPage({ params }: { params: { id: string } }) {
-  const listing = useQuery(api.listings.getListingById, {
-    listingId: params.id as Id<"listings">,
-  });
+export default function ListingPage() {
+  const params = useParams();
+  const id = params?.id as string | undefined;
+
+  const listing = useQuery(
+    api.listings.getListingById,
+    id ? { listingId: id as Id<"listings"> } : "skip"
+  );
   const incrementViews = useMutation(api.listings.incrementViews);
 
   useEffect(() => {
-    if (listing) {
-      incrementViews({ listingId: params.id as Id<"listings"> }).catch(() => {});
+    if (listing && id) {
+      incrementViews({ listingId: id as Id<"listings"> }).catch(() => {});
     }
   }, [!!listing]);
 
