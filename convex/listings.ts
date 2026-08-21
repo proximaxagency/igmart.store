@@ -179,3 +179,27 @@ export const incrementViews = mutation({
     await ctx.db.patch(args.listingId, { views: (listing.views ?? 0) + 1 });
   },
 });
+
+// ── CONVEX FILE STORAGE ────────────────────────────────────────────────────
+// Generate a one-time upload URL for direct browser → Convex storage uploads
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+// Get a public CDN URL for a Convex storage ID
+export const getImageUrl = query({
+  args: { storageId: v.string() },
+  handler: async (ctx, args) => {
+    // If it already looks like a URL, return it as-is
+    if (args.storageId.startsWith("http")) return args.storageId;
+    try {
+      return await ctx.storage.getUrl(args.storageId as Id<"_storage">);
+    } catch {
+      return null;
+    }
+  },
+});
+

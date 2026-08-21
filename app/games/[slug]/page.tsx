@@ -1,11 +1,13 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
-import { GAMES, LISTINGS, CATEGORIES } from "@/lib/data/igmartData";
+import { useState, useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { Stars, EmptyState } from "@/components/ui/index";
 import { ListingCard } from "@/components/shared/ListingCard";
-import { Search } from "lucide-react";
+import { Loader2, SlidersHorizontal, Search } from "lucide-react";
 
 interface Props {
   params: { slug: string };
@@ -16,37 +18,88 @@ function getNormalizedSlug(slug: string) {
   return slug;
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const normalizedSlug = getNormalizedSlug(params.slug);
-  const game = GAMES.find((g) => g.slug === normalizedSlug);
-  if (!game) return { title: "Game Not Found" };
-  return {
-    title: `${game.name} Accounts Marketplace | IGMART`,
-    description: `Buy and sell verified ${game.name} accounts with escrow protection on IGMART.`,
-  };
-}
-
 export default function GameDetailPage({ params }: Props) {
   const normalizedSlug = getNormalizedSlug(params.slug);
-  const game = GAMES.find((g) => g.slug === normalizedSlug);
-  if (!game) notFound();
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("recommended");
 
-  const gameListings = LISTINGS.filter((l) => l.game === game.name || (game.slug === "pubg-mobile" && (l.game === "BGMI" || l.game === "PUBG Global" || l.game === "PUBG Mobile / BGMI")));
+  // Load all games from Convex
+  const games = useQuery(api.listings.getGames);
+  // Load all active listings from Convex
+  const allListings = useQuery(api.listings.listActiveListings, { limit: 500 });
+
+  const game = useMemo(() => {
+    if (!games) return null;
+    return games.find((g) => g.slug === normalizedSlug) ?? null;
+  }, [games, normalizedSlug]);
+
+  const gameListings = useMemo(() => {
+    if (!allListings || !game) return [];
+    let filtered = allListings.filter((l) => l.gameId === game._id);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter((l) => l.title.toLowerCase().includes(q) || l.description?.toLowerCase().includes(q));
+    }
+    if (sort === "price_asc") filtered = [...filtered].sort((a, b) => a.price - b.price);
+    else if (sort === "price_desc") filtered = [...filtered].sort((a, b) => b.price - a.price);
+    else if (sort === "newest") filtered = [...filtered].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    else filtered = [...filtered].sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
+    return filtered;
+  }, [allListings, game, search, sort]);
+
+  // Loading
+  if (games === undefined || allListings === undefined) {
+    return (
+      <div className="bg-background min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 size={36} className="animate-spin text-primary" />
+          <p className="text-text-muted font-semibold text-sm">Loading game…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found
+  if (!game) {
+    return (
+      <div className="bg-background min-h-screen flex flex-col items-center justify-center gap-6 text-center px-4">
+        <div className="text-7xl font-black text-border">404</div>
+        <h1 className="font-heading font-black text-2xl text-text">Game Not Found</h1>
+        <p className="text-text-muted max-w-sm">
+          We couldn&apos;t find a game for &quot;{params.slug}&quot;. Browse all available games below.
+        </p>
+        <div className="flex gap-3">
+          <Link href="/" className="px-5 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors">
+            Return Home
+          </Link>
+          <Link href="/marketplace" className="px-5 py-2.5 rounded-xl border border-border text-text font-semibold text-sm hover:border-primary/50 transition-colors">
+            Browse Marketplace
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const posterSrc = game.imageUrl ?? "/clash-of-clans-poster.jpg";
+  const listingCount = game.metrics?.activeListings ?? gameListings.length;
+  const sellerCount = game.metrics?.totalSellers ?? 0;
+  const rating = game.metrics?.rating ?? 4.9;
 
   return (
     <div className="bg-background min-h-screen">
       {/* Game Hero */}
       <div className="relative h-[280px] sm:h-[320px] lg:h-[360px] flex items-end pb-8 sm:pb-12 border-b border-border">
-        <Image 
-          src={game.image} 
-          alt={game.name} 
-          fill 
+        <Image
+          src={posterSrc}
+          alt={game.name}
+          fill
           sizes="100vw"
           priority
-          className="object-cover object-top z-0 opacity-35" 
+          unoptimized
+          className="object-cover object-top z-0 opacity-35"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-[1]" />
-        
+
         <div className="container relative z-10">
           <div className="flex items-center gap-2 sm:gap-3 mb-4">
             <Link href="/marketplace" className="text-text-muted text-xs sm:text-sm font-semibold hover:text-text transition-colors">Marketplace</Link>
@@ -56,12 +109,12 @@ export default function GameDetailPage({ params }: Props) {
           <h1 className="font-heading font-black text-3xl sm:text-4xl lg:text-5xl text-text mb-6">
             {game.name} Marketplace
           </h1>
-          
+
           <div className="flex flex-wrap gap-3 sm:gap-4">
             {[
-              { label: "ACTIVE LISTINGS", val: game.listings.toLocaleString() },
-              { label: "VERIFIED SELLERS", val: game.sellers.toLocaleString() },
-              { label: "AVERAGE RATING", val: game.rating, isRating: true },
+              { label: "ACTIVE LISTINGS", val: listingCount.toLocaleString() },
+              { label: "VERIFIED SELLERS", val: sellerCount.toLocaleString() },
+              { label: "AVERAGE RATING", val: rating, isRating: true },
             ].map((stat, idx) => (
               <div key={idx} className="bg-surface/80 border border-border/80 px-4 py-3 rounded-xl backdrop-blur-md min-w-[140px]">
                 <p className="text-[10px] sm:text-xs text-text-muted font-bold tracking-wider uppercase mb-1">{stat.label}</p>
@@ -82,32 +135,28 @@ export default function GameDetailPage({ params }: Props) {
       {/* Main Content */}
       <div className="container py-8 sm:py-12">
         <div className="flex flex-col lg:flex-row gap-8">
-          
-          {/* Sidebar Filters */}
+
+          {/* Sidebar */}
           <div className="w-full lg:w-[280px] flex-shrink-0">
-            {/* Desktop Sticky Container */}
             <div className="lg:sticky lg:top-[100px] flex flex-col gap-6">
-              
               <div className="bg-card border border-border rounded-xl p-5">
-                <h3 className="font-heading font-bold text-lg text-text mb-4">Categories</h3>
-                <div className="flex flex-col gap-3">
-                  {CATEGORIES.map(cat => (
-                    <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
-                      <div className="relative flex items-center justify-center w-5 h-5 rounded border border-border bg-background group-hover:border-primary transition-colors">
-                        <input type="checkbox" className="peer absolute opacity-0 w-full h-full cursor-pointer" />
-                        <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity absolute pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        <div className="absolute inset-0 bg-primary opacity-0 peer-checked:opacity-100 rounded-sm transition-opacity pointer-events-none" />
-                      </div>
-                      <span className="text-sm font-semibold text-text-secondary group-hover:text-text transition-colors flex items-center gap-2">
-                        <span>{cat.icon}</span> {cat.name}
-                      </span>
-                    </label>
-                  ))}
+                <h3 className="font-heading font-bold text-lg text-text mb-4">Filters</h3>
+
+                {/* Search */}
+                <div className="relative mb-4">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+                  <input
+                    type="text"
+                    placeholder="Search listings…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg pl-8 pr-3 py-2.5 text-sm font-medium text-text placeholder:text-text-muted focus:outline-none focus:border-primary-hover transition-colors"
+                  />
                 </div>
-                
-                <div className="h-px bg-border my-6" />
-                
-                <h3 className="font-heading font-bold text-lg text-text mb-4">Price Range</h3>
+
+                <div className="h-px bg-border my-4" />
+
+                <h3 className="font-heading font-bold text-base text-text mb-3">Price Range</h3>
                 <div className="flex items-center gap-3">
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">$</span>
@@ -120,7 +169,6 @@ export default function GameDetailPage({ params }: Props) {
                   </div>
                 </div>
               </div>
-              
             </div>
           </div>
 
@@ -128,14 +176,19 @@ export default function GameDetailPage({ params }: Props) {
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <p className="text-sm font-semibold text-text-secondary">
-                Showing <strong className="text-text font-bold">{gameListings.length}</strong> featured listings
+                Showing <strong className="text-text font-bold">{gameListings.length}</strong> listings
               </p>
               <div className="relative min-w-[200px]">
-                <select className="w-full appearance-none bg-card border border-border rounded-lg px-4 py-2.5 pr-10 text-sm font-semibold text-text focus:outline-none focus:border-primary-hover min-h-[44px] cursor-pointer">
-                  <option>Recommended</option>
-                  <option>Lowest Price</option>
-                  <option>Highest Price</option>
-                  <option>Newest</option>
+                <SlidersHorizontal size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="w-full appearance-none bg-card border border-border rounded-lg pl-8 pr-10 py-2.5 text-sm font-semibold text-text focus:outline-none focus:border-primary-hover min-h-[44px] cursor-pointer"
+                >
+                  <option value="recommended">Recommended</option>
+                  <option value="price_asc">Lowest Price</option>
+                  <option value="price_desc">Highest Price</option>
+                  <option value="newest">Newest</option>
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -146,15 +199,28 @@ export default function GameDetailPage({ params }: Props) {
             {gameListings.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                 {gameListings.map((listing) => (
-                  <ListingCard key={listing.id} {...listing} />
+                  <ListingCard
+                    key={listing._id}
+                    id={listing._id}
+                    title={listing.title}
+                    game={listing.gameName ?? game.name}
+                    price={listing.price}
+                    originalPrice={listing.originalPrice}
+                    seller={(listing as any).sellerName ?? "Verified Seller"}
+                    rating={5}
+                    reviews={0}
+                    delivery={listing.deliveryTime ?? "Instant"}
+                    image={listing.images?.[0] ?? posterSrc}
+                    badge={listing.badge}
+                  />
                 ))}
               </div>
             ) : (
               <div className="mt-8">
-                <EmptyState 
-                  icon="🎮" 
-                  title="No listings found" 
-                  description="Try adjusting your filters or check back later." 
+                <EmptyState
+                  icon="🎮"
+                  title={search ? "No results found" : "No listings yet"}
+                  description={search ? `No listings match "${search}". Try a different search.` : "Check back soon — new listings are added daily."}
                 />
               </div>
             )}

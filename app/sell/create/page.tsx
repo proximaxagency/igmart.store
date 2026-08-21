@@ -9,6 +9,7 @@ import {
   Loader2, UploadCloud, ChevronRight, Gamepad2, Shield, Star,
   Swords, Gem, Trophy, Zap, Flame, Package, Lock, Eye, EyeOff
 } from "lucide-react";
+import { ImageUploader } from "@/components/shared/ImageUploader";
 
 // ─── Game-specific field configs ───────────────────────────────────────────
 type FieldType = "text" | "number" | "select" | "toggle" | "level";
@@ -123,6 +124,7 @@ export default function CreateListingPage() {
   const [gameDetails, setGameDetails] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const selectedGame = useMemo(() => {
     if (!formData.gameId || !games) return null;
@@ -182,7 +184,7 @@ export default function CreateListingPage() {
         deliveryMethod: formData.deliveryMethod,
         deliveryTime: formData.deliveryTime,
         autoDeliveryData: formData.autoDeliveryData || undefined,
-        images: ["https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800"],
+        images: uploadedImages.length > 0 ? uploadedImages : [selectedGame?.imageUrl ?? "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800"],
         attributes: Object.keys(gameDetails).length > 0 ? gameDetails : undefined,
       });
       router.push("/seller/dashboard");
@@ -462,16 +464,20 @@ export default function CreateListingPage() {
         {/* ── STEP 5: Media ── */}
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-border bg-elevated/40 flex items-center gap-2">
-            <UploadCloud size={18} className="text-text-muted" />
+            <UploadCloud size={18} className="text-primary" />
             <h2 className="font-heading font-bold text-base text-text">Screenshots & Media</h2>
-            <span className="ml-auto text-xs font-bold text-text-muted bg-elevated px-2 py-0.5 rounded-full border border-border">Coming Soon</span>
+            <span className="ml-auto text-xs font-bold text-success bg-success/10 px-2 py-0.5 rounded-full border border-success/20">Live Upload</span>
           </div>
           <div className="p-6">
-            <div className="border-2 border-dashed border-border rounded-xl p-10 flex flex-col items-center justify-center text-center opacity-40 cursor-not-allowed">
-              <UploadCloud size={36} className="text-text-muted mb-3" />
-              <p className="text-sm font-semibold text-text">Upload Account Screenshots</p>
-              <p className="text-xs text-text-muted mt-1">Listings with screenshots get 3× more buyers. Coming in v2.</p>
-            </div>
+            <ImageUploader
+              value={uploadedImages}
+              onChange={setUploadedImages}
+              maxImages={5}
+              label="Account Screenshots"
+            />
+            <p className="text-xs text-text-muted mt-3">
+              💡 Listings with screenshots get <strong>3× more buyers</strong>. Upload up to 5 images — drag & drop supported.
+            </p>
           </div>
         </div>
 
