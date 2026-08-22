@@ -43,6 +43,9 @@ export default defineSchema({
     // Financial Ledger Balances
     walletBalance: v.optional(v.number()),
     pendingBalance: v.optional(v.number()),
+
+    // Data source tracking
+    isSeeded: v.optional(v.boolean()),
   })
     .index("by_clerkId", ["clerkId"])
     .index("by_username", ["username"])
@@ -106,6 +109,9 @@ export default defineSchema({
     ),
     views: v.number(),
     badge: v.optional(v.union(v.literal("HOT"), v.literal("SALE"), v.literal("POPULAR"), v.literal("NEW"))),
+
+    // Data source tracking
+    isSeeded: v.optional(v.boolean()),
     
     createdAt: v.number(),
     updatedAt: v.number(),

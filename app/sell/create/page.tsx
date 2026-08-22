@@ -25,7 +25,7 @@ interface GameField {
   required?: boolean;
 }
 
-const GAME_FIELDS: Record<string, { emoji: string; color: string; fields: GameField[] }> = {
+export const GAME_FIELDS: Record<string, { emoji: string; color: string; fields: GameField[] }> = {
   "clash-of-clans": {
     emoji: "⚔️",
     color: "from-amber-500/20 to-yellow-500/10 border-amber-500/30",
@@ -202,6 +202,7 @@ export default function CreateListingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadAnother, setUploadAnother] = useState(false);
 
   const selectedGame = useMemo(() => {
     if (!formData.gameId || !games) return null;
@@ -265,7 +266,6 @@ export default function CreateListingPage() {
     return `${selectedGame.name} Account`;
   }, [selectedGame, gameDetails]);
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.gameId || !formData.categoryId) return;
@@ -287,14 +287,33 @@ export default function CreateListingPage() {
         images: uploadedImages.length > 0 ? uploadedImages : [selectedGame?.imageUrl ?? "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800"],
         attributes: Object.keys(gameDetails).length > 0 ? gameDetails : undefined,
       });
-      router.push("/seller/dashboard");
-    } catch (error) {
+
+      if (uploadAnother) {
+        setFormData({
+          title: "",
+          description: "",
+          price: "",
+          gameId: formData.gameId,
+          categoryId: formData.categoryId,
+          deliveryMethod: "manual",
+          deliveryTime: "24 hours",
+          autoDeliveryData: "",
+        });
+        setGameDetails({});
+        setUploadedImages([]);
+        alert("Listing published successfully! You can now create another one.");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        router.push("/seller/dashboard");
+      }
+    } catch (error: any) {
       console.error("Failed to create listing:", error);
-      alert("Failed to create listing. Please try again.");
+      alert(`Failed to create listing: ${error.message || error}`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   const inputCls = "w-full bg-background border border-border rounded-xl px-4 py-3 text-text text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-text-muted/60";
   const labelCls = "block text-sm font-semibold text-text mb-1.5";
@@ -582,7 +601,20 @@ export default function CreateListingPage() {
         </div>
 
         {/* ── Submit ── */}
-        <div className="flex items-center justify-between pt-2 pb-6">
+        <div className="flex flex-col gap-4 pt-2 pb-6">
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              id="uploadAnother" 
+              checked={uploadAnother} 
+              onChange={e => setUploadAnother(e.target.checked)} 
+              className="accent-primary w-4 h-4 cursor-pointer" 
+            />
+            <label htmlFor="uploadAnother" className="text-sm font-semibold text-text cursor-pointer">
+              Upload another account for this game (keeps game & category selected)
+            </label>
+          </div>
+          <div className="flex items-center justify-between">
           <p className="text-xs text-text-muted">
             By publishing, you agree to our{" "}
             <a href="/legal/terms" className="text-primary hover:underline">Seller Terms</a>
@@ -598,8 +630,11 @@ export default function CreateListingPage() {
               <><Flame size={17} /> Publish Listing</>
             )}
           </button>
+          </div>
         </div>
       </form>
+      {/* Spacer for floating chat widget */}
+      <div className="h-20"></div>
     </div>
   );
 }

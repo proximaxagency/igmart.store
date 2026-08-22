@@ -458,6 +458,7 @@ export const listPendingListings = query({
       v.literal("removed"),
       v.literal("paused"),
     )),
+    excludeSeeded: v.optional(v.boolean()), // default true — hides seed/dummy data
   },
   handler: async (ctx, args) => {
     const user = await getAuthUser(ctx);
@@ -466,13 +467,20 @@ export const listPendingListings = query({
     }
 
     const filterStatus = args.status ?? "pending_review";
+    const shouldExcludeSeeded = args.excludeSeeded !== false; // true unless explicitly set false
+
     const listings = await ctx.db.query("listings")
       .withIndex("by_status", (q) => q.eq("status", filterStatus))
       .order("desc")
-      .take(100);
+      .take(500); // take more so we can filter after
+
+    // Filter out seed data unless admin opts in
+    const filtered = shouldExcludeSeeded
+      ? listings.filter((l) => !l.isSeeded)
+      : listings;
 
     const hydrated = [];
-    for (const listing of listings) {
+    for (const listing of filtered.slice(0, 100)) {
       const seller = await ctx.db.get(listing.sellerId);
       const game = await ctx.db.get(listing.gameId);
       hydrated.push({
@@ -599,5 +607,47 @@ export const bulkApproveListings = mutation({
       createdAt: Date.now(),
     });
     return { success: true, count };
+  },
+});
+
+export const bulkCreateListings = mutation({
+  args: {
+    listings: v.array(
+      v.object({
+        title: v.string(),
+        description: v.string(),
+        price: v.number(),
+        gameId: v.id("games"),
+        categoryId: v.id("categories"),
+        deliveryMethod: v.union(v.literal("automatic"), v.literal("manual"), v.literal("coordinate")),
+        deliveryTime: v.string(),
+        autoDeliveryData: v.optional(v.string()),
+        images: v.array(v.string()),
+        attributes: v.optional(v.any()), // Game-specific attributes
+        isSeeded: v.optional(v.boolean()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const user = await getAuthUser(ctx);
+    if (!user || (user.role !== "admin" && user.role !== "super_admin" && user.role !== "moderator")) {
+      throw new Error("Forbidden");
+    }
+
+    const insertedIds = [];
+    for (const listing of args.listings) {
+      // @ts-ignore
+      const listingId = await ctx.db.insert("listings", {
+        ...listing,
+        sellerId: user._id,
+        slug: listing.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + "-" + Math.random().toString(36).slice(2, 6),
+        status: "active", // Admins go straight to active
+        views: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      insertedIds.push(listingId);
+    }
+    return insertedIds;
   },
 });

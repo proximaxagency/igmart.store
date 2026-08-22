@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, MessageSquare, Users, Database, AlertTriangle, Settings, ArrowLeft, ShieldAlert, Loader2, ShieldCheck, DollarSign, FileText, LayoutDashboard } from "lucide-react";
+import { Shield, MessageSquare, Users, Database, AlertTriangle, Settings, ArrowLeft, ShieldAlert, Loader2, ShieldCheck, DollarSign, FileText, LayoutDashboard, Upload } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -25,6 +25,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/finance", label: "Finance & Payouts", icon: DollarSign },
     { href: "/admin/users", label: "User Management", icon: Users },
     { href: "/admin/listings", label: "Listing Moderation", icon: Database },
+    { href: "/admin/bulk-upload", label: "Bulk Upload", icon: Upload },
     { href: "/admin/disputes", label: "Disputes & Escrow", icon: AlertTriangle },
     { href: "/admin/risk", label: "Risk Operations", icon: ShieldAlert },
     { href: "/admin/audit", label: "System Audit Logs", icon: FileText },

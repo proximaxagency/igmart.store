@@ -32,8 +32,9 @@ export default function AdminListingsPage() {
   const [selectedBadge, setSelectedBadge] = useState<typeof BADGE_OPTIONS[number] | "">("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+  const [showSeeded, setShowSeeded] = useState(false);
 
-  const listings = useQuery(api.admin.listPendingListings, { status: statusFilter });
+  const listings = useQuery(api.admin.listPendingListings, { status: statusFilter, excludeSeeded: !showSeeded });
   const approveListing = useMutation(api.admin.approveListing);
   const rejectListing = useMutation(api.admin.rejectListing);
   const bulkApprove = useMutation(api.admin.bulkApproveListings);
@@ -163,6 +164,15 @@ export default function AdminListingsPage() {
               {opt.label}
             </button>
           ))}
+          <label className="flex items-center gap-2 ml-2 cursor-pointer bg-elevated border border-border px-3 py-2 rounded-xl">
+            <input 
+              type="checkbox" 
+              checked={showSeeded} 
+              onChange={(e) => setShowSeeded(e.target.checked)} 
+              className="accent-primary" 
+            />
+            <span className="text-xs font-bold text-text-muted whitespace-nowrap">Show Seed Data</span>
+          </label>
         </div>
       </div>
 

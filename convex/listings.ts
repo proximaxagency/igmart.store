@@ -94,31 +94,51 @@ export const createListing = mutation({
     if (args.price <= 0) throw new Error("Price must be greater than zero");
     if (args.title.trim().length < 5) throw new Error("Title must be at least 5 characters");
 
+    const ADMIN_EMAILS = ["proximaxagency@gmail.com", "dev@igmart.store"];
+    const isAdmin = ADMIN_EMAILS.some(e => (user.email || "").toLowerCase().includes(e.split("@")[0]));
+
     // Auto-upgrade buyer to seller on first listing
     if (user.role === "buyer") {
       await ctx.db.patch(user._id, { role: "seller", updatedAt: Date.now() });
     }
 
+    // Admin accounts skip the review queue — go live immediately
+    const listingStatus = isAdmin ? "active" : "pending_review";
+
     const listingId = await ctx.db.insert("listings", {
       ...args,
       sellerId: user._id,
       slug: generateSlug(args.title),
-      status: "pending_review",   // Goes to admin queue first
+      status: listingStatus,
       views: 0,
+      isSeeded: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
 
-    // Notify the seller their listing is under review
-    await ctx.db.insert("notifications", {
-      userId: user._id,
-      type: "listing_approved",
-      title: "Listing Submitted for Review",
-      body: `Your listing "${args.title.substring(0, 60)}" has been submitted and is pending admin approval.`,
-      link: `/seller/dashboard`,
-      isRead: false,
-      createdAt: Date.now(),
-    });
+    if (!isAdmin) {
+      // Notify the seller their listing is under review
+      await ctx.db.insert("notifications", {
+        userId: user._id,
+        type: "listing_approved",
+        title: "Listing Submitted for Review",
+        body: `Your listing "${args.title.substring(0, 60)}" has been submitted and is pending admin approval.`,
+        link: `/seller/dashboard`,
+        isRead: false,
+        createdAt: Date.now(),
+      });
+    } else {
+      // Admin listing — immediately live notification
+      await ctx.db.insert("notifications", {
+        userId: user._id,
+        type: "listing_approved",
+        title: "🎉 Listing Published!",
+        body: `Your listing "${args.title.substring(0, 60)}" is now live on the marketplace.`,
+        link: `/listing/${listingId}`,
+        isRead: false,
+        createdAt: Date.now(),
+      });
+    }
 
     return listingId;
   },
