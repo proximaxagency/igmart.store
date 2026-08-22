@@ -2,6 +2,7 @@
 "use client";
 import { forwardRef } from "react";
 import { CheckCircle2, ShieldCheck, Star, Heart } from "lucide-react";
+import { useCurrency } from "@/components/providers/CurrencyProvider";
 
 // ═══════════════════════════════════════════════
 // BUTTON
@@ -270,10 +271,10 @@ interface PriceDisplayProps {
 export function PriceDisplay({
   price,
   originalPrice,
-  currency = "$",
   size = "md",
   showDiscount = false,
-}: PriceDisplayProps) {
+}: Omit<PriceDisplayProps, "currency">) {
+  const { format } = useCurrency();
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
 
   const priceSize = {
@@ -291,11 +292,11 @@ export function PriceDisplay({
   return (
     <div className="flex items-end gap-2 flex-wrap">
       <span className={`font-heading font-black text-text leading-none ${priceSize}`}>
-        {currency}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        {format(price)}
       </span>
       {originalPrice && (
         <span className={`text-text-muted line-through mb-0.5 font-medium ${originalSize}`}>
-          {currency}{originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {format(originalPrice)}
         </span>
       )}
       {showDiscount && discount > 0 && (

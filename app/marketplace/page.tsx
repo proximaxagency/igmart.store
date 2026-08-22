@@ -9,6 +9,7 @@ import {
   Loader2, ChevronLeft, ChevronRight, Flame, Star
 } from "lucide-react";
 import { GAMES, CATEGORIES } from "@/lib/data/igmartData";
+import { useCurrency } from "@/components/providers/CurrencyProvider";
 
 const SORT_OPTIONS = [
   { label: "Recommended", value: "recommended" },
@@ -172,6 +173,7 @@ function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
     _id: string; title: string; gameName?: string; price: number;
     images?: string[]; deliveryTime?: string; _creationTime: number;
   };
+  const { format } = useCurrency();
   return (
     <Link
       href={`/listing/${l._id}`}
@@ -202,7 +204,7 @@ function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
       <div className="p-4">
         <p className="text-sm font-bold text-text line-clamp-2 leading-snug group-hover:text-primary-hover transition-colors mb-3">{l.title}</p>
         <div className="flex items-center justify-between">
-          <p className="font-heading font-black text-xl text-text">${l.price.toFixed(2)}</p>
+          <p className="font-heading font-black text-xl text-text">{format(l.price)}</p>
           <span className="text-[10px] bg-elevated text-text-muted font-bold px-2.5 py-1 rounded-full border border-border">
             {l.deliveryTime || "Fast"}
           </span>

@@ -9,6 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
+import { useCurrency } from "@/components/providers/CurrencyProvider";
 
 function getBadgeVariant(badge: string): "hot" | "sale" | "popular" | "new" {
   if (badge === "HOT") return "hot";
@@ -24,6 +25,7 @@ function RecoCard({ listing }: { listing: Record<string, unknown> }) {
     images?: string[]; deliveryTime?: string; badge?: string; gameName?: string;
   };
   const img = l.images?.[0];
+  const { format } = useCurrency();
   return (
     <Link
       href={`/listing/${l._id}`}
@@ -52,13 +54,13 @@ function RecoCard({ listing }: { listing: Record<string, unknown> }) {
           {l.title}
         </p>
         <div className="flex items-center justify-between">
-          <p className="font-heading font-black text-lg text-text">${l.price.toFixed(2)}</p>
+          <p className="font-heading font-black text-lg text-text">{format(l.price)}</p>
           <span className="text-[10px] bg-elevated text-text-muted font-bold px-2 py-0.5 rounded-full border border-border">
             {l.deliveryTime || "Instant"}
           </span>
         </div>
         {l.originalPrice && l.originalPrice > l.price && (
-          <p className="text-[11px] text-text-muted line-through mt-0.5">${l.originalPrice.toFixed(2)}</p>
+          <p className="text-[11px] text-text-muted line-through mt-0.5">{format(l.originalPrice)}</p>
         )}
       </div>
     </Link>
