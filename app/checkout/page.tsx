@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ShieldCheck, Lock, Wallet, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, Lock, Wallet, Loader2, AlertTriangle, CheckCircle2, MessageSquare } from "lucide-react";
 import { Button, Alert } from "@/components/ui/index";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -139,6 +139,39 @@ function CheckoutContent() {
               )}
             </div>
 
+            {/* Listing info context on the left now */}
+            <div className="bg-card border border-border rounded-xl p-5 sm:p-6">
+              <h2 className="font-heading font-bold text-[17px] text-text mb-5">Order Details</h2>
+              <div className="flex gap-3.5 mb-5 pb-5 border-b border-border">
+                <div className="relative w-20 h-16 flex-shrink-0 rounded-lg overflow-hidden border border-border bg-surface flex items-center justify-center">
+                  {listing.images?.[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl">🎮</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <p className="text-sm font-semibold text-text leading-snug line-clamp-2">{listing.title}</p>
+                  <p className="text-xs text-text-muted mt-1">
+                    Seller: <span className="text-primary-hover">{listing.sellerName}</span>
+                    {listing.sellerIsVerified && <span className="ml-1 text-success">✓</span>}
+                  </p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    {listing.gameName} · {listing.deliveryTime}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-text-secondary">Subtotal</span>
+                <span className="text-sm font-semibold text-text">${listing.price.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center mt-3">
+                <span className="text-sm text-text-secondary">Buyer Protection Fee (3%)</span>
+                <span className="text-sm font-semibold text-text">${fee.toFixed(2)}</span>
+              </div>
+            </div>
+
             {/* Escrow info */}
             <div className="bg-card border border-border rounded-xl p-5 sm:p-6">
               <h2 className="font-heading font-bold text-[17px] text-text mb-4 flex items-center gap-3">
@@ -160,48 +193,49 @@ function CheckoutContent() {
             </div>
           </div>
 
-          {/* Right: order summary */}
-          <div className="w-full lg:w-[360px] flex-shrink-0">
-            <div className="lg:sticky lg:top-[84px] bg-card border border-border rounded-xl p-5 sm:p-6">
-              <h2 className="font-heading font-bold text-[17px] text-text mb-5">Order Summary</h2>
+          {/* Right: Fast Checkout card */}
+          <div className="w-full lg:w-[380px] flex-shrink-0">
+            <div className="lg:sticky lg:top-[84px] bg-card border border-border rounded-xl p-6 shadow-xl shadow-black/10">
+              <h2 className="font-heading font-black text-2xl text-text mb-2">Fast Checkout</h2>
+              <p className="text-sm text-text-muted font-medium mb-6">
+                You'll get the account logins instantly after the payment.
+              </p>
 
-              {/* Listing info */}
-              <div className="flex gap-3.5 mb-5 pb-5 border-b border-border">
-                <div className="relative w-20 h-16 flex-shrink-0 rounded-lg overflow-hidden border border-border bg-surface flex items-center justify-center">
-                  {listing.images?.[0] ? (
-                    <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-2xl">🎮</span>
-                  )}
+              <div className="flex flex-col gap-3 mb-6">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 size={18} className="text-success flex-shrink-0" />
+                  <span className="text-sm text-text-secondary font-medium">Email and password can be changed</span>
                 </div>
-                <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <p className="text-sm font-semibold text-text leading-snug line-clamp-2">{listing.title}</p>
-                  <p className="text-xs text-text-muted mt-1">
-                    Seller: <span className="text-primary-hover">{listing.sellerName}</span>
-                    {listing.sellerIsVerified && <span className="ml-1 text-success">✓</span>}
-                  </p>
-                  <p className="text-xs text-text-muted mt-0.5">
-                    {listing.gameName} · {listing.deliveryTime}
-                  </p>
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 size={18} className="text-success flex-shrink-0" />
+                  <span className="text-sm text-text-secondary font-medium">Instant delivery after payment</span>
                 </div>
               </div>
 
-              {/* Price breakdown */}
-              <div className="flex flex-col gap-3 pb-5 border-b border-border">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-text-secondary">Subtotal</span>
-                  <span className="text-sm font-semibold text-text">${listing.price.toFixed(2)}</span>
+              {/* Quantity */}
+              <div className="flex flex-col gap-2 pb-6 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-text">Quantity</span>
+                  <div className="flex items-center gap-3">
+                    <button className="w-8 h-8 rounded-lg bg-elevated border border-border flex items-center justify-center text-text-muted cursor-not-allowed transition-colors hover:bg-surface">-</button>
+                    <span className="text-base font-bold text-text">1</span>
+                    <button className="w-8 h-8 rounded-lg bg-elevated border border-border flex items-center justify-center text-text-muted cursor-not-allowed transition-colors hover:bg-surface">+</button>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-text-secondary">Buyer Protection Fee (3%)</span>
-                  <span className="text-sm font-semibold text-text">${fee.toFixed(2)}</span>
-                </div>
+                <p className="text-right text-[11px] font-bold text-text-muted uppercase tracking-wider">Min: 1 / Max: 3</p>
               </div>
 
-              {/* Total */}
-              <div className="flex justify-between items-center py-5">
-                <span className="text-base font-bold text-text">Total</span>
-                <span className="font-heading font-black text-3xl text-text">${total.toFixed(2)}</span>
+              {/* Price & Coins */}
+              <div className="flex justify-between items-end py-6">
+                <div className="flex items-baseline gap-1">
+                  <span className="font-heading font-black text-3xl text-text">${total.toFixed(2)}</span>
+                  <span className="text-sm font-bold text-text-muted">USD</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <div className="bg-warning/20 text-warning px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wider mb-1 flex items-center gap-1.5 border border-warning/30">
+                    <span className="text-sm leading-none">🪙</span> Cashback 3% Coins
+                  </div>
+                </div>
               </div>
 
               {error && (
@@ -210,30 +244,27 @@ function CheckoutContent() {
                 </Alert>
               )}
 
-              <button
-                onClick={handlePurchase}
-                disabled={loading || !hasSufficientFunds}
-                className={`w-full flex items-center justify-center gap-2 font-bold px-6 py-3.5 rounded-xl transition-all text-white ${
-                  hasSufficientFunds && !loading
-                    ? "bg-gradient-to-r from-primary to-cyan-500 hover:opacity-90 shadow-lg shadow-primary/25 cursor-pointer"
-                    : "bg-elevated text-text-muted cursor-not-allowed"
-                }`}
-              >
-                {loading ? (
-                  <><Loader2 size={18} className="animate-spin" /> Processing...</>
-                ) : (
-                  <><Lock size={16} /> Pay ${total.toFixed(2)} Securely</>
-                )}
-              </button>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handlePurchase}
+                  disabled={loading || !hasSufficientFunds}
+                  className={`w-full flex items-center justify-center gap-2 font-black text-base px-6 py-4 rounded-xl transition-all text-white ${
+                    hasSufficientFunds && !loading
+                      ? "bg-gradient-to-r from-primary to-cyan-500 hover:opacity-90 shadow-lg shadow-primary/25 cursor-pointer"
+                      : "bg-elevated border border-border text-text-muted cursor-not-allowed"
+                  }`}
+                >
+                  {loading ? (
+                    <><Loader2 size={18} className="animate-spin" /> Processing...</>
+                  ) : (
+                    <>Buy Account &rarr;</>
+                  )}
+                </button>
+                <button className="w-full flex items-center justify-center gap-2 font-bold text-sm px-6 py-3.5 rounded-xl border border-border bg-transparent text-text hover:border-primary/50 hover:bg-surface transition-all">
+                  <MessageSquare size={16} /> Chat with seller
+                </button>
+              </div>
 
-              <p className="text-center text-xs text-text-muted mt-3 leading-relaxed">
-                By clicking Pay, you agree to our{" "}
-                <Link href="/legal/terms" className="text-primary-hover hover:underline">Terms of Service</Link>.
-              </p>
-
-              <Alert variant="success" icon={<ShieldCheck size={18} />} title="IGMART Trade Protection" className="mt-4">
-                Payment is held in escrow. Release only when you've received your item.
-              </Alert>
             </div>
           </div>
         </div>

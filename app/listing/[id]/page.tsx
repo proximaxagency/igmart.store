@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Shield, MessageSquare, Zap, CheckCircle2, ChevronRight, Loader2, ArrowRight } from "lucide-react";
+import { Shield, MessageSquare, Zap, CheckCircle2, ChevronRight, ChevronLeft, Loader2, ArrowRight } from "lucide-react";
 import { Badge, Stars, PriceDisplay, Button, Alert } from "@/components/ui/index";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -162,7 +162,7 @@ export default function ListingPage() {
           <div className="flex-1 min-w-0">
 
             {/* Main image */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden mb-6">
+            <div className="bg-card border border-border rounded-xl overflow-hidden mb-6 relative group">
               <div className="aspect-video relative bg-elevated">
                 <Image
                   src={listing.images?.[activeImg] ?? image}
@@ -179,6 +179,25 @@ export default function ListingPage() {
                   </div>
                 )}
               </div>
+
+              {/* Mobile/Desktop overlay arrows for image navigation */}
+              {listing.images && listing.images.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => { e.preventDefault(); setActiveImg(prev => (prev === 0 ? listing.images!.length - 1 : prev - 1)); }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/50 hover:bg-primary/90 text-white flex items-center justify-center backdrop-blur-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all z-10"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); setActiveImg(prev => (prev === listing.images!.length - 1 ? 0 : prev + 1)); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/50 hover:bg-primary/90 text-white flex items-center justify-center backdrop-blur-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all z-10"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              )}
+
 
               {/* Gallery thumbnails */}
               {listing.images && listing.images.length > 1 && (
