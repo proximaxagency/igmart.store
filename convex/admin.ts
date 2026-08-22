@@ -446,3 +446,158 @@ export const listDisputedOrders = query({
     return hydrated;
   },
 });
+
+// ── ADMIN LISTING REVIEW QUEUE ────────────────────────────────────────────
+
+export const listPendingListings = query({
+  args: {
+    status: v.optional(v.union(
+      v.literal("pending_review"),
+      v.literal("active"),
+      v.literal("rejected"),
+      v.literal("removed"),
+      v.literal("paused"),
+    )),
+  },
+  handler: async (ctx, args) => {
+    const user = await getAuthUser(ctx);
+    if (!user || (user.role !== "admin" && user.role !== "super_admin" && user.role !== "moderator")) {
+      throw new Error("Forbidden");
+    }
+
+    const filterStatus = args.status ?? "pending_review";
+    const listings = await ctx.db.query("listings")
+      .withIndex("by_status", (q) => q.eq("status", filterStatus))
+      .order("desc")
+      .take(100);
+
+    const hydrated = [];
+    for (const listing of listings) {
+      const seller = await ctx.db.get(listing.sellerId);
+      const game = await ctx.db.get(listing.gameId);
+      hydrated.push({
+        ...listing,
+        sellerName: seller?.displayName || seller?.username || "Unknown Seller",
+        sellerEmail: seller?.email || "",
+        sellerIsVerified: seller?.isVerified || false,
+        sellerRating: seller?.rating || 0,
+        gameName: game?.name || "Unknown Game",
+      });
+    }
+    return hydrated;
+  },
+});
+
+export const approveListing = mutation({
+  args: {
+    listingId: v.id("listings"),
+    badge: v.optional(v.union(v.literal("HOT"), v.literal("SALE"), v.literal("POPULAR"), v.literal("NEW"))),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin", "moderator"]);
+
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) throw new Error("Listing not found");
+    if (listing.status !== "pending_review") throw new Error("Listing is not pending review");
+
+    await ctx.db.patch(args.listingId, {
+      status: "active",
+      badge: args.badge ?? listing.badge,
+      updatedAt: Date.now(),
+    });
+
+    // Notify the seller
+    await ctx.db.insert("notifications", {
+      userId: listing.sellerId,
+      type: "listing_approved",
+      title: "🎉 Listing Approved!",
+      body: `Your listing "${listing.title.substring(0, 60)}" has been approved and is now live on the marketplace.`,
+      link: `/listing/${listing._id}`,
+      isRead: false,
+      createdAt: Date.now(),
+    });
+
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: "listing.approve",
+      targetType: "listing",
+      targetId: args.listingId,
+      metadata: { title: listing.title },
+      createdAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+export const rejectListing = mutation({
+  args: {
+    listingId: v.id("listings"),
+    reason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin", "moderator"]);
+
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) throw new Error("Listing not found");
+
+    await ctx.db.patch(args.listingId, {
+      status: "rejected",
+      updatedAt: Date.now(),
+    });
+
+    // Notify the seller with the reason
+    await ctx.db.insert("notifications", {
+      userId: listing.sellerId,
+      type: "listing_rejected",
+      title: "Listing Rejected",
+      body: `Your listing "${listing.title.substring(0, 60)}" was not approved. Reason: ${args.reason}`,
+      link: `/seller/dashboard`,
+      isRead: false,
+      createdAt: Date.now(),
+    });
+
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: "listing.reject",
+      targetType: "listing",
+      targetId: args.listingId,
+      metadata: { title: listing.title, reason: args.reason },
+      createdAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+export const bulkApproveListings = mutation({
+  args: { listingIds: v.array(v.id("listings")) },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin"]);
+    let count = 0;
+    for (const id of args.listingIds) {
+      const listing = await ctx.db.get(id);
+      if (!listing || listing.status !== "pending_review") continue;
+      await ctx.db.patch(id, { status: "active", updatedAt: Date.now() });
+      await ctx.db.insert("notifications", {
+        userId: listing.sellerId,
+        type: "listing_approved",
+        title: "🎉 Listing Approved!",
+        body: `Your listing "${listing.title.substring(0, 60)}" is now live.`,
+        link: `/listing/${id}`,
+        isRead: false,
+        createdAt: Date.now(),
+      });
+      count++;
+    }
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: "listing.bulk_approve",
+      targetType: "listing",
+      targetId: "bulk",
+      metadata: { count, ids: args.listingIds },
+      createdAt: Date.now(),
+    });
+    return { success: true, count };
+  },
+});

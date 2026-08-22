@@ -103,10 +103,21 @@ export const createListing = mutation({
       ...args,
       sellerId: user._id,
       slug: generateSlug(args.title),
-      status: "active",
+      status: "pending_review",   // Goes to admin queue first
       views: 0,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+    });
+
+    // Notify the seller their listing is under review
+    await ctx.db.insert("notifications", {
+      userId: user._id,
+      type: "listing_approved",
+      title: "Listing Submitted for Review",
+      body: `Your listing "${args.title.substring(0, 60)}" has been submitted and is pending admin approval.`,
+      link: `/seller/dashboard`,
+      isRead: false,
+      createdAt: Date.now(),
     });
 
     return listingId;
