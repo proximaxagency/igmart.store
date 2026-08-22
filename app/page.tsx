@@ -157,7 +157,7 @@ export default function HomePage() {
               title="Featured Accounts"
               subtitle="Hand-picked listings from our top verified sellers."
             />
-            <Link href="/marketplace/accounts" className="text-primary-hover text-sm font-semibold flex items-center gap-1 hover:gap-1.5 transition-all pb-2 flex-shrink-0">
+            <Link href="/marketplace" className="text-primary-hover text-sm font-semibold flex items-center gap-1 hover:gap-1.5 transition-all pb-2 flex-shrink-0">
               All accounts <ArrowRight size={15} />
             </Link>
           </div>
