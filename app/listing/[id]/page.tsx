@@ -35,7 +35,7 @@ function RecoCard({ listing }: { listing: Record<string, unknown> }) {
           <img
             src={img}
             alt={l.title}
-            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl">🎮</div>
@@ -163,12 +163,19 @@ export default function ListingPage() {
 
             {/* Main image */}
             <div className="bg-card border border-border rounded-xl overflow-hidden mb-6 relative group">
-              <div className="relative bg-elevated/50 flex items-center justify-center min-h-[300px]">
+              <div className="relative bg-elevated/50 flex items-center justify-center min-h-[300px] overflow-hidden">
+                {/* Blurred background image to fill awkward gaps */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center blur-xl opacity-40 scale-110"
+                  style={{ backgroundImage: `url(${listing.images?.[activeImg] ?? image})` }}
+                />
+                
+                {/* Main uncropped image */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={listing.images?.[activeImg] ?? image}
                   alt={listing.title}
-                  className="w-full h-auto max-h-[70vh] object-contain transition-opacity duration-300"
+                  className="w-full h-auto max-h-[70vh] object-contain relative z-10 transition-opacity duration-300"
                 />
                 {listing.badge && (
                   <div className="absolute top-3 left-3">

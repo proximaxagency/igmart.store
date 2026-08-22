@@ -184,7 +184,7 @@ function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
             alt={l.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-            className="object-contain group-hover:scale-105 transition-transform duration-300"
+            className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl">🎮</div>
