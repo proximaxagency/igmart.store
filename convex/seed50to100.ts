@@ -40,24 +40,17 @@ export const seed50to100PerGame = mutation({
     const stats: Record<string, number> = {};
 
     // ═════════════════════════════════════════════════════════════════════════
-    // 1. CLASH OF CLANS — 70 Unique Real Listings & Screenshots
+    // 1. CLASH OF CLANS (CoC ONLY Screenshots) — 70 Listings
     // ═════════════════════════════════════════════════════════════════════════
     const cocId = gameMap["clash-of-clans"];
     if (cocId) {
+      // STRICTLY CoC ONLY Screenshots
       const COC_REAL_PICS = [
-        "https://cdn.gameboost.com/accounts/6213164/gallery/58e83257-bef7-4f00-b333-343193769e7b.jpg",
-        "https://cdn.gameboost.com/accounts/6213164/gallery/4a0f6d43-6a76-4849-a869-0ee80b9f6b3d.jpg",
-        "https://cdn.gameboost.com/accounts/6255046/gallery/ed914123-fa2f-4369-b21a-202f7e787b4d.jpg",
-        "https://cdn.gameboost.com/accounts/6185724/gallery/0b70154a-9aee-4f67-b834-a922122bbcfe.jpg",
-        "https://cdn.gameboost.com/accounts/6267350/gallery/e5cdf593-cfb8-4dfe-bbdd-6c0b76bb53e5.jpg",
-        "https://cdn.gameboost.com/accounts/6285688/gallery/c30d6d64-035c-4653-84f5-e490b41b4556.png",
-        "https://cdn.gameboost.com/accounts/6292403/gallery/62f5eaa6-e1b5-4d5f-ab76-cf4727420843.jpg",
-        "https://cdn.gameboost.com/accounts/6285752/gallery/014152d9-74f3-4f94-8d2b-1695cd53b5eb.jpg",
-        "https://cdn.gameboost.com/accounts/6257455/gallery/471ce070-1e4d-4364-bca1-8dd316cdf518.jpg",
-        "https://cdn.gameboost.com/accounts/6249304/gallery/b57b26f2-6e45-45d3-b35b-6840faf15679.jpg",
-        "https://cdn.gameboost.com/accounts/6043461/gallery/b4334910-e127-4238-a779-f87331d414a9.jpg",
-        "https://cdn.gameboost.com/accounts/6106597/gallery/8c3c3534-2c50-4f98-ab8f-2f2894580dff.jpg",
-        "https://cdn.gameboost.com/accounts/6209122/gallery/455645a1-1c45-46d1-8d3e-10a940a6310e.jpg",
+        "https://cdn.gameboost.com/accounts/6213164/gallery/58e83257-bef7-4f00-b333-343193769e7b.jpg", // CoC TH18 Base
+        "https://cdn.gameboost.com/accounts/6213164/gallery/4a0f6d43-6a76-4849-a869-0ee80b9f6b3d.jpg", // CoC Heroes & Builders
+        "https://cdn.gameboost.com/accounts/6255046/gallery/ed914123-fa2f-4369-b21a-202f7e787b4d.jpg", // CoC TH17 War Base
+        "https://cdn.gameboost.com/accounts/6185724/gallery/0b70154a-9aee-4f67-b834-a922122bbcfe.jpg", // CoC Legends Base
+        "/clash-of-clans-poster.jpg",
       ];
 
       const COC_LISTINGS_DATA = [
@@ -84,7 +77,6 @@ export const seed50to100PerGame = mutation({
         const sellerId = sellerIds[i % sellerIds.length] as any;
         const gemsStr = (d.gems + (i * 310) % 4000).toLocaleString();
         const primaryImg = COC_REAL_PICS[i % COC_REAL_PICS.length];
-        const secondaryImg = COC_REAL_PICS[(i + 3) % COC_REAL_PICS.length];
 
         const title = `TH${d.th} Max · Heroes ${d.heroes} · ${d.duke} · ${d.prince} · ${gemsStr} Gems · ${d.scenery} · ${d.equip}`;
         const desc = `⚔️ CLASH OF CLANS TOWN HALL ${d.th} VERIFIED BASE ⚔️\n\n` +
@@ -112,7 +104,7 @@ export const seed50to100PerGame = mutation({
           description: desc,
           price: finalPrice,
           originalPrice: d.orig ? finalPrice + rng(15, 45) : undefined,
-          images: [primaryImg, secondaryImg],
+          images: [primaryImg],
           deliveryTime: pick(DELIVERY),
           deliveryMethod: "manual" as const,
           status: "active" as const,
@@ -127,30 +119,33 @@ export const seed50to100PerGame = mutation({
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // 2. PUBG MOBILE / BGMI — 70 Unique Real Listings & Screenshots
+    // 2. PUBG MOBILE / BGMI (PUBG ONLY Screenshots) — 70 Listings
     // ═════════════════════════════════════════════════════════════════════════
     const pubgId = gameMap["pubg-mobile"];
     if (pubgId) {
+      // STRICTLY PUBG/BGMI ONLY Screenshots
       const PUBG_REAL_PICS = [
-        "https://cdn.gameboost.com/accounts/6067613/gallery/aec3dfcd-c3a6-4cea-84af-d0fde410e3ef.png",
-        "https://cdn.gameboost.com/accounts/6067613/gallery/c73b35b6-5704-4207-9440-cc4c1a604db0.png",
-        "https://cdn.gameboost.com/accounts/6067613/gallery/a2b6a336-e919-428b-b97a-ed0c9a95b883.png",
-        "https://cdn.gameboost.com/accounts/6067613/gallery/6eb40eb0-01f1-4f54-8d6d-7c78ca6dd1b3.png",
-        "https://cdn.gameboost.com/accounts/6314375/gallery/86483c61-cfb3-4c49-96f2-f83b45e1331e.png",
-        "https://cdn.gameboost.com/accounts/6314375/gallery/674b25d1-b2bc-4912-a9ba-f80eca6aa0e0.png",
-        "https://cdn.gameboost.com/accounts/6314375/gallery/dfa77f26-7256-47c8-a1bf-e574e7161088.png",
-        "https://cdn.gameboost.com/accounts/6314375/gallery/6b771655-91e4-4551-9cd8-ac3ae8557fcc.png",
-        "https://cdn.gameboost.com/accounts/6254703/gallery/86-28-1.jpg",
-        "https://cdn.gameboost.com/accounts/6254703/gallery/120-28-2.jpg",
-        "https://cdn.gameboost.com/accounts/6254703/gallery/197-28-3.jpg",
-        "https://cdn.gameboost.com/accounts/6254703/gallery/269-28-4.jpg",
-        "https://cdn.gameboost.com/accounts/6305015/gallery/2d7d6d69-7186-4b78-bf02-cf6919c4dcc9.jpeg",
-        "https://cdn.gameboost.com/accounts/6305015/gallery/f8786e6f-0aa4-4d4a-80ea-20a686e7126c.jpeg",
-        "https://cdn.gameboost.com/accounts/6305015/gallery/a6738219-2b82-490d-8532-82b8105d7191.jpeg",
-        "https://cdn.gameboost.com/accounts/6305189/gallery/5efecb00-92bc-489b-8140-f022a7d29346.jpeg",
-        "https://cdn.gameboost.com/accounts/6305189/gallery/577b00aa-7992-4119-b65c-04db5551d35a.jpeg",
-        "https://cdn.gameboost.com/accounts/6305189/gallery/c1b506d7-6d66-4242-a1eb-774e9384545c.jpeg",
-        "https://cdn.gameboost.com/accounts/6190890/gallery/4a74e2f2-85ba-499b-8dc5-15faf3b4365d.png",
+        "https://cdn.gameboost.com/accounts/6067613/gallery/aec3dfcd-c3a6-4cea-84af-d0fde410e3ef.png", // Glacier M416 Lv7
+        "https://cdn.gameboost.com/accounts/6067613/gallery/c73b35b6-5704-4207-9440-cc4c1a604db0.png", // Mythic Outfits
+        "https://cdn.gameboost.com/accounts/6067613/gallery/a2b6a336-e919-428b-b97a-ed0c9a95b883.png", // GunLab Inventory
+        "https://cdn.gameboost.com/accounts/6067613/gallery/6eb40eb0-01f1-4f54-8d6d-7c78ca6dd1b3.png", // Lobby
+        "https://cdn.gameboost.com/accounts/6314375/gallery/86483c61-cfb3-4c49-96f2-f83b45e1331e.png", // Pharaoh X-Suit
+        "https://cdn.gameboost.com/accounts/6314375/gallery/674b25d1-b2bc-4912-a9ba-f80eca6aa0e0.png", // X-Suit Showcase
+        "https://cdn.gameboost.com/accounts/6314375/gallery/dfa77f26-7256-47c8-a1bf-e574e7161088.png", // Sports Cars
+        "https://cdn.gameboost.com/accounts/6314375/gallery/6b771655-91e4-4551-9cd8-ac3ae8557fcc.png", // Upgrades
+        "https://cdn.gameboost.com/accounts/6254703/gallery/86-28-1.jpg", // Crimson M416
+        "https://cdn.gameboost.com/accounts/6254703/gallery/120-28-2.jpg", // Atomic S12K
+        "https://cdn.gameboost.com/accounts/6254703/gallery/197-28-3.jpg", // Honey Badger
+        "https://cdn.gameboost.com/accounts/6254703/gallery/269-28-4.jpg", // Outfits
+        "https://cdn.gameboost.com/accounts/6305015/gallery/2d7d6d69-7186-4b78-bf02-cf6919c4dcc9.jpeg", // Shinobi M416
+        "https://cdn.gameboost.com/accounts/6305015/gallery/f8786e6f-0aa4-4d4a-80ea-20a686e7126c.jpeg", // Blood Raven
+        "https://cdn.gameboost.com/accounts/6305015/gallery/a6738219-2b82-490d-8532-82b8105d7191.jpeg", // Mythic Collection
+        "https://cdn.gameboost.com/accounts/6305189/gallery/5efecb00-92bc-489b-8140-f022a7d29346.jpeg", // Fool M416 Lv5
+        "https://cdn.gameboost.com/accounts/6305189/gallery/577b00aa-7992-4119-b65c-04db5551d35a.jpeg", // Cryonix Wraith
+        "https://cdn.gameboost.com/accounts/6305189/gallery/c1b506d7-6d66-4242-a1eb-774e9384545c.jpeg", // Gun Collection
+        "https://cdn.gameboost.com/accounts/6190890/gallery/4a74e2f2-85ba-499b-8dc5-15faf3b4365d.png", // S14 Conqueror
+        "/pubg-poster.png",
+        "/bgmi-poster.png",
       ];
 
       const PUBG_DATA = [
@@ -177,7 +172,6 @@ export const seed50to100PerGame = mutation({
         const sellerId = sellerIds[(i + 1) % sellerIds.length] as any;
         const mythics = 30 + (i * 5) % 80;
         const primaryImg = PUBG_REAL_PICS[i % PUBG_REAL_PICS.length];
-        const secondaryImg = PUBG_REAL_PICS[(i + 2) % PUBG_REAL_PICS.length];
 
         const title = `${d.gun} · ${d.xsuit} · ${mythics} Mythic Outfits · ${d.gunlab}x GunLab · Lv.${d.lvl} · ${d.rank}`;
         const desc = `🔥 PUBG MOBILE / BGMI GLOBAL ACCOUNT — LEVEL ${d.lvl} 🔥\n\n` +
@@ -203,7 +197,7 @@ export const seed50to100PerGame = mutation({
           description: desc,
           price: finalPrice,
           originalPrice: d.orig ? finalPrice + rng(15, 55) : undefined,
-          images: [primaryImg, secondaryImg],
+          images: [primaryImg],
           deliveryTime: pick(DELIVERY),
           deliveryMethod: "manual" as const,
           status: "active" as const,
@@ -218,28 +212,30 @@ export const seed50to100PerGame = mutation({
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // 3. FREE FIRE — 70 Unique Real Listings & Screenshots
+    // 3. FREE FIRE (Free Fire ONLY Screenshots) — 70 Listings
     // ═════════════════════════════════════════════════════════════════════════
     const ffId = gameMap["free-fire"];
     if (ffId) {
+      // STRICTLY Free Fire ONLY Screenshots
       const FF_REAL_PICS = [
-        "https://cdn.gameboost.com/accounts/6226793/gallery/2104b9c9-83b5-4767-b4df-a89e759a0758.jpg",
-        "https://cdn.gameboost.com/accounts/6226793/gallery/8e5872b2-440b-4356-88c5-10f824a46456.jpg",
-        "https://cdn.gameboost.com/accounts/6226793/gallery/72958cb9-7e12-4219-aff7-a37f96846026.jpg",
-        "https://cdn.gameboost.com/accounts/6226793/gallery/0d08959e-cbd4-4d12-89bb-2b264cb62cef.jpg",
-        "https://cdn.gameboost.com/accounts/6192164/gallery/9f2d8523-3c61-460d-b067-424481a58b95.jpg",
-        "https://cdn.gameboost.com/accounts/6258601/gallery/69d58882-0a80-4270-84bc-cb5fac11f0af.jpg",
-        "https://cdn.gameboost.com/accounts/6278630/gallery/52ae2ce2-9c2e-4416-a8f7-da15fc0d6aa0.jpg",
-        "https://cdn.gameboost.com/accounts/6278630/gallery/2e29e2fb-3625-4516-8d42-76b5b2a77bcf.jpg",
-        "https://cdn.gameboost.com/accounts/6278630/gallery/9194d7eb-039e-4e75-89cb-f6364faf660e.jpg",
-        "https://cdn.gameboost.com/accounts/5380080/gallery/a1b64e83-d616-402c-8f08-7c71a1594a3e.jpeg",
-        "https://cdn.gameboost.com/accounts/6258394/gallery/67cd3f6d-8f25-46f6-83ba-dfa06461fac6.jpg",
-        "https://cdn.gameboost.com/accounts/6259028/gallery/121-jbbnif9sns50vf62rv6k.jpg",
-        "https://cdn.gameboost.com/accounts/6259034/gallery/25-5brhmv860p2mou261czi.jpg",
-        "https://cdn.gameboost.com/accounts/6280767/gallery/9b7d7984-21a6-4aba-8c39-8106450aae7c.jpg",
-        "https://cdn.gameboost.com/accounts/6280767/gallery/cb02f427-0edc-4ac2-bf7e-7c8caab323fc.jpg",
-        "https://cdn.gameboost.com/accounts/6280767/gallery/5597a608-7e2e-45c8-b1fc-91993f58138e.jpg",
-        "https://cdn.gameboost.com/accounts/6280767/gallery/f5e95392-9beb-4d01-9e33-3380f8653b38.jpg",
+        "https://cdn.gameboost.com/accounts/6226793/gallery/2104b9c9-83b5-4767-b4df-a89e759a0758.jpg", // Draco M10
+        "https://cdn.gameboost.com/accounts/6226793/gallery/8e5872b2-440b-4356-88c5-10f824a46456.jpg", // Vault Outfits
+        "https://cdn.gameboost.com/accounts/6226793/gallery/72958cb9-7e12-4219-aff7-a37f96846026.jpg", // Money Heist
+        "https://cdn.gameboost.com/accounts/6226793/gallery/0d08959e-cbd4-4d12-89bb-2b264cb62cef.jpg", // LOL Emote
+        "https://cdn.gameboost.com/accounts/6192164/gallery/9f2d8523-3c61-460d-b067-424481a58b95.jpg", // 670+ Gun Skins
+        "https://cdn.gameboost.com/accounts/6258601/gallery/69d58882-0a80-4270-84bc-cb5fac11f0af.jpg", // XM8 Destiny
+        "https://cdn.gameboost.com/accounts/6278630/gallery/52ae2ce2-9c2e-4416-a8f7-da15fc0d6aa0.jpg", // AK47 Blue Flame Draco
+        "https://cdn.gameboost.com/accounts/6278630/gallery/2e29e2fb-3625-4516-8d42-76b5b2a77bcf.jpg", // SCAR Megalodon
+        "https://cdn.gameboost.com/accounts/6278630/gallery/9194d7eb-039e-4e75-89cb-f6364faf660e.jpg", // Costumes Collection
+        "https://cdn.gameboost.com/accounts/5380080/gallery/a1b64e83-d616-402c-8f08-7c71a1594a3e.jpeg", // Yuji Itadori JJK
+        "https://cdn.gameboost.com/accounts/6258394/gallery/67cd3f6d-8f25-46f6-83ba-dfa06461fac6.jpg", // Cindered Thompson
+        "https://cdn.gameboost.com/accounts/6259028/gallery/121-jbbnif9sns50vf62rv6k.jpg", // Golden Criminal
+        "https://cdn.gameboost.com/accounts/6259034/gallery/25-5brhmv860p2mou261czi.jpg", // One Punch Man
+        "https://cdn.gameboost.com/accounts/6280767/gallery/9b7d7984-21a6-4aba-8c39-8106450aae7c.jpg", // FAMAS Demon Lv7
+        "https://cdn.gameboost.com/accounts/6280767/gallery/cb02f427-0edc-4ac2-bf7e-7c8caab323fc.jpg", // AK47 Draco Lv6
+        "https://cdn.gameboost.com/accounts/6280767/gallery/5597a608-7e2e-45c8-b1fc-91993f58138e.jpg", // M1887 Sterling
+        "https://cdn.gameboost.com/accounts/6280767/gallery/f5e95392-9beb-4d01-9e33-3380f8653b38.jpg", // Vault Items
+        "/free-fire-poster.png",
       ];
 
       const FF_DATA = [
@@ -264,7 +260,6 @@ export const seed50to100PerGame = mutation({
         const sellerId = sellerIds[(i + 2) % sellerIds.length] as any;
         const vaults = 160 + (i * 8) % 280;
         const primaryImg = FF_REAL_PICS[i % FF_REAL_PICS.length];
-        const secondaryImg = FF_REAL_PICS[(i + 2) % FF_REAL_PICS.length];
 
         const title = `LVL ${d.lvl} · ${d.bundle} · ${d.evos} · ${vaults}+ Vaults · ${d.server}`;
         const desc = `🔥 FREE FIRE HIGH-TIER VETERAN ACCOUNT (${d.server}) 🔥\n\n` +
@@ -288,7 +283,7 @@ export const seed50to100PerGame = mutation({
           description: desc,
           price: finalPrice,
           originalPrice: d.orig ? finalPrice + rng(10, 45) : undefined,
-          images: [primaryImg, secondaryImg],
+          images: [primaryImg],
           deliveryTime: pick(DELIVERY),
           deliveryMethod: "manual" as const,
           status: "active" as const,
@@ -303,19 +298,16 @@ export const seed50to100PerGame = mutation({
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // 4. ROBLOX — 70 Unique Real Listings & Screenshots
+    // 4. ROBLOX (Roblox ONLY Screenshots) — 70 Listings
     // ═════════════════════════════════════════════════════════════════════════
     const robId = gameMap["roblox"];
     if (robId) {
+      // STRICTLY Roblox ONLY Screenshots
       const ROB_REAL_PICS = [
-        "https://cdn.gameboost.com/accounts/4013208/gallery/34aeb225-e312-4483-a1fb-b541540058dc.png",
-        "https://cdn.gameboost.com/accounts/5353349/gallery/123-fd58c123-c94c-45f4-b70b-37ff033daee9-webp.webp",
-        "https://cdn.gameboost.com/accounts/6280457/gallery/24-10bVNN.png",
-        "https://cdn.gameboost.com/accounts/6285688/gallery/c30d6d64-035c-4653-84f5-e490b41b4556.png",
-        "https://cdn.gameboost.com/accounts/6285752/gallery/014152d9-74f3-4f94-8d2b-1695cd53b5eb.jpg",
-        "https://cdn.gameboost.com/accounts/6259028/gallery/121-jbbnif9sns50vf62rv6k.jpg",
-        "https://cdn.gameboost.com/accounts/6213164/gallery/58e83257-bef7-4f00-b333-343193769e7b.jpg",
-        "https://cdn.gameboost.com/accounts/6314375/gallery/86483c61-cfb3-4c49-96f2-f83b45e1331e.png",
+        "https://cdn.gameboost.com/accounts/4013208/gallery/34aeb225-e312-4483-a1fb-b541540058dc.png", // Korblox & Headless
+        "https://cdn.gameboost.com/accounts/5353349/gallery/123-fd58c123-c94c-45f4-b70b-37ff033daee9-webp.webp", // Blox Fruits Max
+        "https://cdn.gameboost.com/accounts/6280457/gallery/24-10bVNN.png", // 2008 OG Profile
+        "/roblox-poster.png",
       ];
 
       const ROB_DATA = [
@@ -339,7 +331,6 @@ export const seed50to100PerGame = mutation({
         const finalPrice = Math.max(19, d.price + variance - 8);
         const sellerId = sellerIds[(i + 3) % sellerIds.length] as any;
         const primaryImg = ROB_REAL_PICS[i % ROB_REAL_PICS.length];
-        const secondaryImg = ROB_REAL_PICS[(i + 1) % ROB_REAL_PICS.length];
 
         const title = `${d.main} · ${d.extra} · Created ${d.year}`;
         const desc = `🌟 ROBLOX HIGH-TIER VETERAN / BLOX FRUITS ACCOUNT 🌟\n\n` +
@@ -363,7 +354,7 @@ export const seed50to100PerGame = mutation({
           description: desc,
           price: finalPrice,
           originalPrice: d.orig ? finalPrice + rng(15, 60) : undefined,
-          images: [primaryImg, secondaryImg],
+          images: [primaryImg],
           deliveryTime: pick(DELIVERY),
           deliveryMethod: "manual" as const,
           status: "active" as const,
@@ -378,27 +369,31 @@ export const seed50to100PerGame = mutation({
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // 5. CLASH ROYALE — 70 Unique Real Listings & Screenshots
+    // 5. CLASH ROYALE (Clash Royale ONLY Screenshots) — 70 Listings
     // ═════════════════════════════════════════════════════════════════════════
     const crId = gameMap["clash-royale"];
     if (crId) {
+      // STRICTLY Clash Royale ONLY Screenshots
       const CR_REAL_PICS = [
-        "https://cdn.gameboost.com/accounts/6043461/gallery/b4334910-e127-4238-a779-f87331d414a9.jpg",
-        "https://cdn.gameboost.com/accounts/6043461/gallery/2cd5323a-ef84-4ab0-a7cf-e49bcc78f173.jpg",
-        "https://cdn.gameboost.com/accounts/6043461/gallery/a5f3575d-ca30-4c55-bd2b-854054e4aad1.jpg",
-        "https://cdn.gameboost.com/accounts/6043461/gallery/6857d901-c145-4128-ab22-187b4af802d1.jpg",
-        "https://cdn.gameboost.com/accounts/6106597/gallery/8c3c3534-2c50-4f98-ab8f-2f2894580dff.jpg",
-        "https://cdn.gameboost.com/accounts/6106597/gallery/b843a118-9f63-430b-9ad4-b4634b2e71b8.jpg",
-        "https://cdn.gameboost.com/accounts/6106597/gallery/2c663c63-40f8-446d-86b5-e05a81d6763d.jpg",
-        "https://cdn.gameboost.com/accounts/6106597/gallery/9ea12812-23e0-4d75-9c0e-cab1ab3f27c4.jpg",
-        "https://cdn.gameboost.com/accounts/6209122/gallery/455645a1-1c45-46d1-8d3e-10a940a6310e.jpg",
-        "https://cdn.gameboost.com/accounts/6209122/gallery/61716fcd-3c1b-42fb-9d0c-90d1473ab2ee.jpg",
-        "https://cdn.gameboost.com/accounts/6209122/gallery/72f2e1b1-e2dc-4c8e-8878-986acca6b40c.jpg",
-        "https://cdn.gameboost.com/accounts/6209122/gallery/97dc6385-c025-46a8-a10a-86549a10551a.jpg",
-        "https://cdn.gameboost.com/accounts/6267350/gallery/e5cdf593-cfb8-4dfe-bbdd-6c0b76bb53e5.jpg",
-        "https://cdn.gameboost.com/accounts/6292403/gallery/62f5eaa6-e1b5-4d5f-ab76-cf4727420843.jpg",
-        "https://cdn.gameboost.com/accounts/6257455/gallery/471ce070-1e4d-4364-bca1-8dd316cdf518.jpg",
-        "https://cdn.gameboost.com/accounts/6249304/gallery/b57b26f2-6e45-45d3-b35b-6840faf15679.jpg",
+        "https://cdn.gameboost.com/accounts/6043461/gallery/b4334910-e127-4238-a779-f87331d414a9.jpg", // CR KT16 Top 43
+        "https://cdn.gameboost.com/accounts/6043461/gallery/2cd5323a-ef84-4ab0-a7cf-e49bcc78f173.jpg", // CR 33 Evos
+        "https://cdn.gameboost.com/accounts/6043461/gallery/a5f3575d-ca30-4c55-bd2b-854054e4aad1.jpg", // CR 12,114 Trophies
+        "https://cdn.gameboost.com/accounts/6043461/gallery/6857d901-c145-4128-ab22-187b4af802d1.jpg", // CR CRL 20 Emotes
+        "https://cdn.gameboost.com/accounts/6106597/gallery/8c3c3534-2c50-4f98-ab8f-2f2894580dff.jpg", // CR KT16 GT100
+        "https://cdn.gameboost.com/accounts/6106597/gallery/b843a118-9f63-430b-9ad4-b4634b2e71b8.jpg", // CR 39 Evos
+        "https://cdn.gameboost.com/accounts/6106597/gallery/2c663c63-40f8-446d-86b5-e05a81d6763d.jpg", // CR 13,000 Trophies
+        "https://cdn.gameboost.com/accounts/6106597/gallery/9ea12812-23e0-4d75-9c0e-cab1ab3f27c4.jpg", // CR 35 Tower Skins
+        "https://cdn.gameboost.com/accounts/6209122/gallery/455645a1-1c45-46d1-8d3e-10a940a6310e.jpg", // CR Emperor King
+        "https://cdn.gameboost.com/accounts/6209122/gallery/61716fcd-3c1b-42fb-9d0c-90d1473ab2ee.jpg", // CR 169 Emotes
+        "https://cdn.gameboost.com/accounts/6209122/gallery/72f2e1b1-e2dc-4c8e-8878-986acca6b40c.jpg", // CR Elite Cards
+        "https://cdn.gameboost.com/accounts/6209122/gallery/97dc6385-c025-46a8-a10a-86549a10551a.jpg", // CR Gold & Gems
+        "https://cdn.gameboost.com/accounts/6267350/gallery/e5cdf593-cfb8-4dfe-bbdd-6c0b76bb53e5.jpg", // CR 9 Years OG
+        "https://cdn.gameboost.com/accounts/6285688/gallery/c30d6d64-035c-4653-84f5-e490b41b4556.png", // CR 107 Max Cards
+        "https://cdn.gameboost.com/accounts/6292403/gallery/62f5eaa6-e1b5-4d5f-ab76-cf4727420843.jpg", // CR 33,000 Gems
+        "https://cdn.gameboost.com/accounts/6285752/gallery/014152d9-74f3-4f94-8d2b-1695cd53b5eb.jpg", // CR 115 Max Cards
+        "https://cdn.gameboost.com/accounts/6257455/gallery/471ce070-1e4d-4364-bca1-8dd316cdf518.jpg", // CR PEKKA Balloon
+        "https://cdn.gameboost.com/accounts/6249304/gallery/b57b26f2-6e45-45d3-b35b-6840faf15679.jpg", // CR Goblin Emote
+        "/clash-royale-poster.png",
       ];
 
       const CR_DATA = [
@@ -421,7 +416,6 @@ export const seed50to100PerGame = mutation({
         const sellerId = sellerIds[(i + 4) % sellerIds.length] as any;
         const gold = (800000 + (i * 110000) % 2200000).toLocaleString();
         const primaryImg = CR_REAL_PICS[i % CR_REAL_PICS.length];
-        const secondaryImg = CR_REAL_PICS[(i + 1) % CR_REAL_PICS.length];
 
         const title = `King Level ${d.kl} · ${d.trophies} 🏆 · ${d.evos} · ${d.cards} · ${d.rank}`;
         const desc = `👑 CLASH ROYALE ULTIMATE COMPETITIVE ACCOUNT 👑\n\n` +
@@ -447,7 +441,7 @@ export const seed50to100PerGame = mutation({
           description: desc,
           price: finalPrice,
           originalPrice: d.orig ? finalPrice + rng(10, 40) : undefined,
-          images: [primaryImg, secondaryImg],
+          images: [primaryImg],
           deliveryTime: pick(DELIVERY),
           deliveryMethod: "manual" as const,
           status: "active" as const,
