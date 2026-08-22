@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Stars, EmptyState } from "@/components/ui/index";
 import { ListingCard } from "@/components/shared/ListingCard";
-import { Loader2, SlidersHorizontal, Search } from "lucide-react";
+import { Loader2, SlidersHorizontal, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useParams } from "next/navigation";
 
+const ITEMS_PER_PAGE = 15;
 
 function getNormalizedSlug(slug: string) {
   // Normalize spaces → hyphens (handles accidental URLs like /games/free fire)
@@ -27,11 +28,14 @@ export default function GameDetailPage() {
   const normalizedSlug = getNormalizedSlug(rawSlug);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("recommended");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Load all games from Convex
   const games = useQuery(api.listings.getGames);
   // Load all active listings from Convex
-  const allListings = useQuery(api.listings.listActiveListings, { limit: 500 });
+  const allListings = useQuery(api.listings.listActiveListings, { limit: 1000 });
 
   const game = useMemo(() => {
     if (!games) return null;
@@ -45,12 +49,30 @@ export default function GameDetailPage() {
       const q = search.toLowerCase();
       filtered = filtered.filter((l) => l.title.toLowerCase().includes(q) || l.description?.toLowerCase().includes(q));
     }
+    if (minPrice && !isNaN(Number(minPrice))) {
+      filtered = filtered.filter((l) => l.price >= Number(minPrice));
+    }
+    if (maxPrice && !isNaN(Number(maxPrice))) {
+      filtered = filtered.filter((l) => l.price <= Number(maxPrice));
+    }
     if (sort === "price_asc") filtered = [...filtered].sort((a, b) => a.price - b.price);
     else if (sort === "price_desc") filtered = [...filtered].sort((a, b) => b.price - a.price);
     else if (sort === "newest") filtered = [...filtered].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
     else filtered = [...filtered].sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
     return filtered;
-  }, [allListings, game, search, sort]);
+  }, [allListings, game, search, sort, minPrice, maxPrice]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, sort, minPrice, maxPrice, normalizedSlug]);
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(gameListings.length / ITEMS_PER_PAGE));
+  const paginatedListings = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return gameListings.slice(start, start + ITEMS_PER_PAGE);
+  }, [gameListings, currentPage]);
 
   // Loading
   if (games === undefined || allListings === undefined) {
@@ -90,8 +112,11 @@ export default function GameDetailPage() {
   const sellerCount = game.metrics?.totalSellers ?? 0;
   const rating = game.metrics?.rating ?? 4.9;
 
+  const startIdx = gameListings.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endIdx = Math.min(currentPage * ITEMS_PER_PAGE, gameListings.length);
+
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background min-h-screen pb-16">
       {/* Game Hero */}
       <div className="relative h-[280px] sm:h-[320px] lg:h-[360px] flex items-end pb-8 sm:pb-12 border-b border-border">
         <Image
@@ -141,10 +166,10 @@ export default function GameDetailPage() {
       <div className="container py-8 sm:py-12">
         <div className="flex flex-col lg:flex-row gap-8">
 
-          {/* Sidebar */}
+          {/* Sidebar Filters */}
           <div className="w-full lg:w-[280px] flex-shrink-0">
             <div className="lg:sticky lg:top-[100px] flex flex-col gap-6">
-              <div className="bg-card border border-border rounded-xl p-5">
+              <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
                 <h3 className="font-heading font-bold text-lg text-text mb-4">Filters</h3>
 
                 {/* Search */}
@@ -165,14 +190,35 @@ export default function GameDetailPage() {
                 <div className="flex items-center gap-3">
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">$</span>
-                    <input type="number" placeholder="Min" className="w-full bg-background border border-border rounded-lg pl-7 pr-3 py-2.5 text-sm font-medium text-text placeholder:text-text-muted focus:outline-none focus:border-primary-hover transition-colors min-h-[44px]" />
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                      className="w-full bg-background border border-border rounded-lg pl-7 pr-3 py-2.5 text-sm font-medium text-text placeholder:text-text-muted focus:outline-none focus:border-primary-hover transition-colors min-h-[44px]"
+                    />
                   </div>
                   <span className="text-text-muted font-bold">-</span>
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">$</span>
-                    <input type="number" placeholder="Max" className="w-full bg-background border border-border rounded-lg pl-7 pr-3 py-2.5 text-sm font-medium text-text placeholder:text-text-muted focus:outline-none focus:border-primary-hover transition-colors min-h-[44px]" />
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                      className="w-full bg-background border border-border rounded-lg pl-7 pr-3 py-2.5 text-sm font-medium text-text placeholder:text-text-muted focus:outline-none focus:border-primary-hover transition-colors min-h-[44px]"
+                    />
                   </div>
                 </div>
+
+                {(search || minPrice || maxPrice) && (
+                  <button
+                    onClick={() => { setSearch(""); setMinPrice(""); setMaxPrice(""); }}
+                    className="mt-4 w-full text-xs font-semibold text-primary hover:underline text-center"
+                  >
+                    Clear all filters
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -181,7 +227,10 @@ export default function GameDetailPage() {
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <p className="text-sm font-semibold text-text-secondary">
-                Showing <strong className="text-text font-bold">{gameListings.length}</strong> listings
+                Showing <strong className="text-text font-bold">{startIdx}–{endIdx}</strong> of <strong className="text-text font-bold">{gameListings.length}</strong> listings
+                {totalPages > 1 && (
+                  <span className="text-text-muted text-xs ml-2">(Page {currentPage} of {totalPages})</span>
+                )}
               </p>
               <div className="relative min-w-[200px]">
                 <SlidersHorizontal size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
@@ -201,25 +250,76 @@ export default function GameDetailPage() {
               </div>
             </div>
 
-            {gameListings.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                {gameListings.map((listing) => (
-                  <ListingCard
-                    key={listing._id}
-                    id={listing._id}
-                    title={listing.title}
-                    game={listing.gameName ?? game.name}
-                    price={listing.price}
-                    originalPrice={listing.originalPrice}
-                    seller={(listing as any).sellerName ?? "Verified Seller"}
-                    rating={5}
-                    reviews={0}
-                    delivery={listing.deliveryTime ?? "Instant"}
-                    image={listing.images?.[0] ?? posterSrc}
-                    badge={listing.badge}
-                  />
-                ))}
-              </div>
+            {paginatedListings.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                  {paginatedListings.map((listing) => (
+                    <ListingCard
+                      key={listing._id}
+                      id={listing._id}
+                      title={listing.title}
+                      game={listing.gameName ?? game.name}
+                      price={listing.price}
+                      originalPrice={listing.originalPrice}
+                      seller={(listing as any).sellerName ?? "Verified Seller"}
+                      rating={5}
+                      reviews={0}
+                      delivery={listing.deliveryTime ?? "Instant"}
+                      image={listing.images?.[0] ?? posterSrc}
+                      badge={listing.badge}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination Controls (15 per page) */}
+                {totalPages > 1 && (
+                  <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
+                    <p className="text-xs text-text-muted font-medium">
+                      Page {currentPage} of {totalPages} ({gameListings.length} accounts available)
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setCurrentPage((p) => Math.max(1, p - 1));
+                          window.scrollTo({ top: 300, behavior: "smooth" });
+                        }}
+                        disabled={currentPage === 1}
+                        className="flex items-center gap-1 px-3 py-2 rounded-lg border border-border bg-card text-xs font-bold text-text disabled:opacity-40 disabled:pointer-events-none hover:border-primary/50 transition-colors"
+                      >
+                        <ChevronLeft size={14} /> Previous
+                      </button>
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          onClick={() => {
+                            setCurrentPage(pageNum);
+                            window.scrollTo({ top: 300, behavior: "smooth" });
+                          }}
+                          className={`w-9 h-9 rounded-lg text-xs font-black transition-all ${
+                            currentPage === pageNum
+                              ? "bg-primary text-white shadow-md shadow-primary/20"
+                              : "bg-card border border-border text-text-muted hover:text-text hover:border-primary/30"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+
+                      <button
+                        onClick={() => {
+                          setCurrentPage((p) => Math.min(totalPages, p + 1));
+                          window.scrollTo({ top: 300, behavior: "smooth" });
+                        }}
+                        disabled={currentPage === totalPages}
+                        className="flex items-center gap-1 px-3 py-2 rounded-lg border border-border bg-card text-xs font-bold text-text disabled:opacity-40 disabled:pointer-events-none hover:border-primary/50 transition-colors"
+                      >
+                        Next <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="mt-8">
                 <EmptyState
