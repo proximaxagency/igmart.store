@@ -22,7 +22,7 @@ export function isDbUser(user: any): user is Doc<"users"> {
 // Helper: Get authenticated user from Clerk JWT
 export async function getAuthUser(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Unauthorized: Invalid or missing Clerk JWT token");
+  if (!identity) return null;
 
   let user = await ctx.db
     .query("users")
