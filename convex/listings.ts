@@ -25,7 +25,7 @@ export const listActiveListings = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const pageSize = Math.min(args.limit ?? 50, 100);
+    const pageSize = Math.min(args.limit ?? 100, 1000);
 
     let listings;
     if (args.gameId) {
