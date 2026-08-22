@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation as useConvexMutation } from "convex/react";
-import { GAME_FIELDS } from "@/app/sell/create/page";
+import { GAME_FIELDS } from "@/lib/gameFields";
 import { Plus, Trash2, Upload, AlertCircle, CheckCircle, Loader2, ImagePlus, X } from "lucide-react";
 
 // Number of blank rows to start with
@@ -218,7 +218,7 @@ export default function BulkUploadPage() {
             className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm text-text outline-none focus:border-primary"
           >
             <option value="">Select a category...</option>
-            {categories?.filter((c) => c.gameId === gameId).map((c) => (
+            {categories?.map((c) => (
               <option key={c._id} value={c._id}>{c.name}</option>
             ))}
           </select>
