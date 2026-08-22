@@ -9,13 +9,14 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-
+import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { useUser, useClerk, SignInButton, SignUpButton } from "@clerk/nextjs";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const { currency, toggle: toggleCurrency } = useCurrency();
   const pathname = usePathname();
   const menuPanelRef = useRef<HTMLDivElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
@@ -193,6 +194,19 @@ export default function Header() {
 
         {/* Right Controls */}
         <div className="flex items-center gap-1">
+          {/* Currency Toggle */}
+          <button
+            onClick={toggleCurrency}
+            aria-label="Toggle currency"
+            title={currency === "USD" ? "Switch to INR" : "Switch to USD"}
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border bg-elevated hover:border-primary/40 hover:bg-elevated/80 transition-all text-xs font-bold text-text-muted hover:text-text"
+          >
+            <span className="text-[11px] font-black">
+              {currency === "USD" ? "$" : "₹"}
+            </span>
+            <span>{currency}</span>
+          </button>
+
           {/* Search */}
           <Link
             href="/search"
@@ -428,6 +442,17 @@ export default function Header() {
                   </Link>
                 ))}
               </nav>
+
+              {/* Currency Toggle — mobile */}
+              <button
+                onClick={toggleCurrency}
+                className="flex items-center justify-between w-full py-3 px-2 border-b border-border/50 text-[15px] font-semibold text-text-secondary hover:text-text transition-colors"
+              >
+                <span>Currency: {currency}</span>
+                <span className="text-sm font-black bg-primary/10 text-primary px-2.5 py-0.5 rounded-full border border-primary/20">
+                  {currency === "USD" ? "Switch to ₹ INR" : "Switch to $ USD"}
+                </span>
+              </button>
 
               {/* User section */}
               <div className="mt-auto pt-4 border-t border-border">

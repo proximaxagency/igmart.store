@@ -201,3 +201,44 @@ export const updateUserRole = mutation({
     return true;
   },
 });
+
+// Mutation (Admin only): Adjust user wallet balance
+export const adminAdjustWallet = mutation({
+  args: {
+    targetUserId: v.id("users"),
+    amount: v.number(),           // positive = add, negative = subtract
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin"]);
+
+    const target = await ctx.db.get(args.targetUserId);
+    if (!target) throw new Error("User not found");
+
+    const currentBalance = target.walletBalance ?? 0;
+    const newBalance = currentBalance + args.amount;
+
+    if (newBalance < 0) throw new Error(`Cannot reduce balance below zero. Current: $${currentBalance.toFixed(2)}`);
+
+    await ctx.db.patch(args.targetUserId, {
+      walletBalance: newBalance,
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: args.amount >= 0 ? "wallet.credit" : "wallet.debit",
+      targetType: "user",
+      targetId: args.targetUserId,
+      metadata: {
+        amount: args.amount,
+        previousBalance: currentBalance,
+        newBalance,
+        reason: args.reason || "Admin manual adjustment",
+      },
+      createdAt: Date.now(),
+    });
+
+    return { success: true, previousBalance: currentBalance, newBalance };
+  },
+});

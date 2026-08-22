@@ -48,6 +48,7 @@ export const metadata: Metadata = {
 };
 
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
+import { CurrencyProvider } from "@/components/providers/CurrencyProvider";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -58,12 +59,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ConvexClientProvider>
-          <Header />
-          <main id="main-content">{children}</main>
-          <Footer />
-          <CookieBanner />
-          <BackToTop />
-          <FloatingChatWidget />
+          <CurrencyProvider>
+            <Header />
+            <main id="main-content">{children}</main>
+            <Footer />
+            <CookieBanner />
+            <BackToTop />
+            <FloatingChatWidget />
+          </CurrencyProvider>
         </ConvexClientProvider>
       </body>
     </html>

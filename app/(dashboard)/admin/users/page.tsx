@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Users, Search, Ban, CheckCircle, Loader2, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Users, Search, Ban, CheckCircle, Loader2, ShieldCheck, AlertTriangle, Wallet, Plus, Minus } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 
 type ConfirmAction = {
@@ -12,6 +12,12 @@ type ConfirmAction = {
   userId: Id<"users">;
   username: string;
   newRole?: string;
+} | null;
+
+type WalletModal = {
+  userId: Id<"users">;
+  username: string;
+  currentBalance: number;
 } | null;
 
 export default function AdminUsersPage() {
@@ -23,6 +29,12 @@ export default function AdminUsersPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
+  // Wallet state
+  const [walletModal, setWalletModal] = useState<WalletModal>(null);
+  const [walletAmount, setWalletAmount] = useState("");
+  const [walletReason, setWalletReason] = useState("");
+  const [walletLoading, setWalletLoading] = useState(false);
+
   const users = useQuery(api.admin.listUsersAdmin, isLoaded && user ? {
     searchTerm: searchTerm || undefined,
     roleFilter: roleFilter || undefined,
@@ -31,6 +43,7 @@ export default function AdminUsersPage() {
 
   const setUserStatus = useMutation(api.admin.setUserStatus);
   const updateUserRole = useMutation(api.users.updateUserRole);
+  const adjustWallet = useMutation(api.users.adminAdjustWallet);
 
   const executeAction = async () => {
     if (!confirm) return;
@@ -58,12 +71,41 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleWalletAdjust = async (sign: 1 | -1) => {
+    if (!walletModal) return;
+    const parsed = parseFloat(walletAmount);
+    if (isNaN(parsed) || parsed <= 0) {
+      setFeedback({ type: "error", msg: "Enter a valid positive amount." });
+      return;
+    }
+    setWalletLoading(true);
+    setFeedback(null);
+    try {
+      const result = await adjustWallet({
+        targetUserId: walletModal.userId,
+        amount: sign * parsed,
+        reason: walletReason || undefined,
+      });
+      setFeedback({
+        type: "success",
+        msg: `${sign > 0 ? "Added" : "Deducted"} $${parsed.toFixed(2)} ${sign > 0 ? "to" : "from"} @${walletModal.username}. New balance: $${result.newBalance.toFixed(2)}`,
+      });
+      setWalletModal(null);
+      setWalletAmount("");
+      setWalletReason("");
+    } catch (err: any) {
+      setFeedback({ type: "error", msg: err.message || "Wallet adjustment failed." });
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="font-heading font-black text-2xl text-text">User Management Desk</h1>
-          <p className="text-text-muted text-xs mt-0.5">Control accounts, roles & platform access</p>
+          <p className="text-text-muted text-xs mt-0.5">Control accounts, roles, wallet balances &amp; platform access</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative">
@@ -145,18 +187,89 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+      {/* Wallet Adjustment Modal */}
+      {walletModal && (
+        <div className="fixed inset-0 z-[400] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+              <Wallet size={24} />
+            </div>
+            <h3 className="font-heading font-black text-lg text-text text-center mb-1">Wallet Adjustment</h3>
+            <p className="text-xs text-text-muted text-center mb-1">@{walletModal.username}</p>
+            <p className="text-center mb-5">
+              <span className="text-xs text-text-muted">Current balance: </span>
+              <span className="font-black text-text text-sm">${walletModal.currentBalance.toFixed(2)}</span>
+            </p>
+
+            <div className="space-y-3 mb-5">
+              <div>
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-1.5">Amount (USD)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-bold">$</span>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={walletAmount}
+                    onChange={(e) => setWalletAmount(e.target.value)}
+                    className="w-full bg-elevated border border-border rounded-xl pl-7 pr-4 py-2.5 text-sm text-text outline-none focus:border-primary transition-colors"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-1.5">Reason (optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Refund, Bonus, Correction..."
+                  value={walletReason}
+                  onChange={(e) => setWalletReason(e.target.value)}
+                  className="w-full bg-elevated border border-border rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-text-muted outline-none focus:border-primary transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => handleWalletAdjust(1)}
+                disabled={walletLoading}
+                className="flex-1 flex items-center justify-center gap-2 bg-success hover:opacity-90 text-white font-bold py-2.5 rounded-xl transition-opacity text-sm"
+              >
+                {walletLoading ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
+                Add
+              </button>
+              <button
+                onClick={() => handleWalletAdjust(-1)}
+                disabled={walletLoading}
+                className="flex-1 flex items-center justify-center gap-2 bg-danger hover:opacity-90 text-white font-bold py-2.5 rounded-xl transition-opacity text-sm"
+              >
+                {walletLoading ? <Loader2 size={15} className="animate-spin" /> : <Minus size={15} />}
+                Deduct
+              </button>
+            </div>
+            <button
+              onClick={() => { setWalletModal(null); setWalletAmount(""); setWalletReason(""); }}
+              className="w-full bg-elevated hover:bg-border text-text-muted font-semibold py-2 rounded-xl transition-colors text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
         {users === undefined ? (
           <div className="flex justify-center p-12"><Loader2 className="animate-spin text-primary" size={28} /></div>
         ) : users.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[700px]">
+            <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-surface border-b border-border text-xs uppercase tracking-wider text-text-muted font-bold">
                   <th className="p-4 pl-6">User</th>
                   <th className="p-4">Email</th>
                   <th className="p-4">Role</th>
                   <th className="p-4">Status</th>
+                  <th className="p-4">Wallet</th>
                   <th className="p-4 pr-6 text-right">Actions</th>
                 </tr>
               </thead>
@@ -201,6 +314,15 @@ export default function AdminUsersPage() {
                       }`}>
                         {u.status}
                       </span>
+                    </td>
+                    <td className="p-4">
+                      <button
+                        onClick={() => setWalletModal({ userId: u._id, username: u.username, currentBalance: u.walletBalance ?? 0 })}
+                        className="flex items-center gap-1.5 text-xs font-bold text-text-muted hover:text-primary border border-border hover:border-primary/40 px-2.5 py-1.5 rounded-lg transition-all"
+                      >
+                        <Wallet size={12} />
+                        ${(u.walletBalance ?? 0).toFixed(2)}
+                      </button>
                     </td>
                     <td className="p-4 pr-6 text-right">
                       <div className="flex items-center justify-end gap-2">
