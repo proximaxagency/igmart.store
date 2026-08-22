@@ -8,18 +8,23 @@ import { api } from "@/convex/_generated/api";
 import { Stars, EmptyState } from "@/components/ui/index";
 import { ListingCard } from "@/components/shared/ListingCard";
 import { Loader2, SlidersHorizontal, Search } from "lucide-react";
+import { useParams } from "next/navigation";
 
-interface Props {
-  params: { slug: string };
-}
 
 function getNormalizedSlug(slug: string) {
-  if (slug === "bgmi" || slug === "pubg-global" || slug === "pubg") return "pubg-mobile";
-  return slug;
+  // Normalize spaces → hyphens (handles accidental URLs like /games/free fire)
+  const cleaned = slug.replace(/%20/g, "-").replace(/\s+/g, "-").toLowerCase();
+  if (cleaned === "bgmi" || cleaned === "pubg-global" || cleaned === "pubg") return "pubg-mobile";
+  if (cleaned === "free-fire" || cleaned === "freefire") return "free-fire";
+  if (cleaned === "clash-of-clans" || cleaned === "coc") return "clash-of-clans";
+  if (cleaned === "clash-royale" || cleaned === "cr") return "clash-royale";
+  return cleaned;
 }
 
-export default function GameDetailPage({ params }: Props) {
-  const normalizedSlug = getNormalizedSlug(params.slug);
+export default function GameDetailPage() {
+  const params = useParams();
+  const rawSlug = (params?.slug as string) ?? "";
+  const normalizedSlug = getNormalizedSlug(rawSlug);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("recommended");
 
@@ -66,7 +71,7 @@ export default function GameDetailPage({ params }: Props) {
         <div className="text-7xl font-black text-border">404</div>
         <h1 className="font-heading font-black text-2xl text-text">Game Not Found</h1>
         <p className="text-text-muted max-w-sm">
-          We couldn&apos;t find a game for &quot;{params.slug}&quot;. Browse all available games below.
+          We couldn&apos;t find a game for &quot;{rawSlug}&quot;. Browse all available games below.
         </p>
         <div className="flex gap-3">
           <Link href="/" className="px-5 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors">
