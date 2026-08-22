@@ -21,7 +21,13 @@ export function isDbUser(user: any): user is Doc<"users"> {
 
 // Helper: Get authenticated user from Clerk JWT
 export async function getAuthUser(ctx: QueryCtx | MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
+  let identity = null;
+  try {
+    identity = await ctx.auth.getUserIdentity();
+  } catch (err) {
+    console.warn("Auth error:", err);
+    return null;
+  }
   if (!identity) return null;
 
   let user = await ctx.db
