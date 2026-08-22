@@ -39,7 +39,7 @@ const GAME_FIELDS: Record<string, { emoji: string; color: string; fields: GameFi
       { key: "archerQueenLevel", label: "Archer Queen Level", type: "number", placeholder: "e.g. 95 (max 95 at TH16)", icon: "🏹", hint: "Max 95 at TH16+" },
       { key: "grandWardenLevel", label: "Grand Warden Level", type: "number", placeholder: "e.g. 70 (max 70 at TH16)", icon: "📖", hint: "Max 70 at TH16+" },
       { key: "royalChampionLevel", label: "Royal Champion Level", type: "number", placeholder: "e.g. 45 (max 45 at TH16)", icon: "🛡️", hint: "Unlocks at TH13" },
-      { key: "minionPrinceLevel", label: "Minion Prince Level", type: "number", placeholder: "e.g. 30 (max 30 at TH17)", icon: "😈", hint: "New! Unlocks at TH17" },
+      { key: "minionPrinceLevel", label: "Minion Prince Level", type: "number", placeholder: "e.g. 30", icon: "😈", hint: "Flying hero — unlocks at TH9 via Hero Hall Lv 3" },
       { key: "dragonDukeLevel", label: "Dragon Duke Level", type: "number", placeholder: "e.g. 20 (max 20)", icon: "🐉", hint: "New Feb 2026 flying hero — Builder Base" },
       { key: "builderHallLevel", label: "Builder Hall Level", type: "select", icon: "🔨",
         options: ["BH1","BH2","BH3","BH4","BH5","BH6","BH7","BH8","BH9","BH10"],
