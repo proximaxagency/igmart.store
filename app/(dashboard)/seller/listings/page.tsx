@@ -7,7 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { Id } from "@/convex/_generated/dataModel";
 import {
-  Package, Plus, Pause, Play, Trash2, Edit, Loader2, AlertTriangle, CheckCircle2
+  Package, Plus, Pause, Play, Trash2, Edit, Loader2, AlertTriangle, CheckCircle2, LayoutGrid
 } from "lucide-react";
 import { Badge } from "@/components/ui/index";
 
@@ -61,12 +61,20 @@ export default function SellerListingsPage() {
           </h1>
           <p className="text-text-muted text-sm mt-0.5">Manage your active listings, pause or remove items</p>
         </div>
-        <Link
-          href="/sell/create"
-          className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-md shadow-primary/20"
-        >
-          <Plus size={16} /> New Listing
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/sell/create"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-md shadow-primary/20"
+          >
+            <Plus size={16} /> List
+          </Link>
+          <Link
+            href="/admin/bulk-upload"
+            className="inline-flex items-center gap-2 bg-elevated hover:bg-border text-text border border-border text-sm font-bold px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <LayoutGrid size={16} /> Bulk List
+          </Link>
+        </div>
       </div>
 
       {feedback && (
@@ -186,12 +194,20 @@ export default function SellerListingsPage() {
             <Package size={48} className="text-text-muted mx-auto mb-4 opacity-30" />
             <p className="font-bold text-text mb-2">No listings yet</p>
             <p className="text-sm text-text-muted mb-6">Create your first listing to start selling on IGMART.</p>
-            <Link
-              href="/sell/create"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-5 py-2.5 rounded-xl transition-colors text-sm"
-            >
-              <Plus size={16} /> Create Listing
-            </Link>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Link
+                href="/sell/create"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-5 py-2.5 rounded-xl transition-colors text-sm"
+              >
+                <Plus size={16} /> Create Listing
+              </Link>
+              <Link
+                href="/admin/bulk-upload"
+                className="inline-flex items-center gap-2 bg-elevated hover:bg-border text-text border border-border font-bold px-5 py-2.5 rounded-xl transition-colors text-sm"
+              >
+                <LayoutGrid size={16} /> Bulk Upload
+              </Link>
+            </div>
           </div>
         )}
       </div>
