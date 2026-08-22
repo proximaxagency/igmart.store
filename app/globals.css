@@ -312,4 +312,35 @@
   .status-success { color: var(--color-success); background: var(--color-success-muted); }
   .status-warning { color: var(--color-warning); background: var(--color-warning-muted); }
   .status-danger  { color: var(--color-danger);  background: var(--color-danger-muted);  }
+
+  /* ── Performance utilities ─────────────────────────────────────────── */
+
+  /* GPU-composited animations — use on elements that animate */
+  .gpu-layer {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  /* Skip rendering off-screen sections (huge perf win on long pages) */
+  .offscreen-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 400px;
+  }
+
+  /* Snappier touch response on mobile interactive elements */
+  button, a, [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent font FOUT (flash of unstyled text) */
+  html.fonts-loaded body {
+    opacity: 1;
+  }
+
+  /* Optimize image rendering at scale */
+  img {
+    image-rendering: auto;
+  }
 }

@@ -183,8 +183,9 @@ function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
             src={l.images[0]}
             alt={l.title}
             fill
+            loading="lazy"
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-            className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
+            className="object-cover object-top will-change-transform group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl">🎮</div>
@@ -217,14 +218,18 @@ function SkeletonCard() {
     <div className="bg-card border border-border rounded-2xl overflow-hidden animate-pulse">
       <div className="aspect-[4/3] bg-elevated" />
       <div className="p-4 space-y-2.5">
-        <div className="h-3 bg-elevated rounded w-1/3" />
-        <div className="h-4 bg-elevated rounded w-full" />
-        <div className="h-4 bg-elevated rounded w-2/3" />
-        <div className="h-6 bg-elevated rounded w-1/4 mt-1" />
+        <div className="h-2.5 bg-elevated rounded-full w-1/3" />
+        <div className="h-4 bg-elevated rounded-full w-full" />
+        <div className="h-4 bg-elevated rounded-full w-2/3" />
+        <div className="flex items-center justify-between mt-2">
+          <div className="h-6 bg-elevated rounded-full w-1/4" />
+          <div className="h-5 bg-elevated rounded-full w-16" />
+        </div>
       </div>
     </div>
   );
 }
+
 
 /* ─────────────────────────── Main Page ─────────────────────────── */
 export default function MarketplacePage() {

@@ -175,6 +175,7 @@ export default function ListingPage() {
                 <img
                   src={listing.images?.[activeImg] ?? image}
                   alt={listing.title}
+                  fetchPriority="high"
                   className="w-full h-auto max-h-[70vh] object-contain relative z-10 transition-opacity duration-300"
                 />
                 {listing.badge && (
@@ -215,7 +216,7 @@ export default function ListingPage() {
                       }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={img} alt={`Screenshot ${idx + 1}`} className="w-full h-full object-cover object-top" />
+                      <img src={img} alt={`Screenshot ${idx + 1}`} loading="lazy" className="w-full h-full object-cover object-top" />
                     </button>
                   ))}
                 </div>

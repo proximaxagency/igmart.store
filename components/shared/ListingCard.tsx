@@ -36,7 +36,7 @@ function HorizontalListingCard({ id, title, game, price, originalPrice, rating, 
       className={`group flex items-center gap-4 bg-card border border-border rounded-xl overflow-hidden transition-all duration-200 hover:border-border-strong hover:shadow-[var(--shadow-sm)] hover:bg-elevated/40 ${className}`}
     >
       <div className="relative w-28 h-20 flex-shrink-0 overflow-hidden bg-elevated">
-        <Image src={image} alt="" fill className="object-cover object-top transition-transform duration-300 group-hover:scale-[1.04]" />
+        <Image src={image} alt="" fill loading="lazy" className="object-cover object-top" />
         {badge && (
           <div className="absolute top-2 left-2">
             <Badge variant={getBadgeVariant(badge)}>{badge}</Badge>
@@ -76,7 +76,7 @@ function CompactListingCard({ id, title, game, price, rating, image, badge, clas
       className={`group flex flex-col bg-card border border-border rounded-xl overflow-hidden transition-all duration-200 hover:border-border-strong hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)] ${className}`}
     >
       <div className="relative aspect-video overflow-hidden bg-elevated">
-        <Image src={image} alt="" fill className="object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]" />
+        <Image src={image} alt="" fill loading="lazy" className="object-cover object-top" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
         {badge && (
           <div className="absolute top-2 left-2">
@@ -119,8 +119,9 @@ export function ListingCard({
           src={image}
           alt=""
           fill
+          loading="lazy"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+          className="object-cover object-top will-change-transform transition-transform duration-300 group-hover:scale-[1.03]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
 
