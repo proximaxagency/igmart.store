@@ -10,8 +10,9 @@ interface Props {
   params: { category: string };
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const category = CATEGORIES.find((c) => c.slug === params.category);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const resolvedParams = await params;
+  const category = CATEGORIES.find((c) => c.slug === resolvedParams.category);
   if (!category) return { title: "Category Not Found" };
   return {
     title: `${category.name} | IGMART`,
@@ -19,8 +20,9 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function CategoryPage({ params }: Props) {
-  const category = CATEGORIES.find((c) => c.slug === params.category);
+export default async function CategoryPage({ params }: Props) {
+  const resolvedParams = await params;
+  const category = CATEGORIES.find((c) => c.slug === resolvedParams.category);
   if (!category) notFound();
 
   const catListings = LISTINGS.filter((l) => l.category === category.slug);

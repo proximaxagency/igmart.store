@@ -9,8 +9,9 @@ interface Props {
   params: { slug: string };
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const guide = GUIDES.find((g) => g.slug === params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const resolvedParams = await params;
+  const guide = GUIDES.find((g) => g.slug === resolvedParams.slug);
   if (!guide) return { title: "Guide Not Found" };
   return {
     title: `${guide.title} | IGMART Guides`,
@@ -32,8 +33,9 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function GuideDetailPage({ params }: Props) {
-  const guide = GUIDES.find((g) => g.slug === params.slug);
+export default async function GuideDetailPage({ params }: Props) {
+  const resolvedParams = await params;
+  const guide = GUIDES.find((g) => g.slug === resolvedParams.slug);
   if (!guide) notFound();
 
   const articleSchema = getArticleSchema({

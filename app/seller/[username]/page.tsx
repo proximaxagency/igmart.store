@@ -10,8 +10,9 @@ interface Props {
   params: { username: string };
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const seller = SELLERS.find((s) => s.username === params.username);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const resolvedParams = await params;
+  const seller = SELLERS.find((s) => s.username === resolvedParams.username);
   if (!seller) return { title: "Seller Not Found" };
   return {
     title: `${seller.displayName} | IGMART`,
@@ -19,8 +20,9 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function SellerProfilePage({ params }: Props) {
-  const seller = SELLERS.find((s) => s.username === params.username);
+export default async function SellerProfilePage({ params }: Props) {
+  const resolvedParams = await params;
+  const seller = SELLERS.find((s) => s.username === resolvedParams.username);
   if (!seller) notFound();
 
   const sellerListings = LISTINGS.filter((l) => l.seller === seller.username);
