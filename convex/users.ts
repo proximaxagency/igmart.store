@@ -22,7 +22,7 @@ export function isDbUser(user: any): user is Doc<"users"> {
 // Helper: Get authenticated user from Clerk JWT
 export async function getAuthUser(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) return null;
+  if (!identity) throw new Error("Unauthorized: Invalid or missing Clerk JWT token");
 
   let user = await ctx.db
     .query("users")
@@ -36,8 +36,30 @@ export async function getAuthUser(ctx: QueryCtx | MutationCtx) {
     user = byEmail.find((u) => u.email.toLowerCase() === userEmail.toLowerCase()) || null;
   }
 
+  // Auto-create user if they still don't exist
+  if (!user) {
+    const role = isAdminEmail(userEmail) ? "admin" : "buyer";
+    const now = Date.now();
+    const userId = await ctx.db.insert("users", {
+      clerkId: identity.subject,
+      email: userEmail || "unknown@user.com",
+      username: identity.nickname || identity.name || userEmail.split("@")[0] || "user",
+      displayName: identity.name || identity.nickname || userEmail.split("@")[0] || "User",
+      avatarUrl: identity.pictureUrl,
+      role: role,
+      status: "active",
+      walletBalance: 0,
+      pendingBalance: 0,
+      createdAt: now,
+      updatedAt: now,
+      lastSeenAt: now,
+    });
+    user = await ctx.db.get(userId);
+  }
+
   if (user && isAdminEmail(user.email)) {
     if (user.role !== "admin" && user.role !== "super_admin") {
+      await ctx.db.patch(user._id, { role: "admin" });
       user = { ...user, role: "admin" };
     }
   }
