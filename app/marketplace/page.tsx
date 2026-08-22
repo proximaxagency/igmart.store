@@ -279,9 +279,32 @@ export default function MarketplacePage() {
     if (!isNaN(max)) result = result.filter((l) => l.price <= max);
 
     // Sort
-    if (sort === "newest") result.sort((a, b) => b._creationTime - a._creationTime);
-    else if (sort === "price_asc") result.sort((a, b) => a.price - b.price);
-    else if (sort === "price_desc") result.sort((a, b) => b.price - a.price);
+    if (sort === "newest") {
+      result.sort((a, b) => b._creationTime - a._creationTime);
+    } else if (sort === "price_asc") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sort === "price_desc") {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sort === "recommended" && !activeGame && !search.trim() && deliveries.length === 0) {
+      // Apply 50% CoC quota on the top page
+      const cocListings = result.filter(l => l.gameName?.toLowerCase().includes("clash of clans"));
+      const otherListings = result.filter(l => !l.gameName?.toLowerCase().includes("clash of clans"));
+      
+      const mixed = [];
+      let cIdx = 0;
+      let oIdx = 0;
+      
+      while (cIdx < cocListings.length || oIdx < otherListings.length) {
+        if (mixed.length % 2 === 0) {
+          if (cIdx < cocListings.length) mixed.push(cocListings[cIdx++]);
+          else if (oIdx < otherListings.length) mixed.push(otherListings[oIdx++]);
+        } else {
+          if (oIdx < otherListings.length) mixed.push(otherListings[oIdx++]);
+          else if (cIdx < cocListings.length) mixed.push(cocListings[cIdx++]);
+        }
+      }
+      result = mixed;
+    }
 
     return result;
   }, [rawListings, activeGame, search, deliveries, minPrice, maxPrice, sort]);
