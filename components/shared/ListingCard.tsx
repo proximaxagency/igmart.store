@@ -114,13 +114,13 @@ export function ListingCard({
       className={`group flex flex-col bg-card border border-border rounded-xl overflow-hidden transition-all duration-200 hover:border-border-strong hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] ${className}`}
     >
       {/* Image */}
-      <div className="relative aspect-video w-full overflow-hidden bg-elevated">
+      <div className="relative aspect-video w-full overflow-hidden bg-elevated flex items-center justify-center">
         <Image
           src={image}
           alt=""
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+          className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
 
