@@ -189,7 +189,7 @@ export default function BulkUploadPage() {
   const inputCls = "w-full bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-text outline-none focus:border-primary transition-all";
 
   return (
-    <div className="max-w-full space-y-6">
+    <div className="container max-w-7xl py-8 sm:py-12 space-y-6">
       <div>
         <h1 className="font-heading font-black text-2xl text-text">Bulk Upload</h1>
         <p className="text-text-muted text-sm mt-1">
