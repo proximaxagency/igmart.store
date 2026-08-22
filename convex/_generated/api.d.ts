@@ -15,6 +15,7 @@ import type * as notifications from "../notifications.js";
 import type * as orders from "../orders.js";
 import type * as seed from "../seed.js";
 import type * as seedBulk from "../seedBulk.js";
+import type * as seedReal from "../seedReal.js";
 import type * as seller from "../seller.js";
 import type * as tickets from "../tickets.js";
 import type * as transactions from "../transactions.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   orders: typeof orders;
   seed: typeof seed;
   seedBulk: typeof seedBulk;
+  seedReal: typeof seedReal;
   seller: typeof seller;
   tickets: typeof tickets;
   transactions: typeof transactions;

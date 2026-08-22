@@ -7,8 +7,8 @@ import { Badge, Stars, PriceDisplay, Button, Alert } from "@/components/ui/index
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { notFound, useParams } from "next/navigation";
-import { useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 function getBadgeVariant(badge: string): "hot" | "sale" | "popular" | "new" {
   if (badge === "HOT") return "hot";
@@ -20,6 +20,7 @@ function getBadgeVariant(badge: string): "hot" | "sale" | "popular" | "new" {
 export default function ListingPage() {
   const params = useParams();
   const id = params?.id as string | undefined;
+  const [activeImg, setActiveImg] = useState(0);
 
   const listing = useQuery(
     api.listings.getListingById,
@@ -91,13 +92,13 @@ export default function ListingPage() {
             <div className="bg-card border border-border rounded-xl overflow-hidden mb-6">
               <div className="aspect-video relative bg-elevated">
                 <Image
-                  src={image}
+                  src={listing.images?.[activeImg] ?? image}
                   alt={listing.title}
                   fill
                   priority
                   unoptimized
                   sizes="(max-width: 1024px) 100vw, 65vw"
-                  className="object-cover object-top"
+                  className="object-cover object-top transition-opacity duration-300"
                 />
                 {listing.badge && (
                   <div className="absolute top-3 left-3">
@@ -105,6 +106,24 @@ export default function ListingPage() {
                   </div>
                 )}
               </div>
+
+              {/* Gallery thumbnails */}
+              {listing.images && listing.images.length > 1 && (
+                <div className="flex gap-2 p-3 overflow-x-auto hide-scrollbar bg-elevated/30 border-t border-border">
+                  {listing.images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveImg(idx)}
+                      className={`relative flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all ${
+                        activeImg === idx ? "border-primary shadow-[0_0_0_2px_var(--color-primary)]" : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img} alt={`Screenshot ${idx + 1}`} className="w-full h-full object-cover object-top" />
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <div className="p-5 sm:p-7">
                 {/* Tags */}
