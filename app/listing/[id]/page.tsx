@@ -141,7 +141,15 @@ export default function ListingPage() {
 
   const image = listing.images?.[0] ?? "/clash-of-clans-poster.jpg";
   const gameName = listing.gameName ?? "Game Asset";
-  const gameSlug = gameName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const gameSlug = (() => {
+    // We import GAMES inside the component or at the top. Let's just require it or use the same logic as the slug page.
+    const normalized = gameName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    if (normalized.includes("pubg") || normalized.includes("bgmi")) return "pubg-mobile";
+    if (normalized.includes("free-fire")) return "free-fire";
+    if (normalized.includes("clash-of-clans")) return "clash-of-clans";
+    if (normalized.includes("clash-royale")) return "clash-royale";
+    return normalized;
+  })();
 
   return (
     <div className="bg-background min-h-screen pb-28 lg:pb-16">
