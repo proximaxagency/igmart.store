@@ -2,19 +2,67 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Shield, MessageSquare, Zap, CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
+import { Shield, MessageSquare, Zap, CheckCircle2, ChevronRight, Loader2, ArrowRight } from "lucide-react";
 import { Badge, Stars, PriceDisplay, Button, Alert } from "@/components/ui/index";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 function getBadgeVariant(badge: string): "hot" | "sale" | "popular" | "new" {
   if (badge === "HOT") return "hot";
   if (badge === "SALE") return "sale";
   if (badge === "NEW") return "new";
   return "popular";
+}
+
+/* ── Recommendation Card ─────────────────────────────────────────────── */
+function RecoCard({ listing }: { listing: Record<string, unknown> }) {
+  const l = listing as {
+    _id: string; title: string; price: number; originalPrice?: number;
+    images?: string[]; deliveryTime?: string; badge?: string; gameName?: string;
+  };
+  const img = l.images?.[0];
+  return (
+    <Link
+      href={`/listing/${l._id}`}
+      className="group flex-shrink-0 w-[220px] sm:w-[240px] bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-200"
+    >
+      <div className="relative aspect-[4/3] bg-elevated overflow-hidden">
+        {img ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={img}
+            alt={l.title}
+            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-4xl">🎮</div>
+        )}
+        {l.badge && (
+          <div className="absolute top-2 left-2">
+            <Badge variant={getBadgeVariant(l.badge)}>{l.badge}</Badge>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      </div>
+      <div className="p-3.5">
+        <p className="text-sm font-bold text-text line-clamp-2 leading-snug group-hover:text-primary-hover transition-colors mb-2.5">
+          {l.title}
+        </p>
+        <div className="flex items-center justify-between">
+          <p className="font-heading font-black text-lg text-text">${l.price.toFixed(2)}</p>
+          <span className="text-[10px] bg-elevated text-text-muted font-bold px-2 py-0.5 rounded-full border border-border">
+            {l.deliveryTime || "Instant"}
+          </span>
+        </div>
+        {l.originalPrice && l.originalPrice > l.price && (
+          <p className="text-[11px] text-text-muted line-through mt-0.5">${l.originalPrice.toFixed(2)}</p>
+        )}
+      </div>
+    </Link>
+  );
 }
 
 export default function ListingPage() {
@@ -28,11 +76,33 @@ export default function ListingPage() {
   );
   const incrementViews = useMutation(api.listings.incrementViews);
 
+  // Fetch all active listings for same game (for recommendations)
+  const allActiveListings = useQuery(
+    api.listings.listActiveListings,
+    listing?.gameId ? { gameId: listing.gameId as Id<"games">, limit: 50 } : "skip"
+  );
+
+  // Filter out current listing, shuffle, take 8
+  const recommendations = useMemo(() => {
+    if (!allActiveListings || !id) return [];
+    const others = allActiveListings.filter((l) => l._id !== id);
+    // Fisher-Yates shuffle for variety
+    const arr = [...others];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, 8);
+  }, [allActiveListings, id]);
+
   useEffect(() => {
     if (listing && id) {
       incrementViews({ listingId: id as Id<"listings"> }).catch(() => {});
     }
   }, [!!listing]);
+
+  // Reset active image when listing changes
+  useEffect(() => { setActiveImg(0); }, [id]);
 
   // Loading state
   if (listing === undefined) {
@@ -69,6 +139,7 @@ export default function ListingPage() {
 
   const image = listing.images?.[0] ?? "/clash-of-clans-poster.jpg";
   const gameName = listing.gameName ?? "Game Asset";
+  const gameSlug = gameName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
   return (
     <div className="bg-background min-h-screen pb-28 lg:pb-16">
@@ -79,6 +150,8 @@ export default function ListingPage() {
           <Link href="/" className="text-text-muted hover:text-text-secondary transition-colors font-medium">Home</Link>
           <ChevronRight size={13} className="text-text-muted flex-shrink-0" />
           <Link href="/marketplace" className="text-text-muted hover:text-text-secondary transition-colors font-medium">Marketplace</Link>
+          <ChevronRight size={13} className="text-text-muted flex-shrink-0" />
+          <Link href={`/games/${gameSlug}`} className="text-text-muted hover:text-text-secondary transition-colors font-medium">{gameName}</Link>
           <ChevronRight size={13} className="text-text-muted flex-shrink-0" />
           <span className="text-text font-semibold truncate max-w-[200px] sm:max-w-xs">{listing.title}</span>
         </nav>
@@ -248,6 +321,32 @@ export default function ListingPage() {
             </div>
           </div>
         </div>
+
+        {/* ── YOU MAY ALSO LIKE ─────────────────────────────────────────────── */}
+        {recommendations.length > 0 && (
+          <section className="mt-10 pt-8 border-t border-border">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="text-xs font-black text-primary uppercase tracking-widest mb-1">More from {gameName}</p>
+                <h2 className="font-heading font-black text-xl sm:text-2xl text-text">You May Also Like</h2>
+              </div>
+              <Link
+                href={`/games/${gameSlug}`}
+                className="flex items-center gap-1.5 text-sm font-bold text-primary-hover hover:gap-2.5 transition-all flex-shrink-0"
+              >
+                View all <ArrowRight size={15} />
+              </Link>
+            </div>
+
+            {/* Horizontally scrollable card row */}
+            <div className="flex gap-4 overflow-x-auto pb-3 hide-scrollbar -mx-1 px-1">
+              {recommendations.map((rec) => (
+                <RecoCard key={rec._id} listing={rec as Record<string, unknown>} />
+              ))}
+            </div>
+          </section>
+        )}
+
       </div>
 
       {/* Mobile sticky bar */}
@@ -266,3 +365,5 @@ export default function ListingPage() {
     </div>
   );
 }
+
+
