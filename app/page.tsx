@@ -5,6 +5,7 @@ import { GAMES, LISTINGS, SELLERS, REVIEWS, GUIDES, FAQ_ITEMS } from "@/lib/data
 import { Badge, Stars, SectionHeading, Button } from "@/components/ui/index";
 import { GameCard } from "@/components/shared/GameCard";
 import { ListingCard } from "@/components/shared/ListingCard";
+import { FeaturedListings } from "@/components/home/FeaturedListings";
 import HomepageClient from "@/components/home/HomepageClient";
 import { Zap, ShieldCheck, MessageSquare, Scale, Star, ArrowRight, BadgeCheck, Clock, Wallet } from "lucide-react";
 
@@ -35,7 +36,6 @@ const whyBuyHere = [
 
 export default function HomePage() {
   const popularGames = GAMES.filter((g) => g.popular).slice(0, 10);
-  const featuredListings = LISTINGS.slice(0, 8);
   const featuredSellers = SELLERS;
   const featuredGuides = GUIDES.slice(0, 5);
 
@@ -161,11 +161,7 @@ export default function HomePage() {
               All accounts <ArrowRight size={15} />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {featuredListings.map((listing) => (
-              <ListingCard key={listing.id} {...listing} />
-            ))}
-          </div>
+          <FeaturedListings />
         </div>
       </section>
 

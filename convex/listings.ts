@@ -52,10 +52,24 @@ export const listActiveListings = query({
       if (game) gamesMap.set(gId, game.name);
     }
 
-    return listings.map((l) => ({
-      ...l,
-      gameName: gamesMap.get(l.gameId) || "Game Asset",
-    }));
+    // Batch fetch all referenced sellers in one pass
+    const sellerIds = [...new Set(listings.map((l) => l.sellerId))];
+    const sellersMap = new Map<string, any>();
+    for (const sId of sellerIds) {
+      const seller = await ctx.db.get(sId);
+      if (seller) sellersMap.set(sId, seller);
+    }
+
+    return listings.map((l) => {
+      const seller = sellersMap.get(l.sellerId);
+      return {
+        ...l,
+        gameName: gamesMap.get(l.gameId) || "Game Asset",
+        sellerName: seller?.displayName || "IGMART Seller",
+        sellerRating: seller?.rating || 5.0,
+        sellerIsVerified: seller?.isVerified || false,
+      };
+    });
   },
 });
 
