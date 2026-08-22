@@ -94,14 +94,17 @@ export default function BulkUploadPage() {
 
   // ── Per-row image handling ────────────────────────────────────────────────
   const handleRowImages = useCallback((rowId: string, files: FileList | null) => {
-    if (!files) return;
-    const arr = Array.from(files).slice(0, 5);
-    const previews = arr.map((f) => URL.createObjectURL(f));
+    if (!files || files.length === 0) return;
+    
     setRows((prev) => prev.map((r) => {
       if (r.id !== rowId) return r;
-      // Revoke old previews
+      const newFiles = Array.from(files);
+      const combined = [...r.imageFiles, ...newFiles].slice(0, 5);
+      const previews = combined.map((f) => URL.createObjectURL(f));
+      
+      // Revoke old previews to avoid memory leaks
       r.imagePreviews.forEach((u) => URL.revokeObjectURL(u));
-      return { ...r, imageFiles: arr, imagePreviews: previews, images: [], uploadStatus: "idle" };
+      return { ...r, imageFiles: combined, imagePreviews: previews, images: [], uploadStatus: "idle" };
     }));
   }, []);
 
