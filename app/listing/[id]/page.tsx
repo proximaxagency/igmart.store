@@ -11,7 +11,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 
-import { getImageUrl } from "@/lib/imageUrl";
+import { ConvexImage, useResolvedImageUrl } from "@/components/shared/ConvexImage";
 
 function getBadgeVariant(badge: string): "hot" | "sale" | "popular" | "new" {
   if (badge === "HOT") return "hot";
@@ -26,7 +26,6 @@ function RecoCard({ listing }: { listing: Record<string, unknown> }) {
     _id: string; title: string; price: number; originalPrice?: number;
     images?: string[]; deliveryTime?: string; badge?: string; gameName?: string;
   };
-  const img = getImageUrl(l.images?.[0]);
   const { format } = useCurrency();
   return (
     <Link
@@ -34,10 +33,9 @@ function RecoCard({ listing }: { listing: Record<string, unknown> }) {
       className="group flex-shrink-0 w-[220px] sm:w-[240px] bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-200"
     >
       <div className="relative aspect-[4/3] bg-elevated overflow-hidden">
-        {img ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={img}
+        {l.images?.[0] ? (
+          <ConvexImage
+            src={l.images[0]}
             alt={l.title}
             className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
           />
@@ -141,7 +139,7 @@ export default function ListingPage() {
     );
   }
 
-  const image = listing.images?.[0] ?? "/clash-of-clans-poster.jpg";
+  const activeImageSrc = useResolvedImageUrl(listing.images?.[activeImg], "/clash-of-clans-poster.jpg");
   const gameName = listing.gameName ?? "Game Asset";
   const gameSlug = (() => {
     // We import GAMES inside the component or at the top. Let's just require it or use the same logic as the slug page.
@@ -179,16 +177,13 @@ export default function ListingPage() {
                 {/* Blurred background image to fill awkward gaps */}
                 <div 
                   className="absolute inset-0 bg-cover bg-center blur-xl opacity-40 scale-110"
-                  style={{ backgroundImage: `url(${getImageUrl(listing.images?.[activeImg], image)})` }}
+                  style={{ backgroundImage: activeImageSrc ? `url(${activeImageSrc})` : undefined }}
                 />
                 
                 {/* Main uncropped image */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={getImageUrl(listing.images?.[activeImg], image)}
+                <ConvexImage
+                  src={listing.images?.[activeImg]}
                   alt={listing.title}
-                  fetchPriority="high"
-                  onError={(e) => { (e.target as HTMLImageElement).src = image || "/clash-of-clans-poster.jpg"; }}
                   className="w-full h-auto max-h-[70vh] object-contain relative z-10 transition-opacity duration-300"
                 />
                 {listing.badge && (
@@ -228,12 +223,10 @@ export default function ListingPage() {
                         activeImg === idx ? "border-primary shadow-[0_0_0_2px_var(--color-primary)]" : "border-border hover:border-primary/50"
                       }`}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={getImageUrl(img, image)}
+                      <ConvexImage
+                        src={img}
                         alt={`Screenshot ${idx + 1}`}
                         loading="lazy"
-                        onError={(e) => { (e.target as HTMLImageElement).src = image || "/clash-of-clans-poster.jpg"; }}
                         className="w-full h-full object-cover object-top"
                       />
                     </button>
