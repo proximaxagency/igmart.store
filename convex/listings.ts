@@ -203,6 +203,7 @@ export const getListingById = query({
     return {
       ...listing,
       images: resolvedImages,
+      rawImages: listing.images || [], // raw storage IDs for edit forms
       gameName: game?.name || "Game Asset",
       sellerName: seller?.displayName || seller?.username || "Seller",
       sellerAvatar: seller?.avatarUrl || null,
@@ -211,6 +212,7 @@ export const getListingById = query({
     };
   },
 });
+
 
 export const updateListing = mutation({
   args: {
