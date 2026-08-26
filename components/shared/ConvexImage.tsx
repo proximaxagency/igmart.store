@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, type ImgHTMLAttributes } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
@@ -48,7 +48,7 @@ export function useResolvedImageUrl(
   return resolvedFromConvex || fallback;
 }
 
-interface ConvexImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+export interface ConvexImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   src?: string | null;
   fallback?: string;
 }
