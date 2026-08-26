@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { 
   TrendingUp, DollarSign, Package, Star, Plus, ShieldCheck, Box, 
-  ArrowUpRight, AlertCircle, CheckCircle2, Store, Zap, Loader2, Sparkles, MessageSquare
+  ArrowUpRight, AlertCircle, CheckCircle2, Store, Zap, Loader2, Sparkles, MessageSquare, Edit, Eye
 } from "lucide-react";
 import { Badge } from "@/components/ui/index";
 import { useQuery } from "convex/react";
@@ -204,25 +204,58 @@ export default function SellerDashboardPage() {
                       <th className="pb-3 pr-4">Item Details</th>
                       <th className="pb-3 pr-4">Price</th>
                       <th className="pb-3 pr-4">Views</th>
-                      <th className="pb-3">Status</th>
+                      <th className="pb-3 pr-4">Status</th>
+                      <th className="pb-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60 text-xs">
-                    {listings.map((l) => (
-                      <tr key={l._id} className="hover:bg-elevated/40 transition-colors">
-                        <td className="py-3.5 pr-4">
-                          <p className="font-bold text-text truncate max-w-[220px]">{l.title}</p>
-                          <p className="text-[11px] text-text-muted truncate max-w-[220px] mt-0.5">{l.description}</p>
-                        </td>
-                        <td className="py-3.5 pr-4 font-bold text-text">${l.price.toFixed(2)}</td>
-                        <td className="py-3.5 pr-4 text-text-muted">{l.views || 0}</td>
-                        <td className="py-3.5">
-                          <Badge variant={statusVariant[l.status] ?? "default"} size="sm">
-                            {l.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
+                    {listings.map((l) => {
+                      const rawImg = l.images?.[0];
+                      const safeImg = (rawImg && (rawImg.startsWith("http://") || rawImg.startsWith("https://") || rawImg.startsWith("/")))
+                        ? rawImg
+                        : "/clash-of-clans-poster.jpg";
+                      return (
+                        <tr key={l._id} className="hover:bg-elevated/40 transition-colors">
+                          <td className="py-3.5 pr-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-elevated relative overflow-hidden flex-shrink-0 border border-border">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={safeImg} alt="" className="w-full h-full object-cover object-top" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-text truncate max-w-[180px] sm:max-w-xs">{l.title}</p>
+                                <p className="text-[11px] text-text-muted truncate max-w-[180px] sm:max-w-xs mt-0.5">{l.description}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3.5 pr-4 font-bold text-text">${l.price.toFixed(2)}</td>
+                          <td className="py-3.5 pr-4 text-text-muted">{l.views || 0}</td>
+                          <td className="py-3.5 pr-4">
+                            <Badge variant={statusVariant[l.status] ?? "default"} size="sm">
+                              {l.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3.5 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Link
+                                href={`/sell/create?edit=${l._id}`}
+                                className="inline-flex items-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-bold px-2.5 py-1 rounded-lg transition-colors text-xs"
+                                title="Edit Listing"
+                              >
+                                <Edit size={12} /> Edit
+                              </Link>
+                              <Link
+                                href={`/listing/${l._id}`}
+                                className="inline-flex items-center gap-1 bg-elevated hover:bg-border text-text-muted hover:text-text border border-border font-medium px-2 py-1 rounded-lg transition-colors text-xs"
+                                title="View Public Listing"
+                              >
+                                <Eye size={12} />
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

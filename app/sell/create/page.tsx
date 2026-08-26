@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import {
   Loader2, UploadCloud, ChevronRight, Gamepad2, Shield, Star,
-  Swords, Gem, Trophy, Zap, Flame, Package, Lock, Eye, EyeOff
+  Swords, Gem, Trophy, Zap, Flame, Package, Lock, Eye, EyeOff, Pencil
 } from "lucide-react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { GAME_FIELDS, type GameField } from "@/lib/gameFields";
@@ -15,10 +15,20 @@ import { GAME_FIELDS, type GameField } from "@/lib/gameFields";
 
 export default function CreateListingPage() {
   const router = useRouter();
-  
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit") as Id<"listings"> | null;
+  const isEditMode = !!editId;
+
   const games = useQuery(api.listings.getGames);
   const categories = useQuery(api.listings.getCategories);
   const createListing = useMutation(api.listings.createListing);
+  const updateListing = useMutation(api.listings.updateListing);
+
+  // Load existing listing data in edit mode
+  const existingListing = useQuery(
+    api.listings.getListingById,
+    editId ? { listingId: editId } : "skip"
+  );
 
   const [formData, setFormData] = useState({
     title: "",
@@ -36,6 +46,28 @@ export default function CreateListingPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [uploadAnother, setUploadAnother] = useState(false);
+  const [prefilled, setPrefilled] = useState(false);
+
+  // Pre-fill form when editing an existing listing
+  useEffect(() => {
+    if (isEditMode && existingListing && !prefilled) {
+      setFormData({
+        title: existingListing.title || "",
+        description: existingListing.description || "",
+        price: existingListing.price?.toString() || "",
+        gameId: (existingListing.gameId as Id<"games">) || "",
+        categoryId: (existingListing.categoryId as Id<"categories">) || "",
+        deliveryMethod: (existingListing.deliveryMethod as any) || "manual",
+        deliveryTime: existingListing.deliveryTime || "24 hours",
+        autoDeliveryData: (existingListing as any).autoDeliveryData || "",
+      });
+      setUploadedImages(existingListing.images || []);
+      if (existingListing.attributes) {
+        setGameDetails(existingListing.attributes as Record<string, any>);
+      }
+      setPrefilled(true);
+    }
+  }, [isEditMode, existingListing, prefilled]);
 
   const selectedGame = useMemo(() => {
     if (!formData.gameId || !games) return null;
@@ -50,7 +82,7 @@ export default function CreateListingPage() {
 
   const handleGameChange = (gameId: string) => {
     setFormData({ ...formData, gameId: gameId as any });
-    setGameDetails({}); // reset details when game changes
+    if (!isEditMode) setGameDetails({}); // only reset in create mode
   };
 
   const handleDetailChange = (key: string, value: any) => {
@@ -102,51 +134,88 @@ export default function CreateListingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.gameId || !formData.categoryId) return;
-    
+
     const finalTitle = formData.title || autoTitle;
     if (!finalTitle || !formData.price) return;
-    
+
     setIsSubmitting(true);
     try {
-      await createListing({
-        title: finalTitle,
-        description: formData.description || buildAutoDescription(selectedGame?.slug || "", gameDetails),
-        price: parseFloat(formData.price),
-        gameId: formData.gameId as Id<"games">,
-        categoryId: formData.categoryId as Id<"categories">,
-        deliveryMethod: formData.deliveryMethod,
-        deliveryTime: formData.deliveryTime,
-        autoDeliveryData: formData.autoDeliveryData || undefined,
-        images: uploadedImages.length > 0 ? uploadedImages : [selectedGame?.imageUrl ?? "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800"],
-        attributes: Object.keys(gameDetails).length > 0 ? gameDetails : undefined,
-      });
-
-      if (uploadAnother) {
-        setFormData({
-          title: "",
-          description: "",
-          price: "",
-          gameId: formData.gameId,
-          categoryId: formData.categoryId,
-          deliveryMethod: "manual",
-          deliveryTime: "24 hours",
-          autoDeliveryData: "",
+      if (isEditMode && editId) {
+        // ── Edit mode: update existing listing ──
+        await updateListing({
+          listingId: editId,
+          title: finalTitle,
+          description: formData.description || buildAutoDescription(selectedGame?.slug || "", gameDetails),
+          price: parseFloat(formData.price),
+          gameId: formData.gameId as Id<"games">,
+          categoryId: formData.categoryId as Id<"categories">,
+          deliveryMethod: formData.deliveryMethod,
+          deliveryTime: formData.deliveryTime,
+          autoDeliveryData: formData.autoDeliveryData || undefined,
+          images: uploadedImages.length > 0 ? uploadedImages : undefined,
+          attributes: Object.keys(gameDetails).length > 0 ? gameDetails : undefined,
         });
-        setGameDetails({});
-        setUploadedImages([]);
-        alert("Listing published successfully! You can now create another one.");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        router.push("/seller/listings");
       } else {
-        router.push("/seller/dashboard");
+        // ── Create mode: new listing ──
+        await createListing({
+          title: finalTitle,
+          description: formData.description || buildAutoDescription(selectedGame?.slug || "", gameDetails),
+          price: parseFloat(formData.price),
+          gameId: formData.gameId as Id<"games">,
+          categoryId: formData.categoryId as Id<"categories">,
+          deliveryMethod: formData.deliveryMethod,
+          deliveryTime: formData.deliveryTime,
+          autoDeliveryData: formData.autoDeliveryData || undefined,
+          images: uploadedImages.length > 0 ? uploadedImages : [selectedGame?.imageUrl ?? "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800"],
+          attributes: Object.keys(gameDetails).length > 0 ? gameDetails : undefined,
+        });
+
+        if (uploadAnother) {
+          setFormData({
+            title: "",
+            description: "",
+            price: "",
+            gameId: formData.gameId,
+            categoryId: formData.categoryId,
+            deliveryMethod: "manual",
+            deliveryTime: "24 hours",
+            autoDeliveryData: "",
+          });
+          setGameDetails({});
+          setUploadedImages([]);
+          alert("Listing published successfully! You can now create another one.");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          router.push("/seller/dashboard");
+        }
       }
     } catch (error: any) {
-      console.error("Failed to create listing:", error);
-      alert(`Failed to create listing: ${error.message || error}`);
+      console.error("Failed to save listing:", error);
+      alert(`Failed to save listing: ${error.message || error}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Show loading while fetching existing listing in edit mode
+  if (isEditMode && existingListing === undefined) {
+    return (
+      <div className="container max-w-3xl py-20 flex items-center justify-center gap-3 text-text-muted">
+        <Loader2 className="animate-spin text-primary" size={24} />
+        <span className="font-semibold">Loading listing...</span>
+      </div>
+    );
+  }
+
+  if (isEditMode && existingListing === null) {
+    return (
+      <div className="container max-w-3xl py-20 text-center">
+        <p className="font-bold text-danger text-lg">Listing not found.</p>
+        <button onClick={() => router.back()} className="mt-4 text-primary hover:underline text-sm">Go back</button>
+      </div>
+    );
+  }
 
   const inputCls = "w-full bg-background border border-border rounded-xl px-4 py-3 text-text text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-text-muted/60";
   const labelCls = "block text-sm font-semibold text-text mb-1.5";
@@ -156,13 +225,22 @@ export default function CreateListingPage() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-            <Package size={20} />
+            {isEditMode ? <Pencil size={20} /> : <Package size={20} />}
           </div>
           <div>
-            <h1 className="font-heading font-black text-2xl sm:text-3xl text-text">Create a New Listing</h1>
-            <p className="text-text-muted text-sm">Fill in the details to attract buyers fast</p>
+            <h1 className="font-heading font-black text-2xl sm:text-3xl text-text">
+              {isEditMode ? "Edit Listing" : "Create a New Listing"}
+            </h1>
+            <p className="text-text-muted text-sm">
+              {isEditMode ? "Update your listing details below" : "Fill in the details to attract buyers fast"}
+            </p>
           </div>
         </div>
+        {isEditMode && (
+          <div className="flex items-center gap-2 p-3 bg-warning/10 border border-warning/30 rounded-xl text-sm text-warning font-semibold">
+            <Pencil size={14} /> Editing: <span className="text-text font-bold truncate">{existingListing?.title}</span>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -435,34 +513,47 @@ export default function CreateListingPage() {
 
         {/* ── Submit ── */}
         <div className="flex flex-col gap-4 pt-2 pb-6">
-          <div className="flex items-center gap-2">
-            <input 
-              type="checkbox" 
-              id="uploadAnother" 
-              checked={uploadAnother} 
-              onChange={e => setUploadAnother(e.target.checked)} 
-              className="accent-primary w-4 h-4 cursor-pointer" 
-            />
-            <label htmlFor="uploadAnother" className="text-sm font-semibold text-text cursor-pointer">
-              Upload another account for this game (keeps game & category selected)
-            </label>
-          </div>
-          <div className="flex items-center justify-between">
-          <p className="text-xs text-text-muted">
-            By publishing, you agree to our{" "}
-            <a href="/legal/terms" className="text-primary hover:underline">Seller Terms</a>
-          </p>
-          <button
-            type="submit"
-            disabled={isSubmitting || !games || !categories}
-            className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-8 py-3.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/25 text-sm cursor-pointer"
-          >
-            {isSubmitting ? (
-              <><Loader2 size={17} className="animate-spin" /> Publishing...</>
-            ) : (
-              <><Flame size={17} /> Publish Listing</>
-            )}
-          </button>
+          {!isEditMode && (
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="uploadAnother"
+                checked={uploadAnother}
+                onChange={e => setUploadAnother(e.target.checked)}
+                className="accent-primary w-4 h-4 cursor-pointer"
+              />
+              <label htmlFor="uploadAnother" className="text-sm font-semibold text-text cursor-pointer">
+                Upload another account for this game (keeps game & category selected)
+              </label>
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-xs text-text-muted">
+              By publishing, you agree to our{" "}
+              <a href="/legal/terms" className="text-primary hover:underline">Seller Terms</a>
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="text-sm font-bold text-text-muted hover:text-text border border-border bg-elevated hover:bg-border px-5 py-3 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || !games || !categories}
+                className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-8 py-3.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/25 text-sm cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <><Loader2 size={17} className="animate-spin" />{isEditMode ? "Saving..." : "Publishing..."}</>
+                ) : isEditMode ? (
+                  <><Pencil size={17} /> Save Changes</>
+                ) : (
+                  <><Flame size={17} /> Publish Listing</>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </form>

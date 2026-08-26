@@ -218,6 +218,14 @@ export const updateListing = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     price: v.optional(v.number()),
+    originalPrice: v.optional(v.number()),
+    images: v.optional(v.array(v.string())),
+    attributes: v.optional(v.any()),
+    deliveryTime: v.optional(v.string()),
+    deliveryMethod: v.optional(v.union(v.literal("automatic"), v.literal("manual"), v.literal("coordinate"))),
+    autoDeliveryData: v.optional(v.string()),
+    gameId: v.optional(v.id("games")),
+    categoryId: v.optional(v.id("categories")),
     status: v.optional(v.union(
       v.literal("draft"), v.literal("pending_review"), v.literal("active"),
       v.literal("paused"), v.literal("sold"), v.literal("rejected"), v.literal("removed")
