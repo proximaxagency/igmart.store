@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Upload, X, ImageIcon, Loader2, AlertCircle } from "lucide-react";
-import { getImageUrl } from "@/lib/imageUrl";
+import { ConvexImage } from "@/components/shared/ConvexImage";
 
 interface ImageUploaderProps {
   value: string[];
@@ -309,16 +309,14 @@ export function ImageUploader({
 }
 
 function UploadedThumb({ src, onRemove }: { src: string; onRemove: () => void }) {
-  const displaySrc = previewCache.get(src) || getImageUrl(src);
+  const localPreview = previewCache.get(src);
 
   return (
     <div className="relative aspect-video rounded-xl overflow-hidden border border-border bg-elevated group flex items-center justify-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={displaySrc}
+      <ConvexImage
+        src={localPreview || src}
         alt="Listing image"
         className="w-full h-full object-cover object-top"
-        onError={(e) => { (e.target as HTMLImageElement).src = "/clash-of-clans-poster.jpg"; }}
       />
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
       <button
