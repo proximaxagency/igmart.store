@@ -54,6 +54,7 @@ export default function AdminUsersPage() {
   const [walletNotificationMessage, setWalletNotificationMessage] = useState("");
   const [sendNotification, setSendNotification] = useState(true);
   const [walletLoading, setWalletLoading] = useState(false);
+  const [walletError, setWalletError] = useState<string | null>(null);
 
   const users = useQuery(api.admin.listUsersAdmin, isAuthenticated ? {
     searchTerm: searchTerm || undefined,
@@ -63,7 +64,8 @@ export default function AdminUsersPage() {
 
   const setUserStatus = useMutation(api.admin.setUserStatus);
   const updateUserRole = useMutation(api.users.updateUserRole);
-  const adjustWallet = useMutation(api.users.adminAdjustWallet);
+  const adjustWalletAdmin = useMutation((api.admin as any).adjustUserWallet);
+  const adjustWalletUsers = useMutation(api.users.adminAdjustWallet);
 
   const executeAction = async () => {
     if (!confirm) return;
@@ -96,7 +98,7 @@ export default function AdminUsersPage() {
     if (!walletModal) return;
     const parsed = parseFloat(walletAmount);
     if (isNaN(parsed) || parsed <= 0) {
-      setFeedback({ type: "error", msg: "Please enter a valid positive dollar amount." });
+      setWalletError("Please enter a valid positive dollar amount.");
       return;
     }
 
@@ -105,7 +107,7 @@ export default function AdminUsersPage() {
     const calculatedNewBalance = walletModal.currentBalance + finalAmount;
 
     if (calculatedNewBalance < 0) {
-      setFeedback({ type: "error", msg: `Cannot deduct $${parsed.toFixed(2)}. User only has $${walletModal.currentBalance.toFixed(2)}.` });
+      setWalletError(`Cannot deduct $${parsed.toFixed(2)}. User balance ($${walletModal.currentBalance.toFixed(2)}) is less than deduction.`);
       return;
     }
 
@@ -114,18 +116,75 @@ export default function AdminUsersPage() {
       : walletReason;
 
     setWalletLoading(true);
+    setWalletError(null);
     setFeedback(null);
+
     try {
-      const result = await adjustWallet({
-        targetUserId: walletModal.userId,
-        amount: finalAmount,
-        reason: effectiveReason,
-        notificationMessage: sendNotification ? walletNotificationMessage.trim() || undefined : undefined,
-      });
+      let result: any = null;
+      let lastErr: any = null;
+
+      // 1. Try adjustWalletAdmin with notificationMessage
+      try {
+        if (adjustWalletAdmin) {
+          result = await adjustWalletAdmin({
+            targetUserId: walletModal.userId,
+            amount: finalAmount,
+            reason: effectiveReason,
+            notificationMessage: sendNotification ? walletNotificationMessage.trim() || undefined : undefined,
+          });
+        }
+      } catch (e1: any) {
+        lastErr = e1;
+      }
+
+      // 2. Fallback to adjustWalletUsers
+      if (!result) {
+        try {
+          result = await adjustWalletUsers({
+            targetUserId: walletModal.userId,
+            amount: finalAmount,
+            reason: effectiveReason,
+            notificationMessage: sendNotification ? walletNotificationMessage.trim() || undefined : undefined,
+          });
+        } catch (e2: any) {
+          lastErr = e2;
+        }
+      }
+
+      // 3. Fallback without notificationMessage in case cloud validator is older
+      if (!result) {
+        try {
+          if (adjustWalletAdmin) {
+            result = await adjustWalletAdmin({
+              targetUserId: walletModal.userId,
+              amount: finalAmount,
+              reason: effectiveReason,
+            });
+          }
+        } catch (e3: any) {
+          lastErr = e3;
+        }
+      }
+
+      if (!result) {
+        try {
+          result = await adjustWalletUsers({
+            targetUserId: walletModal.userId,
+            amount: finalAmount,
+            reason: effectiveReason,
+          });
+        } catch (e4: any) {
+          lastErr = e4;
+        }
+      }
+
+      if (!result) {
+        throw lastErr || new Error("Failed to adjust wallet balance.");
+      }
 
       setFeedback({
         type: "success",
-        msg: `${walletMode === "credit" ? "Added" : "Deducted"} $${parsed.toFixed(2)} ${walletMode === "credit" ? "to" : "from"} @${walletModal.username}. New balance: $${result.newBalance.toFixed(2)}${sendNotification ? " (Notification sent)" : ""}`,
+        msg: `Successfully ${walletMode === "credit" ? "credited" : "deducted"} $${parsed.toFixed(2)} ${walletMode === "credit" ? "to" : "from"} @${walletModal.username}. New balance: $${result.newBalance.toFixed(2)}${sendNotification ? " (Notification sent)" : ""}`,
       });
 
       // Reset modal
@@ -133,8 +192,10 @@ export default function AdminUsersPage() {
       setWalletAmount("");
       setCustomReason("");
       setWalletNotificationMessage("");
+      setWalletError(null);
     } catch (err: any) {
-      setFeedback({ type: "error", msg: err.message || "Wallet adjustment failed." });
+      console.error("Wallet adjustment error:", err);
+      setWalletError(err?.message || "Wallet adjustment failed. Please check admin permissions.");
     } finally {
       setWalletLoading(false);
     }
@@ -234,19 +295,27 @@ export default function AdminUsersPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setWalletModal(null)}
+                onClick={() => { setWalletModal(null); setWalletError(null); }}
                 className="text-text-muted hover:text-text p-1.5 rounded-lg hover:bg-elevated transition-colors"
               >
                 ✕
               </button>
             </div>
 
+            {/* In-modal Error Alert */}
+            {walletError && (
+              <div className="mb-4 p-3 rounded-xl bg-danger/10 border border-danger/25 text-danger text-xs font-semibold flex items-start gap-2">
+                <AlertTriangle size={15} className="flex-shrink-0 mt-0.5" />
+                <span>{walletError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleWalletSubmit} className="space-y-5">
               {/* Credit vs Debit Toggle */}
               <div className="grid grid-cols-2 gap-2 bg-elevated/70 p-1.5 rounded-2xl border border-border">
                 <button
                   type="button"
-                  onClick={() => setWalletMode("credit")}
+                  onClick={() => { setWalletMode("credit"); setWalletError(null); }}
                   className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                     walletMode === "credit"
                       ? "bg-success text-white shadow-md shadow-success/20 scale-[1.02]"
@@ -257,7 +326,7 @@ export default function AdminUsersPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setWalletMode("debit")}
+                  onClick={() => { setWalletMode("debit"); setWalletError(null); }}
                   className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                     walletMode === "debit"
                       ? "bg-danger text-white shadow-md shadow-danger/20 scale-[1.02]"
@@ -299,7 +368,7 @@ export default function AdminUsersPage() {
                     step="0.01"
                     placeholder="0.00"
                     value={walletAmount}
-                    onChange={(e) => setWalletAmount(e.target.value)}
+                    onChange={(e) => { setWalletAmount(e.target.value); setWalletError(null); }}
                     required
                     className="w-full bg-background border border-border rounded-2xl pl-8 pr-4 py-3 text-base font-bold text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-text-muted/40"
                   />
@@ -311,7 +380,7 @@ export default function AdminUsersPage() {
                     <button
                       key={amt}
                       type="button"
-                      onClick={() => setWalletAmount(amt.toString())}
+                      onClick={() => { setWalletAmount(amt.toString()); setWalletError(null); }}
                       className="text-xs font-bold bg-elevated hover:bg-primary/10 hover:text-primary hover:border-primary/40 border border-border text-text-muted px-2.5 py-1 rounded-lg transition-all cursor-pointer"
                     >
                       +{amt}
@@ -382,7 +451,7 @@ export default function AdminUsersPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setWalletModal(null)}
+                  onClick={() => { setWalletModal(null); setWalletError(null); }}
                   className="flex-1 bg-elevated hover:bg-border text-text font-bold py-3 rounded-xl transition-colors text-xs cursor-pointer"
                 >
                   Cancel
