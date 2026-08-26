@@ -78,6 +78,10 @@ export default function ListingPage() {
   );
   const incrementViews = useMutation(api.listings.incrementViews);
 
+  // Hook must be called unconditionally at the top of the component
+  const activeRawImage = listing?.images?.[activeImg];
+  const activeImageSrc = useResolvedImageUrl(activeRawImage, "/clash-of-clans-poster.jpg");
+
   // Fetch all active listings for same game (for recommendations)
   const allActiveListings = useQuery(
     api.listings.listActiveListings,
@@ -139,7 +143,6 @@ export default function ListingPage() {
     );
   }
 
-  const activeImageSrc = useResolvedImageUrl(listing.images?.[activeImg], "/clash-of-clans-poster.jpg");
   const gameName = listing.gameName ?? "Game Asset";
   const gameSlug = (() => {
     // We import GAMES inside the component or at the top. Let's just require it or use the same logic as the slug page.
