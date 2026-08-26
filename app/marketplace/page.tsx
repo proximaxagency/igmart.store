@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { GAMES, CATEGORIES } from "@/lib/data/igmartData";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
+import { getImageUrl } from "@/lib/imageUrl";
 
 const SORT_OPTIONS = [
   { label: "Recommended", value: "recommended" },
@@ -174,10 +175,7 @@ function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
     images?: string[]; deliveryTime?: string; _creationTime: number;
   };
   const { format } = useCurrency();
-  const rawImg = l.images?.[0];
-  const safeImg = (rawImg && (rawImg.startsWith("http://") || rawImg.startsWith("https://") || rawImg.startsWith("/")))
-    ? rawImg
-    : "/clash-of-clans-poster.jpg";
+  const safeImg = getImageUrl(l.images?.[0], "/clash-of-clans-poster.jpg");
 
   return (
     <Link

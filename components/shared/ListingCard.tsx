@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Badge, Stars, PriceDisplay, WishlistButton } from "@/components/ui/index";
 import { Zap } from "lucide-react";
+import { getImageUrl } from "@/lib/imageUrl";
 
 export type ListingCardVariant = "default" | "compact" | "horizontal";
 
@@ -28,9 +29,7 @@ function getBadgeVariant(badge: string) {
 }
 
 function getSafeImage(img?: string) {
-  if (!img) return "/clash-of-clans-poster.jpg";
-  if (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/")) return img;
-  return "/clash-of-clans-poster.jpg";
+  return getImageUrl(img, "/clash-of-clans-poster.jpg");
 }
 
 // ── Horizontal layout (list view) ──────────────────

@@ -11,6 +11,8 @@ import { useParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 
+import { getImageUrl } from "@/lib/imageUrl";
+
 function getBadgeVariant(badge: string): "hot" | "sale" | "popular" | "new" {
   if (badge === "HOT") return "hot";
   if (badge === "SALE") return "sale";
@@ -24,7 +26,7 @@ function RecoCard({ listing }: { listing: Record<string, unknown> }) {
     _id: string; title: string; price: number; originalPrice?: number;
     images?: string[]; deliveryTime?: string; badge?: string; gameName?: string;
   };
-  const img = l.images?.[0];
+  const img = getImageUrl(l.images?.[0]);
   const { format } = useCurrency();
   return (
     <Link
@@ -177,13 +179,13 @@ export default function ListingPage() {
                 {/* Blurred background image to fill awkward gaps */}
                 <div 
                   className="absolute inset-0 bg-cover bg-center blur-xl opacity-40 scale-110"
-                  style={{ backgroundImage: `url(${listing.images?.[activeImg] ?? image})` }}
+                  style={{ backgroundImage: `url(${getImageUrl(listing.images?.[activeImg], image)})` }}
                 />
                 
                 {/* Main uncropped image */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={listing.images?.[activeImg] ?? image}
+                  src={getImageUrl(listing.images?.[activeImg], image)}
                   alt={listing.title}
                   fetchPriority="high"
                   className="w-full h-auto max-h-[70vh] object-contain relative z-10 transition-opacity duration-300"
@@ -226,7 +228,7 @@ export default function ListingPage() {
                       }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={img} alt={`Screenshot ${idx + 1}`} loading="lazy" className="w-full h-full object-cover object-top" />
+                      <img src={getImageUrl(img, image)} alt={`Screenshot ${idx + 1}`} loading="lazy" className="w-full h-full object-cover object-top" />
                     </button>
                   ))}
                 </div>

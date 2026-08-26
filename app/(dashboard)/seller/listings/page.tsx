@@ -10,6 +10,7 @@ import {
   Package, Plus, Pause, Play, Trash2, Edit, Loader2, AlertTriangle, CheckCircle2, LayoutGrid
 } from "lucide-react";
 import { Badge } from "@/components/ui/index";
+import { getImageUrl } from "@/lib/imageUrl";
 
 const statusVariant: Record<string, "success" | "warning" | "danger" | "default"> = {
   active: "success", pending_review: "warning", draft: "default",
@@ -139,10 +140,7 @@ export default function SellerListingsPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {listings.map((l) => {
-                  const rawImg = l.images?.[0];
-                  const safeImg = (rawImg && (rawImg.startsWith("http://") || rawImg.startsWith("https://") || rawImg.startsWith("/")))
-                    ? rawImg
-                    : "/clash-of-clans-poster.jpg";
+                  const safeImg = getImageUrl(l.images?.[0]);
                   return (
                     <tr key={l._id} className="hover:bg-elevated/50 transition-colors">
                       <td className="p-4 pl-6">

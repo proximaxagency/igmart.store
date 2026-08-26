@@ -299,28 +299,20 @@ export function ImageUploader({
   );
 }
 
-function UploadedThumb({ src, onRemove }: { src: string; onRemove: () => void }) {
-  const isStorageId = !src.startsWith("http") && !src.startsWith("/") && !src.startsWith("data:") && !src.startsWith("blob:");
-  const resolvedUrl = useQuery(
-    (api.listings as any).getImageUrl,
-    isStorageId ? { storageId: src } : "skip"
-  );
+import { getImageUrl } from "@/lib/imageUrl";
 
-  const displaySrc = isStorageId ? (resolvedUrl || undefined) : src;
+function UploadedThumb({ src, onRemove }: { src: string; onRemove: () => void }) {
+  const displaySrc = getImageUrl(src);
 
   return (
     <div className="relative aspect-video rounded-xl overflow-hidden border border-border bg-elevated group flex items-center justify-center">
-      {displaySrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={displaySrc}
-          alt="Listing image"
-          className="w-full h-full object-cover object-top"
-          onError={(e) => { (e.target as HTMLImageElement).src = "/clash-of-clans-poster.jpg"; }}
-        />
-      ) : (
-        <Loader2 className="animate-spin text-primary" size={20} />
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={displaySrc}
+        alt="Listing image"
+        className="w-full h-full object-cover object-top"
+        onError={(e) => { (e.target as HTMLImageElement).src = "/clash-of-clans-poster.jpg"; }}
+      />
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
       <button
         type="button"

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/index";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexAuth } from "@convex-dev/auth/react";
+import { getImageUrl } from "@/lib/imageUrl";
 
 const statusVariant: Record<string, "success" | "warning" | "danger" | "default"> = {
   active: "success",
@@ -210,10 +211,7 @@ export default function SellerDashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-border/60 text-xs">
                     {listings.map((l) => {
-                      const rawImg = l.images?.[0];
-                      const safeImg = (rawImg && (rawImg.startsWith("http://") || rawImg.startsWith("https://") || rawImg.startsWith("/")))
-                        ? rawImg
-                        : "/clash-of-clans-poster.jpg";
+                      const safeImg = getImageUrl(l.images?.[0]);
                       return (
                         <tr key={l._id} className="hover:bg-elevated/40 transition-colors">
                           <td className="py-3.5 pr-4">
