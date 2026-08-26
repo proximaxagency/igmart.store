@@ -157,12 +157,13 @@ export const updateUserRole = mutation({
   },
 });
 
-// Mutation (Admin only): Adjust user wallet balance
+// Mutation (Admin only): Adjust user wallet balance with transaction log and notification message
 export const adminAdjustWallet = mutation({
   args: {
     targetUserId: v.id("users"),
     amount: v.number(),
     reason: v.optional(v.string()),
+    notificationMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const admin = await requireRole(ctx, ["admin", "super_admin"]);
@@ -175,23 +176,62 @@ export const adminAdjustWallet = mutation({
 
     if (newBalance < 0) throw new Error(`Cannot reduce balance below zero. Current: $${currentBalance.toFixed(2)}`);
 
+    const now = Date.now();
     await ctx.db.patch(args.targetUserId, {
       walletBalance: newBalance,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
+    const isCredit = args.amount >= 0;
+    const absAmount = Math.abs(args.amount);
+    const reasonText = args.reason || (isCredit ? "Admin wallet credit" : "Admin wallet deduction");
+    const customMessage = args.notificationMessage?.trim();
+
+    // 1. Record in transactions ledger
+    await ctx.db.insert("transactions", {
+      userId: args.targetUserId,
+      type: isCredit ? "deposit" : "withdrawal",
+      amount: args.amount,
+      currency: "USD",
+      status: "completed",
+      description: `[Admin Adjustment] ${reasonText}`,
+      createdAt: now,
+    });
+
+    // 2. Send instant notification to user
+    const notifTitle = isCredit
+      ? `Wallet Credited: +$${absAmount.toFixed(2)}`
+      : `Wallet Deducted: -$${absAmount.toFixed(2)}`;
+    
+    const notifBody = customMessage || (isCredit
+      ? `An administrator credited $${absAmount.toFixed(2)} to your wallet. Reason: ${reasonText}. Your new balance is $${newBalance.toFixed(2)}.`
+      : `An administrator deducted $${absAmount.toFixed(2)} from your wallet. Reason: ${reasonText}. Your new balance is $${newBalance.toFixed(2)}.`
+    );
+
+    await ctx.db.insert("notifications", {
+      userId: args.targetUserId,
+      type: isCredit ? "payment_success" : "security_alert",
+      title: notifTitle,
+      body: notifBody,
+      link: "/account/wallet",
+      isRead: false,
+      createdAt: now,
+    });
+
+    // 3. Record in immutable audit logs
     await ctx.db.insert("auditLogs", {
       actorId: admin._id,
-      action: args.amount >= 0 ? "wallet.credit" : "wallet.debit",
+      action: isCredit ? "wallet.credit" : "wallet.debit",
       targetType: "user",
       targetId: args.targetUserId,
       metadata: {
         amount: args.amount,
         previousBalance: currentBalance,
         newBalance,
-        reason: args.reason || "Admin manual adjustment",
+        reason: reasonText,
+        notificationMessage: customMessage,
       },
-      createdAt: Date.now(),
+      createdAt: now,
     });
 
     return { success: true, previousBalance: currentBalance, newBalance };
