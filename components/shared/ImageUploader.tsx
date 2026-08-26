@@ -54,6 +54,8 @@ function compressImage(file: File): Promise<File> {
     img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
     img.src = objectUrl;
   });
+}
+
 const previewCache = new Map<string, string>();
 
 export function ImageUploader({
