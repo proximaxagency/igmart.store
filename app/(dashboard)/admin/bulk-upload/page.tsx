@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useRef, useMemo, useCallback } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import {
   Plus, Trash2, CheckCircle2, AlertCircle, Layers, Loader2,
   Sparkles, Image as ImageIcon, Upload, X, FileSpreadsheet,
-  ChevronDown, ChevronUp, Info
+  ChevronDown, ChevronUp, Info, Pencil, PlusCircle, RefreshCw
 } from "lucide-react";
 
 // ────────────────────────────────────────────────────────
@@ -23,6 +23,7 @@ interface RowImage {
 
 interface BulkRow {
   id: string;
+  listingId?: string;    // set in edit mode
   title: string;
   description: string;
   price: string;
@@ -33,6 +34,7 @@ interface BulkRow {
   rank: string;
   images: RowImage[];
   expanded: boolean;
+  editStatus?: "idle" | "saving" | "saved" | "error";
 }
 
 function makeRow(): BulkRow {
@@ -231,14 +233,50 @@ export default function BulkUploadPage() {
   const games = useQuery((api.listings as any).getGames) as any[] | undefined;
   const categories = useQuery((api.listings as any).getCategories) as any[] | undefined;
   const bulkCreate = useMutation((api.admin as any).bulkCreateListings);
+  const updateListing = useMutation((api.listings as any).updateListing);
   const generateUploadUrl = useMutation((api.listings as any).generateUploadUrl);
 
+  const [mode, setMode] = useState<"create" | "edit">("create");
   const [gameId, setGameId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [rows, setRows] = useState<BulkRow[]>([makeRow()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [editStatusFilter, setEditStatusFilter] = useState("active");
+
+  // Load existing listings for edit mode
+  const existingListings = useQuery(
+    (api.listings as any).listActiveListings,
+    mode === "edit" && gameId ? { gameId: gameId as Id<"games">, limit: 200 } : "skip"
+  ) as any[] | undefined;
+
+  // Convert existing listings to rows when loaded
+  useEffect(() => {
+    if (mode !== "edit" || !existingListings) return;
+    const editRows: BulkRow[] = existingListings.map((l: any) => ({
+      id: l._id,
+      listingId: l._id,
+      title: l.title || "",
+      description: l.description || "",
+      price: l.price?.toString() || "",
+      deliveryMethod: (l.deliveryMethod as any) || "manual",
+      deliveryTime: l.deliveryTime || "24 hours",
+      autoDeliveryData: l.autoDeliveryData || "",
+      region: l.attributes?.region || "",
+      rank: l.attributes?.rank || "",
+      // Existing images shown as RowImage with done status (raw IDs)
+      images: (l.images || []).map((img: string, idx: number) => ({
+        id: `existing-${idx}-${l._id}`,
+        preview: img, // resolved URL from backend
+        storageId: img, // for now same as img; will be overwritten if user re-uploads
+        status: "done" as const,
+      })),
+      expanded: false,
+      editStatus: "idle",
+    }));
+    setRows(editRows);
+  }, [existingListings, mode]);
 
   const selectedGame = useMemo(() => games?.find((g) => g._id === gameId), [games, gameId]);
   const selectedCategory = useMemo(() => categories?.find((c) => c._id === categoryId), [categories, categoryId]);
@@ -247,7 +285,7 @@ export default function BulkUploadPage() {
   const addRow = () => setRows((r) => [...r, makeRow()]);
 
   const removeRow = (id: string) => {
-    if (rows.length === 1) {
+    if (mode === "create" && rows.length === 1) {
       setRows([makeRow()]);
       return;
     }
@@ -285,8 +323,10 @@ export default function BulkUploadPage() {
     if (!row.description.trim()) errors.push("Description required");
     const price = parseFloat(row.price);
     if (isNaN(price) || price <= 0) errors.push("Valid price required");
-    const doneImages = row.images.filter((i) => i.status === "done");
-    if (doneImages.length < 4) errors.push(`Need ≥4 screenshots (have ${doneImages.length})`);
+    if (mode === "create") {
+      const doneImages = row.images.filter((i) => i.status === "done");
+      if (doneImages.length < 4) errors.push(`Need ≥4 screenshots (have ${doneImages.length})`);
+    }
     return errors;
   };
 
@@ -309,6 +349,51 @@ export default function BulkUploadPage() {
       return;
     }
 
+    if (mode === "edit") {
+      // ── Bulk Edit: update each listing individually ──
+      setIsSubmitting(true);
+      setFeedback(null);
+      setProgress({ done: 0, total: validRows.length });
+      let done = 0;
+      let errors = 0;
+      for (const row of validRows) {
+        if (!row.listingId) continue;
+        try {
+          const newImages = row.images.filter((i) => i.status === "done" && i.storageId).map((i) => i.storageId!);
+          await updateListing({
+            listingId: row.listingId as Id<"listings">,
+            title: row.title.trim(),
+            description: row.description.trim(),
+            price: parseFloat(row.price),
+            deliveryMethod: row.deliveryMethod,
+            deliveryTime: row.deliveryTime,
+            ...(row.autoDeliveryData ? { autoDeliveryData: row.autoDeliveryData } : {}),
+            ...(newImages.length > 0 ? { images: newImages } : {}),
+            attributes: {
+              ...(row.region ? { region: row.region } : {}),
+              ...(row.rank ? { rank: row.rank } : {}),
+            },
+          } as any);
+          setRows(r => r.map(x => x.id === row.id ? { ...x, editStatus: "saved" } : x));
+          done++;
+        } catch {
+          setRows(r => r.map(x => x.id === row.id ? { ...x, editStatus: "error" } : x));
+          errors++;
+        }
+        setProgress({ done: done + errors, total: validRows.length });
+      }
+      setFeedback({
+        type: errors > 0 ? "error" : "success",
+        msg: errors > 0
+          ? `${done} listings updated, ${errors} failed.`
+          : `Successfully updated ${done} listings!`,
+      });
+      setIsSubmitting(false);
+      setProgress(null);
+      return;
+    }
+
+    // ── Create mode: bulk create new listings ──
     setIsSubmitting(true);
     setFeedback(null);
     setProgress({ done: 0, total: validRows.length });
@@ -340,7 +425,7 @@ export default function BulkUploadPage() {
       }
       setFeedback({
         type: "success",
-        msg: `Successfully published ${done} listings to ${selectedGame?.name || "catalog"}!`,
+        msg: `Successfully published ${validRows.length} listings to ${selectedGame?.name || "catalog"}!`,
       });
       setRows([makeRow()]);
     } catch (err: any) {
@@ -350,6 +435,7 @@ export default function BulkUploadPage() {
       setProgress(null);
     }
   };
+
 
   const inputCls = "w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm text-text outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-text-muted/50";
 
@@ -367,15 +453,31 @@ export default function BulkUploadPage() {
             </span>
           </div>
           <h1 className="font-heading font-black text-2xl sm:text-3xl text-text flex items-center gap-2.5">
-            <FileSpreadsheet className="text-primary" size={28} /> Bulk Listing Importer
+            <FileSpreadsheet className="text-primary" size={28} /> Bulk Listing Manager
           </h1>
           <p className="text-text-muted text-sm mt-1">
-            Create listings in a spreadsheet table, upload minimum 4 direct screenshots per row, and publish all at once.
+            Create new listings or edit existing ones in a spreadsheet table.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-text-muted bg-elevated border border-border rounded-xl px-3.5 py-2.5">
-          <Info size={14} className="text-primary flex-shrink-0" />
-          <span><strong className="text-text">Minimum 4 screenshots</strong> required per listing</span>
+
+        {/* Mode Toggle */}
+        <div className="flex items-center gap-0 bg-elevated border border-border rounded-xl p-1">
+          <button
+            onClick={() => { setMode("create"); setRows([makeRow()]); setFeedback(null); }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              mode === "create" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text"
+            }`}
+          >
+            <PlusCircle size={15} /> Create New
+          </button>
+          <button
+            onClick={() => { setMode("edit"); setRows([]); setFeedback(null); }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              mode === "edit" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text"
+            }`}
+          >
+            <Pencil size={15} /> Edit Existing
+          </button>
         </div>
       </div>
 
@@ -394,13 +496,18 @@ export default function BulkUploadPage() {
         <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
           <Layers size={17} className="text-primary" />
           <h2 className="font-heading font-bold text-base text-text">1. Target Game & Category</h2>
+          {mode === "edit" && (
+            <span className="ml-auto text-[11px] bg-warning/10 text-warning border border-warning/20 font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+              <Pencil size={11} /> Edit Mode
+            </span>
+          )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-text-muted block mb-1.5">Game *</label>
             <select
               value={gameId}
-              onChange={(e) => setGameId(e.target.value)}
+              onChange={(e) => { setGameId(e.target.value); if (mode === "edit") setRows([]); }}
               className="w-full bg-background border border-border rounded-xl px-3.5 py-3 text-sm text-text font-semibold focus:outline-none focus:border-primary/60 transition-colors"
             >
               <option value="">-- Choose Game --</option>
@@ -410,7 +517,7 @@ export default function BulkUploadPage() {
             </select>
           </div>
           <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-text-muted block mb-1.5">Category *</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-text-muted block mb-1.5">Category {mode === "create" ? "*" : "(optional for edits)"}</label>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
@@ -423,6 +530,18 @@ export default function BulkUploadPage() {
             </select>
           </div>
         </div>
+        {mode === "edit" && gameId && (
+          <div className="mt-3 text-xs text-text-muted flex items-center gap-2">
+            <RefreshCw size={12} className="text-primary" />
+            {existingListings === undefined ? "Loading existing listings..." : `${existingListings.length} listing${existingListings.length !== 1 ? "s" : ""} loaded for editing`}
+          </div>
+        )}
+        {mode === "create" && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-text-muted bg-elevated/50 border border-border rounded-xl px-3.5 py-2.5">
+            <Info size={13} className="text-primary flex-shrink-0" />
+            <span><strong className="text-text">Minimum 4 screenshots</strong> required per listing in Create mode</span>
+          </div>
+        )}
       </div>
 
       {/* ── Step 2: Spreadsheet Rows ── */}
@@ -431,7 +550,7 @@ export default function BulkUploadPage() {
         <div className="bg-elevated/60 border-b border-border px-5 py-3.5 flex items-center justify-between">
           <h2 className="font-heading font-bold text-base text-text flex items-center gap-2">
             <FileSpreadsheet size={17} className="text-primary" />
-            2. Listing Rows
+            {mode === "edit" ? "2. Edit Listings" : "2. Listing Rows"}
             <span className="ml-2 text-[11px] font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full">
               {rows.length} row{rows.length !== 1 ? "s" : ""}
             </span>
@@ -471,11 +590,24 @@ export default function BulkUploadPage() {
                     {row.title || <span className="text-text-muted font-normal italic">Untitled listing...</span>}
                   </span>
 
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${
-                    doneImgs >= 4 ? "bg-success/10 text-success border-success/20" : "bg-warning/10 text-warning border-warning/20"
-                  }`}>
-                    {doneImgs}/4+ imgs
-                  </span>
+                  {/* Edit status indicator */}
+                  {mode === "edit" && row.editStatus && row.editStatus !== "idle" && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${
+                      row.editStatus === "saved" ? "bg-success/10 text-success border-success/20" :
+                      row.editStatus === "saving" ? "bg-primary/10 text-primary border-primary/20" :
+                      "bg-danger/10 text-danger border-danger/20"
+                    }`}>
+                      {row.editStatus === "saved" ? "✓ Saved" : row.editStatus === "saving" ? "Saving..." : "Error"}
+                    </span>
+                  )}
+
+                  {mode === "create" && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${
+                      doneImgs >= 4 ? "bg-success/10 text-success border-success/20" : "bg-warning/10 text-warning border-warning/20"
+                    }`}>
+                      {doneImgs}/4+ imgs
+                    </span>
+                  )}
 
                   {row.price && (
                     <span className="text-[11px] font-bold bg-elevated border border-border text-text px-2 py-0.5 rounded-full flex-shrink-0">
@@ -656,16 +788,18 @@ export default function BulkUploadPage() {
           })}
         </div>
 
-        {/* Add Row Button */}
-        <div className="p-4 border-t border-border bg-elevated/20">
-          <button
-            type="button"
-            onClick={addRow}
-            className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-hover border border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm"
-          >
-            <Plus size={16} /> Add Another Listing Row
-          </button>
-        </div>
+        {/* Add Row Button — only in create mode */}
+        {mode === "create" && (
+          <div className="p-4 border-t border-border bg-elevated/20">
+            <button
+              type="button"
+              onClick={addRow}
+              className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-hover border border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm"
+            >
+              <Plus size={16} /> Add Another Listing Row
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Sticky Bottom Publishing Bar ── */}
@@ -688,19 +822,19 @@ export default function BulkUploadPage() {
         <button
           type="button"
           onClick={handlePublish}
-          disabled={isSubmitting || validRows.length === 0 || !gameId || !categoryId || anyUploading}
+          disabled={isSubmitting || validRows.length === 0 || !gameId || (mode === "create" && !categoryId) || anyUploading}
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3 rounded-xl font-heading font-black text-sm text-white shadow-lg shadow-primary/25 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
           style={{ background: "var(--gradient-brand)" }}
         >
           {isSubmitting ? (
             <>
               <Loader2 className="animate-spin" size={17} />
-              <span>Publishing...</span>
+              <span>{mode === "edit" ? "Saving..." : "Publishing..."}</span>
             </>
           ) : (
             <>
-              <Sparkles size={17} />
-              <span>Publish {validRows.length} Listing{validRows.length !== 1 ? "s" : ""}</span>
+              {mode === "edit" ? <Pencil size={17} /> : <Sparkles size={17} />}
+              <span>{mode === "edit" ? `Save ${validRows.length} Change${validRows.length !== 1 ? "s" : ""}` : `Publish ${validRows.length} Listing${validRows.length !== 1 ? "s" : ""}`}</span>
             </>
           )}
         </button>
