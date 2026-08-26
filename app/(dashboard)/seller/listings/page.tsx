@@ -138,14 +138,27 @@ export default function SellerListingsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {listings.map((l) => (
-                  <tr key={l._id} className="hover:bg-elevated/50 transition-colors">
-                    <td className="p-4 pl-6">
-                      <p className="text-sm font-bold text-text truncate max-w-[200px]">{l.title}</p>
-                      <p className="text-[11px] text-text-muted truncate max-w-[200px] mt-0.5">{l.description}</p>
-                    </td>
-                    <td className="p-4 text-sm font-bold text-text">${l.price.toFixed(2)}</td>
-                    <td className="p-4 text-sm text-text-muted">{l.views || 0}</td>
+                {listings.map((l) => {
+                  const rawImg = l.images?.[0];
+                  const safeImg = (rawImg && (rawImg.startsWith("http://") || rawImg.startsWith("https://") || rawImg.startsWith("/")))
+                    ? rawImg
+                    : "/clash-of-clans-poster.jpg";
+                  return (
+                    <tr key={l._id} className="hover:bg-elevated/50 transition-colors">
+                      <td className="p-4 pl-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-elevated relative overflow-hidden flex-shrink-0 border border-border">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={safeImg} alt="" className="w-full h-full object-cover object-top" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-text truncate max-w-[180px] sm:max-w-xs">{l.title}</p>
+                            <p className="text-[11px] text-text-muted truncate max-w-[180px] sm:max-w-xs mt-0.5">{l.description}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-sm font-bold text-text">${l.price.toFixed(2)}</td>
+                      <td className="p-4 text-sm text-text-muted">{l.views || 0}</td>
                     <td className="p-4">
                       <Badge variant={statusVariant[l.status] ?? "default"} size="sm">
                         {l.status.replace("_", " ")}

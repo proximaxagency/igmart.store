@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Upload, X, ImageIcon, Loader2, AlertCircle } from "lucide-react";
 
@@ -300,16 +300,27 @@ export function ImageUploader({
 }
 
 function UploadedThumb({ src, onRemove }: { src: string; onRemove: () => void }) {
-  const isStorageId = !src.startsWith("http") && !src.startsWith("/");
+  const isStorageId = !src.startsWith("http") && !src.startsWith("/") && !src.startsWith("data:") && !src.startsWith("blob:");
+  const resolvedUrl = useQuery(
+    api.listings.getImageUrl,
+    isStorageId ? { storageId: src } : "skip"
+  );
+
+  const displaySrc = isStorageId ? (resolvedUrl || undefined) : src;
+
   return (
-    <div className="relative aspect-video rounded-xl overflow-hidden border border-border bg-elevated group">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={isStorageId ? `/__convex_storage/${src}` : src}
-        alt="Listing image"
-        className="w-full h-full object-cover object-top"
-        onError={(e) => { (e.target as HTMLImageElement).src = src; }}
-      />
+    <div className="relative aspect-video rounded-xl overflow-hidden border border-border bg-elevated group flex items-center justify-center">
+      {displaySrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={displaySrc}
+          alt="Listing image"
+          className="w-full h-full object-cover object-top"
+          onError={(e) => { (e.target as HTMLImageElement).src = "/clash-of-clans-poster.jpg"; }}
+        />
+      ) : (
+        <Loader2 className="animate-spin text-primary" size={20} />
+      )}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
       <button
         type="button"

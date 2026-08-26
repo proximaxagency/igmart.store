@@ -27,8 +27,15 @@ function getBadgeVariant(badge: string) {
   return "popular";
 }
 
+function getSafeImage(img?: string) {
+  if (!img) return "/clash-of-clans-poster.jpg";
+  if (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/")) return img;
+  return "/clash-of-clans-poster.jpg";
+}
+
 // ── Horizontal layout (list view) ──────────────────
 function HorizontalListingCard({ id, title, game, price, originalPrice, rating, reviews, seller, image, badge, delivery, className = "" }: ListingCardProps) {
+  const safeImg = getSafeImage(image);
   return (
     <Link
       href={`/listing/${id}`}
@@ -36,7 +43,7 @@ function HorizontalListingCard({ id, title, game, price, originalPrice, rating, 
       className={`group flex items-center gap-4 bg-card border border-border rounded-xl overflow-hidden transition-all duration-200 hover:border-border-strong hover:shadow-[var(--shadow-sm)] hover:bg-elevated/40 ${className}`}
     >
       <div className="relative w-28 h-20 flex-shrink-0 overflow-hidden bg-elevated">
-        <Image src={image} alt="" fill loading="lazy" className="object-cover object-top" />
+        <Image src={safeImg} alt="" fill loading="lazy" unoptimized={safeImg.startsWith("http")} className="object-cover object-top" />
         {badge && (
           <div className="absolute top-2 left-2">
             <Badge variant={getBadgeVariant(badge)}>{badge}</Badge>
@@ -68,7 +75,8 @@ function HorizontalListingCard({ id, title, game, price, originalPrice, rating, 
 }
 
 // ── Compact layout (minimal) ───────────────────────
-function CompactListingCard({ id, title, game, price, rating, image, badge, className = "" }: ListingCardProps) {
+function CompactListingCard({ id, title, game, price, originalPrice, rating, reviews, seller, image, badge, delivery, variant, className = "" }: ListingCardProps) {
+  const safeImg = getSafeImage(image);
   return (
     <Link
       href={`/listing/${id}`}
@@ -76,7 +84,7 @@ function CompactListingCard({ id, title, game, price, rating, image, badge, clas
       className={`group flex flex-col bg-card border border-border rounded-xl overflow-hidden transition-all duration-200 hover:border-border-strong hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)] ${className}`}
     >
       <div className="relative aspect-video overflow-hidden bg-elevated">
-        <Image src={image} alt="" fill loading="lazy" className="object-cover object-top" />
+        <Image src={safeImg} alt="" fill loading="lazy" unoptimized={safeImg.startsWith("http")} className="object-cover object-top" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
         {badge && (
           <div className="absolute top-2 left-2">
@@ -107,6 +115,8 @@ export function ListingCard({
   if (variant === "horizontal") return <HorizontalListingCard {...{ id, title, game, price, originalPrice, rating, reviews, seller, image, badge, delivery, variant, className }} />;
   if (variant === "compact") return <CompactListingCard {...{ id, title, game, price, originalPrice, rating, reviews, seller, image, badge, delivery, variant, className }} />;
 
+  const safeImg = getSafeImage(image);
+
   return (
     <Link
       href={`/listing/${id}`}
@@ -116,10 +126,11 @@ export function ListingCard({
       {/* Image */}
       <div className="relative aspect-video w-full overflow-hidden bg-elevated">
         <Image
-          src={image}
+          src={safeImg}
           alt=""
           fill
           loading="lazy"
+          unoptimized={safeImg.startsWith("http")}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover object-top will-change-transform transition-transform duration-300 group-hover:scale-[1.03]"
         />

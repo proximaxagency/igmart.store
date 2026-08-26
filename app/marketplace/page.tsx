@@ -174,18 +174,24 @@ function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
     images?: string[]; deliveryTime?: string; _creationTime: number;
   };
   const { format } = useCurrency();
+  const rawImg = l.images?.[0];
+  const safeImg = (rawImg && (rawImg.startsWith("http://") || rawImg.startsWith("https://") || rawImg.startsWith("/")))
+    ? rawImg
+    : "/clash-of-clans-poster.jpg";
+
   return (
     <Link
       href={`/listing/${l._id}`}
       className="group bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-0.5 transition-all duration-200"
     >
       <div className="aspect-[4/3] bg-elevated relative overflow-hidden">
-        {l.images?.[0] ? (
+        {safeImg ? (
           <Image
-            src={l.images[0]}
+            src={safeImg}
             alt={l.title}
             fill
             loading="lazy"
+            unoptimized={safeImg.startsWith("http")}
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
             className="object-cover object-top will-change-transform group-hover:scale-105 transition-transform duration-300"
           />

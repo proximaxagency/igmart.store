@@ -483,8 +483,25 @@ export const listPendingListings = query({
     for (const listing of filtered.slice(0, 100)) {
       const seller = await ctx.db.get(listing.sellerId);
       const game = await ctx.db.get(listing.gameId);
+      const resolvedImages = [];
+      if (listing.images && listing.images.length > 0) {
+        for (const img of listing.images) {
+          if (!img) continue;
+          if (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/") || img.startsWith("data:")) {
+            resolvedImages.push(img);
+          } else {
+            try {
+              const url = await ctx.storage.getUrl(img as Id<"_storage">);
+              resolvedImages.push(url || img);
+            } catch {
+              resolvedImages.push(img);
+            }
+          }
+        }
+      }
       hydrated.push({
         ...listing,
+        images: resolvedImages,
         sellerName: seller?.displayName || seller?.username || "Unknown Seller",
         sellerEmail: seller?.email || "",
         sellerIsVerified: seller?.isVerified || false,

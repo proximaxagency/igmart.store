@@ -17,6 +17,26 @@ export const getCategories = query({
   handler: async (ctx) => ctx.db.query("categories").collect(),
 });
 
+// ── RESOLVE STORAGE IDS TO PUBLIC IMAGE URLS ──────────────────────────────
+async function resolveImageUrls(ctx: any, images?: string[]): Promise<string[]> {
+  if (!images || images.length === 0) return [];
+  const urls: string[] = [];
+  for (const img of images) {
+    if (!img) continue;
+    if (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/") || img.startsWith("data:")) {
+      urls.push(img);
+    } else {
+      try {
+        const url = await ctx.storage.getUrl(img as Id<"_storage">);
+        urls.push(url || img);
+      } catch {
+        urls.push(img);
+      }
+    }
+  }
+  return urls;
+}
+
 // ── LIST ACTIVE LISTINGS — fixed: active-only filter + batch game fetch ─
 export const listActiveListings = query({
   args: {
@@ -60,16 +80,20 @@ export const listActiveListings = query({
       if (seller) sellersMap.set(sId, seller);
     }
 
-    return listings.map((l) => {
-      const seller = sellersMap.get(l.sellerId);
-      return {
-        ...l,
-        gameName: gamesMap.get(l.gameId) || "Game Asset",
-        sellerName: seller?.displayName || "IGMART Seller",
-        sellerRating: seller?.rating || 5.0,
-        sellerIsVerified: seller?.isVerified || false,
-      };
-    });
+    return await Promise.all(
+      listings.map(async (l) => {
+        const seller = sellersMap.get(l.sellerId);
+        const resolvedImages = await resolveImageUrls(ctx, l.images);
+        return {
+          ...l,
+          images: resolvedImages,
+          gameName: gamesMap.get(l.gameId) || "Game Asset",
+          sellerName: seller?.displayName || "IGMART Seller",
+          sellerRating: seller?.rating || 5.0,
+          sellerIsVerified: seller?.isVerified || false,
+        };
+      })
+    );
   },
 });
 
@@ -151,10 +175,20 @@ export const getMyListings = query({
     if (!user) return [];
     if ((user._id as string) === "synthetic_admin_user") return [];
 
-    return await ctx.db.query("listings")
+    const listings = await ctx.db.query("listings")
       .withIndex("by_seller", (q) => q.eq("sellerId", user._id))
       .order("desc")
       .collect();
+
+    return await Promise.all(
+      listings.map(async (l) => {
+        const resolvedImages = await resolveImageUrls(ctx, l.images);
+        return {
+          ...l,
+          images: resolvedImages,
+        };
+      })
+    );
   },
 });
 
@@ -165,8 +199,10 @@ export const getListingById = query({
     if (!listing) return null;
     const game = await ctx.db.get(listing.gameId);
     const seller = await ctx.db.get(listing.sellerId);
+    const resolvedImages = await resolveImageUrls(ctx, listing.images);
     return {
       ...listing,
+      images: resolvedImages,
       gameName: game?.name || "Game Asset",
       sellerName: seller?.displayName || seller?.username || "Seller",
       sellerAvatar: seller?.avatarUrl || null,
