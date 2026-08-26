@@ -84,11 +84,17 @@ export function ImageUploader({
   }
 
   // Detect parent-driven full reset (value goes N → 0)
+  // Also detect edit-mode initial load (value goes 0 → N, we haven't shown anything yet)
   const prevValueLen = useRef(value.length);
   useEffect(() => {
     if (value.length === 0 && prevValueLen.current > 0) {
+      // Form was cleared
       committed.current = [];
       setDisplayIds([]);
+    } else if (value.length > 0 && prevValueLen.current === 0 && displayIds.length === 0) {
+      // Edit mode: existing images just loaded, we haven't rendered any yet
+      committed.current = [...value];
+      setDisplayIds([...value]);
     }
     prevValueLen.current = value.length;
   }, [value.length]); // eslint-disable-line react-hooks/exhaustive-deps
