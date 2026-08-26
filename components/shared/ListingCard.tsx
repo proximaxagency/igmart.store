@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import Image from "next/image";
+import { useState } from "react";
 import { Badge, Stars, PriceDisplay, WishlistButton } from "@/components/ui/index";
 import { Zap } from "lucide-react";
 import { getImageUrl } from "@/lib/imageUrl";
@@ -32,6 +34,20 @@ function getSafeImage(img?: string) {
   return getImageUrl(img, "/clash-of-clans-poster.jpg");
 }
 
+// ── Shared image component with fallback ──────────────
+function ListingImg({ src, alt = "" }: { src: string; alt?: string }) {
+  const [imgSrc, setImgSrc] = useState(src);
+  return (
+    <img
+      src={imgSrc}
+      alt={alt}
+      loading="lazy"
+      onError={() => setImgSrc("/clash-of-clans-poster.jpg")}
+      style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }}
+    />
+  );
+}
+
 // ── Horizontal layout (list view) ──────────────────
 function HorizontalListingCard({ id, title, game, price, originalPrice, rating, reviews, seller, image, badge, delivery, className = "" }: ListingCardProps) {
   const safeImg = getSafeImage(image);
@@ -42,7 +58,7 @@ function HorizontalListingCard({ id, title, game, price, originalPrice, rating, 
       className={`group flex items-center gap-4 bg-card border border-border rounded-xl overflow-hidden transition-all duration-200 hover:border-border-strong hover:shadow-[var(--shadow-sm)] hover:bg-elevated/40 ${className}`}
     >
       <div className="relative w-28 h-20 flex-shrink-0 overflow-hidden bg-elevated">
-        <Image src={safeImg} alt="" fill loading="lazy" unoptimized={safeImg.startsWith("http")} className="object-cover object-top" />
+        <ListingImg src={safeImg} alt={title} />
         {badge && (
           <div className="absolute top-2 left-2">
             <Badge variant={getBadgeVariant(badge)}>{badge}</Badge>
@@ -83,7 +99,7 @@ function CompactListingCard({ id, title, game, price, originalPrice, rating, rev
       className={`group flex flex-col bg-card border border-border rounded-xl overflow-hidden transition-all duration-200 hover:border-border-strong hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)] ${className}`}
     >
       <div className="relative aspect-video overflow-hidden bg-elevated">
-        <Image src={safeImg} alt="" fill loading="lazy" unoptimized={safeImg.startsWith("http")} className="object-cover object-top" />
+        <ListingImg src={safeImg} alt={title} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
         {badge && (
           <div className="absolute top-2 left-2">
@@ -124,15 +140,7 @@ export function ListingCard({
     >
       {/* Image */}
       <div className="relative aspect-video w-full overflow-hidden bg-elevated">
-        <Image
-          src={safeImg}
-          alt=""
-          fill
-          loading="lazy"
-          unoptimized={safeImg.startsWith("http")}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover object-top will-change-transform transition-transform duration-300 group-hover:scale-[1.03]"
-        />
+        <ListingImg src={safeImg} alt={title} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
 
         {/* Badge */}
