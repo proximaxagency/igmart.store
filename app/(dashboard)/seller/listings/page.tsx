@@ -10,7 +10,7 @@ import {
   Package, Plus, Pause, Play, Trash2, Edit, Loader2, AlertTriangle, CheckCircle2, LayoutGrid
 } from "lucide-react";
 import { Badge } from "@/components/ui/index";
-import { getImageUrl } from "@/lib/imageUrl";
+import { ConvexImage } from "@/components/shared/ConvexImage";
 
 const statusVariant: Record<string, "success" | "warning" | "danger" | "default"> = {
   active: "success", pending_review: "warning", draft: "default",
@@ -140,14 +140,12 @@ export default function SellerListingsPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {listings.map((l) => {
-                  const safeImg = getImageUrl(l.images?.[0]);
                   return (
                     <tr key={l._id} className="hover:bg-elevated/50 transition-colors">
                       <td className="p-4 pl-6">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-elevated relative overflow-hidden flex-shrink-0 border border-border">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={safeImg} alt="" className="w-full h-full object-cover object-top" />
+                            <ConvexImage src={l.images?.[0]} alt="" className="w-full h-full object-cover object-top" />
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-bold text-text truncate max-w-[180px] sm:max-w-xs">{l.title}</p>
