@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Upload, X, ImageIcon, Loader2, AlertCircle } from "lucide-react";
+import { getImageUrl } from "@/lib/imageUrl";
 
 interface ImageUploaderProps {
   value: string[];
@@ -298,8 +299,6 @@ export function ImageUploader({
     </div>
   );
 }
-
-import { getImageUrl } from "@/lib/imageUrl";
 
 function UploadedThumb({ src, onRemove }: { src: string; onRemove: () => void }) {
   const displaySrc = previewCache.get(src) || getImageUrl(src);
