@@ -9,6 +9,7 @@ import {
   ShieldCheck, Clock, Flame, Tag, Star, TrendingUp, RefreshCw,
   ChevronDown, CheckSquare, Search
 } from "lucide-react";
+import { ConvexImage } from "@/components/shared/ConvexImage";
 
 type StatusFilter = "pending_review" | "active" | "rejected" | "removed" | "paused";
 
@@ -215,7 +216,9 @@ export default function AdminListingsPage() {
                     <td className="p-4 max-w-[260px]">
                       <div className="flex items-start gap-3">
                         {l.images?.[0] ? (
-                          <img src={l.images[0]} alt="" className="w-12 h-10 rounded-lg object-cover border border-border flex-shrink-0" />
+                          <div className="w-12 h-10 rounded-lg overflow-hidden border border-border flex-shrink-0 bg-elevated">
+                            <ConvexImage src={l.images[0]} alt="" className="w-full h-full object-cover object-top" />
+                          </div>
                         ) : (
                           <div className="w-12 h-10 rounded-lg bg-elevated flex-shrink-0" />
                         )}
