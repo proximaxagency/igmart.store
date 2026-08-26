@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/index";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexAuth } from "@convex-dev/auth/react";
-import { getImageUrl } from "@/lib/imageUrl";
+import { ConvexImage } from "@/components/shared/ConvexImage";
 
 const statusVariant: Record<string, "success" | "warning" | "danger" | "default"> = {
   active: "success",
@@ -211,14 +211,12 @@ export default function SellerDashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-border/60 text-xs">
                     {listings.map((l) => {
-                      const safeImg = getImageUrl(l.images?.[0]);
                       return (
                         <tr key={l._id} className="hover:bg-elevated/40 transition-colors">
                           <td className="py-3.5 pr-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-lg bg-elevated relative overflow-hidden flex-shrink-0 border border-border">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={safeImg} alt="" className="w-full h-full object-cover object-top" />
+                                <ConvexImage src={l.images?.[0]} alt="" className="w-full h-full object-cover object-top" />
                               </div>
                               <div className="min-w-0">
                                 <p className="font-bold text-text truncate max-w-[180px] sm:max-w-xs">{l.title}</p>
