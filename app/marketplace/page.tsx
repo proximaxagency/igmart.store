@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { GAMES, CATEGORIES } from "@/lib/data/igmartData";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
-import { getImageUrl } from "@/lib/imageUrl";
+import { ConvexImage } from "@/components/shared/ConvexImage";
 
 const SORT_OPTIONS = [
   { label: "Recommended", value: "recommended" },
@@ -175,7 +175,6 @@ function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
     images?: string[]; deliveryTime?: string; _creationTime: number;
   };
   const { format } = useCurrency();
-  const safeImg = getImageUrl(l.images?.[0], "/clash-of-clans-poster.jpg");
 
   return (
     <Link
@@ -183,12 +182,10 @@ function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
       className="group bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-0.5 transition-all duration-200"
     >
       <div className="aspect-[4/3] bg-elevated relative overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={safeImg || "/clash-of-clans-poster.jpg"}
+        <ConvexImage
+          src={l.images?.[0]}
           alt={l.title}
           loading="lazy"
-          onError={(e) => { (e.target as HTMLImageElement).src = "/clash-of-clans-poster.jpg"; }}
           className="w-full h-full object-cover object-top will-change-transform group-hover:scale-105 transition-transform duration-300"
         />
         {/* Game name tag */}
