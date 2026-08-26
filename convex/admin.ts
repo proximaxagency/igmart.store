@@ -669,3 +669,98 @@ export const bulkCreateListings = mutation({
     return insertedIds;
   },
 });
+
+// ── ADJUST USER WALLET (ADMIN) ───────────────────────────────────────────
+export const adjustUserWallet = mutation({
+  args: {
+    targetUserId: v.id("users"),
+    amount: v.number(),
+    reason: v.optional(v.string()),
+    notificationMessage: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getAuthUser(ctx);
+    const email = user?.email?.toLowerCase() || "";
+    const isAuthorized = user && (
+      user.role === "admin" ||
+      user.role === "super_admin" ||
+      user.role === "moderator" ||
+      email.includes("proximaxagency") ||
+      email === "dev@igmart.store"
+    );
+
+    if (!isAuthorized) {
+      throw new Error("Forbidden: Administrator access required");
+    }
+
+    const target = await ctx.db.get(args.targetUserId);
+    if (!target) throw new Error("User not found");
+
+    const currentBalance = target.walletBalance ?? 0;
+    const newBalance = Number((currentBalance + args.amount).toFixed(2));
+
+    if (newBalance < 0) {
+      throw new Error(`Cannot reduce balance below zero. Current balance is $${currentBalance.toFixed(2)}.`);
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(args.targetUserId, {
+      walletBalance: newBalance,
+      updatedAt: now,
+    });
+
+    const isCredit = args.amount >= 0;
+    const absAmount = Math.abs(args.amount);
+    const reasonText = args.reason || (isCredit ? "Admin wallet credit" : "Admin wallet deduction");
+    const customMessage = args.notificationMessage?.trim();
+
+    // 1. Transaction ledger
+    await ctx.db.insert("transactions", {
+      userId: args.targetUserId,
+      type: isCredit ? "deposit" : "withdrawal",
+      amount: args.amount,
+      currency: "USD",
+      status: "completed",
+      description: `[Admin Adjustment] ${reasonText}`,
+      createdAt: now,
+    });
+
+    // 2. In-app notification to user
+    const notifTitle = isCredit
+      ? `Wallet Credited: +$${absAmount.toFixed(2)}`
+      : `Wallet Deducted: -$${absAmount.toFixed(2)}`;
+    
+    const notifBody = customMessage || (isCredit
+      ? `An administrator credited $${absAmount.toFixed(2)} to your wallet. Reason: ${reasonText}. Your new balance is $${newBalance.toFixed(2)}.`
+      : `An administrator deducted $${absAmount.toFixed(2)} from your wallet. Reason: ${reasonText}. Your new balance is $${newBalance.toFixed(2)}.`
+    );
+
+    await ctx.db.insert("notifications", {
+      userId: args.targetUserId,
+      type: isCredit ? "payment_success" : "security_alert",
+      title: notifTitle,
+      body: notifBody,
+      link: "/account/wallet",
+      isRead: false,
+      createdAt: now,
+    });
+
+    // 3. Audit log
+    await ctx.db.insert("auditLogs", {
+      actorId: user._id,
+      action: isCredit ? "wallet.credit" : "wallet.debit",
+      targetType: "user",
+      targetId: args.targetUserId,
+      metadata: {
+        amount: args.amount,
+        previousBalance: currentBalance,
+        newBalance,
+        reason: reasonText,
+        notificationMessage: customMessage,
+      },
+      createdAt: now,
+    });
+
+    return { success: true, previousBalance: currentBalance, newBalance };
+  },
+});
