@@ -27,7 +27,7 @@ async function resolveImageUrls(ctx: any, images?: string[]): Promise<string[]> 
       urls.push(img);
     } else {
       try {
-        const url = await ctx.storage.getUrl(img as Id<"_storage">);
+        const url = await ctx.storage.getUrl(img as any);
         urls.push(url || img);
       } catch {
         urls.push(img);

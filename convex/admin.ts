@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUser, requireAuthUser, requireRole } from "./users";
+import { Id } from "./_generated/dataModel";
 
 
 // ── GET ADMIN DASHBOARD OVERVIEW METRICS ────────────────────────────────
@@ -491,7 +492,7 @@ export const listPendingListings = query({
             resolvedImages.push(img);
           } else {
             try {
-              const url = await ctx.storage.getUrl(img as Id<"_storage">);
+              const url = await ctx.storage.getUrl(img as any);
               resolvedImages.push(url || img);
             } catch {
               resolvedImages.push(img);

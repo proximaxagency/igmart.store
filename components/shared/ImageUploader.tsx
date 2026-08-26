@@ -302,7 +302,7 @@ export function ImageUploader({
 function UploadedThumb({ src, onRemove }: { src: string; onRemove: () => void }) {
   const isStorageId = !src.startsWith("http") && !src.startsWith("/") && !src.startsWith("data:") && !src.startsWith("blob:");
   const resolvedUrl = useQuery(
-    api.listings.getImageUrl,
+    (api.listings as any).getImageUrl,
     isStorageId ? { storageId: src } : "skip"
   );
 
