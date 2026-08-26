@@ -183,19 +183,14 @@ function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
       className="group bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-0.5 transition-all duration-200"
     >
       <div className="aspect-[4/3] bg-elevated relative overflow-hidden">
-        {safeImg ? (
-          <Image
-            src={safeImg}
-            alt={l.title}
-            fill
-            loading="lazy"
-            unoptimized={safeImg.startsWith("http")}
-            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-            className="object-cover object-top will-change-transform group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl">🎮</div>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={safeImg || "/clash-of-clans-poster.jpg"}
+          alt={l.title}
+          loading="lazy"
+          onError={(e) => { (e.target as HTMLImageElement).src = "/clash-of-clans-poster.jpg"; }}
+          className="w-full h-full object-cover object-top will-change-transform group-hover:scale-105 transition-transform duration-300"
+        />
         {/* Game name tag */}
         {l.gameName && (
           <div className="absolute top-2.5 left-2.5">
