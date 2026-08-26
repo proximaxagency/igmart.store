@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -12,8 +12,7 @@ import {
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { GAME_FIELDS, type GameField } from "@/lib/gameFields";
 
-
-export default function CreateListingPage() {
+function CreateListingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit") as Id<"listings"> | null;
@@ -576,6 +575,21 @@ export default function CreateListingPage() {
       {/* Spacer for floating chat widget */}
       <div className="h-20"></div>
     </div>
+  );
+}
+
+export default function CreateListingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container max-w-3xl py-20 flex items-center justify-center gap-3 text-text-muted">
+          <Loader2 className="animate-spin text-primary" size={24} />
+          <span className="font-semibold text-sm">Loading listing form...</span>
+        </div>
+      }
+    >
+      <CreateListingContent />
+    </Suspense>
   );
 }
 
