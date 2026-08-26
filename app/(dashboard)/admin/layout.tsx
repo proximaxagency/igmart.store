@@ -41,8 +41,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/settings", label: "System Settings", icon: Settings },
   ];
 
-  // 1. Loading State
-  if (!isLoaded) {
+  // 1. Loading State (wait for auth and dbUser query to resolve)
+  if (!isLoaded || (isAuthenticated && dbUser === undefined)) {
     return (
       <div className="min-h-[calc(100vh-76px)] flex flex-col items-center justify-center bg-background">
         <Loader2 className="animate-spin text-primary mb-3" size={32} />
@@ -51,8 +51,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // 2. Security Barrier: Deny access to non-admin users
-  if (!isAuthenticated || !isAdmin) {
+  // 2. Not Authenticated State
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[calc(100vh-76px)] flex items-center justify-center bg-background px-4 py-16">
+        <div className="text-center max-w-md bg-card border border-border rounded-2xl p-8 shadow-2xl space-y-5">
+          <div className="w-16 h-16 bg-primary/10 border border-primary/20 text-primary rounded-2xl flex items-center justify-center mx-auto">
+            <Shield size={36} />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
+              Staff Portal
+            </span>
+            <h1 className="font-heading font-black text-2xl text-text mt-3 mb-2">Sign In Required</h1>
+            <p className="text-text-muted text-xs leading-relaxed">
+              Please sign in with your administrator account to access the IGMART Core control desk.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/login?redirect=/admin"
+              className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary-hover text-white font-bold text-xs py-3 px-6 rounded-xl transition-colors"
+            >
+              Sign In to Admin
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Security Barrier: Deny access to non-admin users
+  if (!isAdmin) {
     return (
       <div className="min-h-[calc(100vh-76px)] flex items-center justify-center bg-background px-4 py-16">
         <div className="text-center max-w-md bg-card border border-border rounded-2xl p-8 shadow-2xl space-y-5">

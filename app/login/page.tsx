@@ -1,20 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuthActions } from "@convex-dev/auth/react";
-import { Eye, EyeOff, Mail, Lock, AlertCircle, Gamepad2 } from "lucide-react";
+import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
+import { Eye, EyeOff, Mail, Lock, AlertCircle, Gamepad2, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const { signIn } = useAuthActions();
+  const { isAuthenticated, isLoading } = useConvexAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // If already logged in, redirect immediately
+  useEffect(() => {
+    if (isAuthenticated) {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect");
+      router.push(redirect && redirect.startsWith("/") ? redirect : "/");
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +33,8 @@ export default function LoginPage() {
     try {
       await signIn("password", { email: email.trim().toLowerCase(), password, flow: "signIn" });
       const params = new URLSearchParams(window.location.search);
-      router.push(params.get("redirect") || "/");
+      const redirect = params.get("redirect");
+      router.push(redirect && redirect.startsWith("/") ? redirect : "/");
     } catch (err: any) {
       setError(err?.message?.includes("Invalid") || err?.message?.includes("invalid")
         ? "Incorrect email or password."
@@ -32,6 +43,15 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <Loader2 className="animate-spin text-primary mb-3" size={32} />
+        <p className="text-sm text-text-muted">Redirecting to your dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-16">

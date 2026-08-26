@@ -1,7 +1,10 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Package, Heart, Wallet, Settings, ShieldCheck, ChevronRight } from "lucide-react";
+import { Package, Heart, Wallet, Settings, ShieldCheck, ChevronRight, Loader2, User } from "lucide-react";
+import { useConvexAuth } from "@convex-dev/auth/react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 const navLinks = [
   { href: "/account/orders", label: "My Orders", icon: Package },
@@ -12,6 +15,12 @@ const navLinks = [
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isLoaded = !isLoading;
+  const dbUser = useQuery(api.users.getCurrentUser, isLoaded && isAuthenticated ? {} : "skip");
+
+  const userName = dbUser?.displayName || dbUser?.username || dbUser?.email?.split("@")[0] || "My Account";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <div className="bg-background min-h-[calc(100vh-64px)]">
@@ -55,13 +64,13 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                   style={{ background: "var(--gradient-brand)" }}
                   aria-hidden="true"
                 >
-                  U
+                  {userInitial}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-heading font-bold text-sm text-text truncate">User Account</p>
+                  <p className="font-heading font-bold text-sm text-text truncate">{userName}</p>
                   <div className="flex items-center gap-1.5 text-success text-[11px] font-bold uppercase tracking-wider mt-0.5">
                     <ShieldCheck size={12} aria-hidden="true" />
-                    Verified
+                    {dbUser?.role === "admin" || dbUser?.role === "super_admin" ? "Admin" : "Verified"}
                   </div>
                 </div>
               </div>

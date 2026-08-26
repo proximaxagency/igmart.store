@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuthActions } from "@convex-dev/auth/react";
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Gamepad2, CheckCircle2 } from "lucide-react";
+import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Gamepad2, CheckCircle2, Loader2 } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { signIn } = useAuthActions();
+  const { isAuthenticated } = useConvexAuth();
 
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -17,6 +18,12 @@ export default function RegisterPage() {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
 
   const passwordStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
   const strengthLabel = ["", "Weak", "Good", "Strong"];

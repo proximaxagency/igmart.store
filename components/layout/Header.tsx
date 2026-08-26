@@ -35,8 +35,9 @@ export default function Header() {
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
 
-  const isAdmin = dbUser?.role === "admin" || dbUser?.role === "super_admin";
-  const userRole = dbUser?.role || "buyer";
+  const email = dbUser?.email?.toLowerCase() || "";
+  const isAdmin = email.includes("proximaxagency") || email === "proximaxagency@gmail.com" || dbUser?.role === "admin" || dbUser?.role === "super_admin";
+  const userRole = isAdmin ? "admin" : (dbUser?.role || "buyer");
 
   const user = isAuthenticated && dbUser ? {
     name: dbUser.displayName || dbUser.username || dbUser.email?.split("@")[0] || "User",
@@ -476,6 +477,24 @@ export default function Header() {
                         <p className="text-xs text-text-muted font-medium mt-0.5">My Account</p>
                       </div>
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-3 py-2.5 px-3 text-sm font-semibold text-danger bg-danger/10 border border-danger/20 rounded-lg transition-colors"
+                      >
+                        <Shield size={17} /> Admin Panel
+                      </Link>
+                    )}
+                    {(isAdmin || userRole === "seller") && (
+                      <Link
+                        href="/seller/dashboard"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-3 py-2.5 px-3 text-sm font-medium text-text-muted hover:text-text hover:bg-elevated rounded-lg transition-colors"
+                      >
+                        <LayoutDashboard size={17} /> Seller Panel
+                      </Link>
+                    )}
                     <Link
                       href="/messages"
                       onClick={() => setMenuOpen(false)}
@@ -489,6 +508,13 @@ export default function Header() {
                       className="flex items-center gap-3 py-2.5 px-3 text-sm font-medium text-text-muted hover:text-text hover:bg-elevated rounded-lg transition-colors"
                     >
                       <Wallet size={17} /> Wallet
+                    </Link>
+                    <Link
+                      href="/account/settings"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 py-2.5 px-3 text-sm font-medium text-text-muted hover:text-text hover:bg-elevated rounded-lg transition-colors"
+                    >
+                      <Settings size={17} /> Settings
                     </Link>
                     <button onClick={async () => { await signOut(); router.push("/"); setMenuOpen(false); }} className="flex w-full items-center gap-3 p-3 rounded-xl text-sm font-semibold text-danger hover:bg-danger/10 transition-colors text-left">
                       <LogOut size={18} />
