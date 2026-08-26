@@ -60,13 +60,16 @@ function CreateListingContent() {
         deliveryTime: existingListing.deliveryTime || "24 hours",
         autoDeliveryData: (existingListing as any).autoDeliveryData || "",
       });
-      setUploadedImages(existingListing.images || []);
+      // Use rawImages (storage IDs) so the update mutation gets the right values
+      const rawImgs = (existingListing as any).rawImages as string[] | undefined;
+      setUploadedImages(rawImgs && rawImgs.length > 0 ? rawImgs : (existingListing.images || []));
       if (existingListing.attributes) {
         setGameDetails(existingListing.attributes as Record<string, any>);
       }
       setPrefilled(true);
     }
   }, [isEditMode, existingListing, prefilled]);
+
 
   const selectedGame = useMemo(() => {
     if (!formData.gameId || !games) return null;
