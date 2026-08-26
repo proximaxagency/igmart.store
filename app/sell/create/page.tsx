@@ -18,16 +18,16 @@ function CreateListingContent() {
   const editId = searchParams.get("edit") as Id<"listings"> | null;
   const isEditMode = !!editId;
 
-  const games = useQuery(api.listings.getGames);
-  const categories = useQuery(api.listings.getCategories);
-  const createListing = useMutation(api.listings.createListing);
-  const updateListing = useMutation(api.listings.updateListing);
+  const games = useQuery((api.listings as any).getGames) as any[] | undefined;
+  const categories = useQuery((api.listings as any).getCategories) as any[] | undefined;
+  const createListing = useMutation((api.listings as any).createListing);
+  const updateListing = useMutation((api.listings as any).updateListing);
 
   // Load existing listing data in edit mode
   const existingListing = useQuery(
-    api.listings.getListingById,
+    (api.listings as any).getListingById,
     editId ? { listingId: editId } : "skip"
-  );
+  ) as any;
 
   const [formData, setFormData] = useState({
     title: "",

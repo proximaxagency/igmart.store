@@ -209,10 +209,10 @@ function RowImageUploader({
 // Main Page
 // ────────────────────────────────────────────────────────
 export default function BulkUploadPage() {
-  const games = useQuery(api.listings.getGames);
-  const categories = useQuery(api.listings.getCategories);
-  const bulkCreate = useMutation(api.admin.bulkCreateListings);
-  const generateUploadUrl = useMutation(api.listings.generateUploadUrl);
+  const games = useQuery((api.listings as any).getGames) as any[] | undefined;
+  const categories = useQuery((api.listings as any).getCategories) as any[] | undefined;
+  const bulkCreate = useMutation((api.admin as any).bulkCreateListings);
+  const generateUploadUrl = useMutation((api.listings as any).generateUploadUrl);
 
   const [gameId, setGameId] = useState("");
   const [categoryId, setCategoryId] = useState("");
