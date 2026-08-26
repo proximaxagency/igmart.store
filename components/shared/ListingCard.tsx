@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { Badge, Stars, PriceDisplay, WishlistButton } from "@/components/ui/index";
 import { Zap } from "lucide-react";
-import { getImageUrl } from "@/lib/imageUrl";
+import { ConvexImage } from "@/components/shared/ConvexImage";
 
 export type ListingCardVariant = "default" | "compact" | "horizontal";
 
@@ -30,27 +29,8 @@ function getBadgeVariant(badge: string) {
   return "popular";
 }
 
-function getSafeImage(img?: string) {
-  return getImageUrl(img, "/clash-of-clans-poster.jpg");
-}
-
-// ── Shared image component with fallback ──────────────
-function ListingImg({ src, alt = "" }: { src: string; alt?: string }) {
-  const [imgSrc, setImgSrc] = useState(src);
-  return (
-    <img
-      src={imgSrc}
-      alt={alt}
-      loading="lazy"
-      onError={() => setImgSrc("/clash-of-clans-poster.jpg")}
-      style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }}
-    />
-  );
-}
-
 // ── Horizontal layout (list view) ──────────────────
 function HorizontalListingCard({ id, title, game, price, originalPrice, rating, reviews, seller, image, badge, delivery, className = "" }: ListingCardProps) {
-  const safeImg = getSafeImage(image);
   return (
     <Link
       href={`/listing/${id}`}
@@ -58,7 +38,7 @@ function HorizontalListingCard({ id, title, game, price, originalPrice, rating, 
       className={`group flex items-center gap-4 bg-card border border-border rounded-xl overflow-hidden transition-all duration-200 hover:border-border-strong hover:shadow-[var(--shadow-sm)] hover:bg-elevated/40 ${className}`}
     >
       <div className="relative w-28 h-20 flex-shrink-0 overflow-hidden bg-elevated">
-        <ListingImg src={safeImg} alt={title} />
+        <ConvexImage src={image} alt={title} className="w-full h-full object-cover object-top" />
         {badge && (
           <div className="absolute top-2 left-2">
             <Badge variant={getBadgeVariant(badge)}>{badge}</Badge>
@@ -91,7 +71,6 @@ function HorizontalListingCard({ id, title, game, price, originalPrice, rating, 
 
 // ── Compact layout (minimal) ───────────────────────
 function CompactListingCard({ id, title, game, price, originalPrice, rating, reviews, seller, image, badge, delivery, variant, className = "" }: ListingCardProps) {
-  const safeImg = getSafeImage(image);
   return (
     <Link
       href={`/listing/${id}`}
@@ -99,7 +78,7 @@ function CompactListingCard({ id, title, game, price, originalPrice, rating, rev
       className={`group flex flex-col bg-card border border-border rounded-xl overflow-hidden transition-all duration-200 hover:border-border-strong hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)] ${className}`}
     >
       <div className="relative aspect-video overflow-hidden bg-elevated">
-        <ListingImg src={safeImg} alt={title} />
+        <ConvexImage src={image} alt={title} className="w-full h-full object-cover object-top" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
         {badge && (
           <div className="absolute top-2 left-2">
@@ -130,8 +109,6 @@ export function ListingCard({
   if (variant === "horizontal") return <HorizontalListingCard {...{ id, title, game, price, originalPrice, rating, reviews, seller, image, badge, delivery, variant, className }} />;
   if (variant === "compact") return <CompactListingCard {...{ id, title, game, price, originalPrice, rating, reviews, seller, image, badge, delivery, variant, className }} />;
 
-  const safeImg = getSafeImage(image);
-
   return (
     <Link
       href={`/listing/${id}`}
@@ -140,7 +117,11 @@ export function ListingCard({
     >
       {/* Image */}
       <div className="relative aspect-video w-full overflow-hidden bg-elevated">
-        <ListingImg src={safeImg} alt={title} />
+        <ConvexImage
+          src={image}
+          alt={title}
+          className="w-full h-full object-cover object-top will-change-transform transition-transform duration-300 group-hover:scale-[1.03]"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
 
         {/* Badge */}
