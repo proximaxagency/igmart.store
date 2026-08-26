@@ -53,7 +53,7 @@ function compressImage(file: File): Promise<File> {
     img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
     img.src = objectUrl;
   });
-}
+const previewCache = new Map<string, string>();
 
 export function ImageUploader({
   value = [],
@@ -120,6 +120,7 @@ export function ImageUploader({
       const { storageId } = await res.json();
 
       // Append to ref FIRST (synchronous — no render race possible)
+      previewCache.set(storageId, preview);
       committed.current = [...committed.current, storageId];
       const snap = [...committed.current];
       setDisplayIds(snap);
@@ -128,8 +129,7 @@ export function ImageUploader({
       setUploading((p) => p.map((u) => u.id === tempId ? { ...u, progress: "done" } : u));
       setTimeout(() => {
         setUploading((p) => p.filter((u) => u.id !== tempId));
-        URL.revokeObjectURL(preview);
-      }, 1000);
+      }, 500);
     } catch (err) {
       setUploading((p) =>
         p.map((u) => u.id === tempId
@@ -302,7 +302,7 @@ export function ImageUploader({
 import { getImageUrl } from "@/lib/imageUrl";
 
 function UploadedThumb({ src, onRemove }: { src: string; onRemove: () => void }) {
-  const displaySrc = getImageUrl(src);
+  const displaySrc = previewCache.get(src) || getImageUrl(src);
 
   return (
     <div className="relative aspect-video rounded-xl overflow-hidden border border-border bg-elevated group flex items-center justify-center">

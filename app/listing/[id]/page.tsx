@@ -188,6 +188,7 @@ export default function ListingPage() {
                   src={getImageUrl(listing.images?.[activeImg], image)}
                   alt={listing.title}
                   fetchPriority="high"
+                  onError={(e) => { (e.target as HTMLImageElement).src = image || "/clash-of-clans-poster.jpg"; }}
                   className="w-full h-auto max-h-[70vh] object-contain relative z-10 transition-opacity duration-300"
                 />
                 {listing.badge && (
@@ -228,7 +229,13 @@ export default function ListingPage() {
                       }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={getImageUrl(img, image)} alt={`Screenshot ${idx + 1}`} loading="lazy" className="w-full h-full object-cover object-top" />
+                      <img
+                        src={getImageUrl(img, image)}
+                        alt={`Screenshot ${idx + 1}`}
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).src = image || "/clash-of-clans-poster.jpg"; }}
+                        className="w-full h-full object-cover object-top"
+                      />
                     </button>
                   ))}
                 </div>
