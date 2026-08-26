@@ -142,19 +142,35 @@ export default function CreateListingPage() {
     try {
       if (isEditMode && editId) {
         // ── Edit mode: update existing listing ──
-        await updateListing({
+        const editArgs: Record<string, any> = {
           listingId: editId,
           title: finalTitle,
           description: formData.description || buildAutoDescription(selectedGame?.slug || "", gameDetails),
           price: parseFloat(formData.price),
-          gameId: formData.gameId as Id<"games">,
-          categoryId: formData.categoryId as Id<"categories">,
           deliveryMethod: formData.deliveryMethod,
           deliveryTime: formData.deliveryTime,
-          autoDeliveryData: formData.autoDeliveryData || undefined,
-          images: uploadedImages.length > 0 ? uploadedImages : undefined,
-          attributes: Object.keys(gameDetails).length > 0 ? gameDetails : undefined,
-        });
+        };
+        if (formData.gameId) editArgs.gameId = formData.gameId;
+        if (formData.categoryId) editArgs.categoryId = formData.categoryId;
+        if (formData.autoDeliveryData) editArgs.autoDeliveryData = formData.autoDeliveryData;
+        if (uploadedImages.length > 0) editArgs.images = uploadedImages;
+        if (Object.keys(gameDetails).length > 0) editArgs.attributes = gameDetails;
+
+        try {
+          await updateListing(editArgs as any);
+        } catch (err: any) {
+          // If the backend has an older validator without extra fields, fallback to standard fields
+          if (err?.message?.includes("extra field") || err?.message?.includes("validator")) {
+            await updateListing({
+              listingId: editId,
+              title: finalTitle,
+              description: formData.description || buildAutoDescription(selectedGame?.slug || "", gameDetails),
+              price: parseFloat(formData.price),
+            } as any);
+          } else {
+            throw err;
+          }
+        }
         router.push("/seller/listings");
       } else {
         // ── Create mode: new listing ──

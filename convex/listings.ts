@@ -238,8 +238,21 @@ export const updateListing = mutation({
     if (listing.sellerId !== user._id && user.role !== "admin" && user.role !== "super_admin") {
       throw new Error("Unauthorized to update this listing");
     }
-    const { listingId, ...updates } = args;
-    await ctx.db.patch(listingId, { ...updates, updatedAt: Date.now() });
+    // Build patch — only include fields that were explicitly provided
+    const patch: Record<string, any> = { updatedAt: Date.now() };
+    if (args.title !== undefined) patch.title = args.title;
+    if (args.description !== undefined) patch.description = args.description;
+    if (args.price !== undefined) patch.price = args.price;
+    if (args.originalPrice !== undefined) patch.originalPrice = args.originalPrice;
+    if (args.images !== undefined) patch.images = args.images;
+    if (args.attributes !== undefined) patch.attributes = args.attributes;
+    if (args.deliveryTime !== undefined) patch.deliveryTime = args.deliveryTime;
+    if (args.deliveryMethod !== undefined) patch.deliveryMethod = args.deliveryMethod;
+    if (args.autoDeliveryData !== undefined) patch.autoDeliveryData = args.autoDeliveryData;
+    if (args.gameId !== undefined) patch.gameId = args.gameId;
+    if (args.categoryId !== undefined) patch.categoryId = args.categoryId;
+    if (args.status !== undefined) patch.status = args.status;
+    await ctx.db.patch(args.listingId, patch);
     return true;
   },
 });
