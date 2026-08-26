@@ -199,8 +199,9 @@ export default function SellerListingsPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
+                );
+              })}
+            </tbody>
             </table>
           </div>
         ) : (
