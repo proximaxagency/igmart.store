@@ -9,6 +9,7 @@ import {
   Sparkles, Image as ImageIcon, Upload, X, FileSpreadsheet,
   ChevronDown, ChevronUp, Info, Pencil, PlusCircle, RefreshCw
 } from "lucide-react";
+import { ConvexImage } from "@/components/shared/ConvexImage";
 
 // ────────────────────────────────────────────────────────
 // Types
@@ -154,8 +155,7 @@ function RowImageUploader({
             key={img.id}
             className="relative w-16 h-16 rounded-xl overflow-hidden border border-border bg-elevated flex-shrink-0 group shadow-sm"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={img.preview} alt="" className="w-full h-full object-cover object-top" />
+            <ConvexImage src={img.preview || img.storageId} alt="" className="w-full h-full object-cover object-top" />
             {img.status === "uploading" && (
               <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center">
                 <Loader2 size={16} className="animate-spin text-white" />
