@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { GAMES, CATEGORIES, GUIDES, LISTINGS } from "@/lib/data/igmartData";
+import { GAMES, CATEGORIES, GUIDES, LISTINGS, POKEMON_LISTINGS } from "@/lib/data/igmartData";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://igmart.store";
@@ -41,7 +41,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  const listingRoutes: MetadataRoute.Sitemap = LISTINGS.map((listing) => ({
+  const allListings = [
+    ...LISTINGS,
+    ...POKEMON_LISTINGS.map((p) => ({ id: p.id || p._id })),
+  ];
+
+  const listingRoutes: MetadataRoute.Sitemap = allListings.map((listing) => ({
     url: `${baseUrl}/listing/${listing.id}`,
     lastModified: now,
     changeFrequency: "daily",

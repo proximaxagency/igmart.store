@@ -158,3 +158,23 @@ export function getArticleSchema(article: {
     },
   };
 }
+
+export function getHowToSchema(howTo: {
+  name: string;
+  description: string;
+  steps: Array<{ name: string; text: string; url?: string }>;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: howTo.name,
+    description: howTo.description,
+    step: howTo.steps.map((step, idx) => ({
+      "@type": "HowToStep",
+      position: idx + 1,
+      name: step.name,
+      text: step.text,
+      url: step.url ? (step.url.startsWith("http") ? step.url : `https://igmart.store${step.url}`) : undefined,
+    })),
+  };
+}

@@ -1,8 +1,20 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionHeading } from "@/components/ui/index";
 import { MessageSquare, Mail, Phone, FileText, Clock, Shield } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "24/7 Customer Support & Help Desk | IGMART",
+  description: "Need help with an order, seller issue, or account question? Contact IGMART 24/7 customer support via live chat, email, or explore our help topics.",
+  alternates: {
+    canonical: "https://igmart.store/support",
+  },
+  openGraph: {
+    title: "24/7 Customer Support & Help Desk | IGMART",
+    description: "Our dedicated support team is available around the clock to assist you with trades, escrow, disputes, and orders.",
+    url: "https://igmart.store/support",
+  },
+};
 
 const SUPPORT_CATEGORIES = [
   {
@@ -30,7 +42,7 @@ const SUPPORT_CATEGORIES = [
     title: "Submit a Ticket",
     desc: "For complex issues, raise a formal support ticket.",
     action: "Open Ticket",
-    href: "/support/ticket",
+    href: "/support",
     badge: "< 24h",
     color: "text-success",
     bg: "bg-success/10 border-success/20",

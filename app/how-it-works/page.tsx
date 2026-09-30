@@ -1,12 +1,46 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, Zap, DollarSign, MessageSquare, ArrowRight } from "lucide-react";
 import { SectionHeading } from "@/components/ui/index";
+import { JsonLd, getHowToSchema } from "@/components/seo/JsonLd";
+
+export const metadata: Metadata = {
+  title: "How It Works — Buyer & Seller Escrow Protection | IGMART",
+  description: "Learn how IGMART protects every gaming transaction. 100% escrow protection, instant delivery, encrypted live chat, and fair dispute resolution.",
+  alternates: {
+    canonical: "https://igmart.store/how-it-works",
+  },
+  openGraph: {
+    title: "How It Works — Buyer & Seller Escrow Protection | IGMART",
+    description: "Learn how IGMART protects every transaction. 100% escrow protection, instant delivery, and guaranteed payouts.",
+    url: "https://igmart.store/how-it-works",
+  },
+};
 
 export default function HowItWorksPage() {
+  const howToSchema = getHowToSchema({
+    name: "How to Safely Buy and Sell Gaming Assets on IGMART",
+    description: "Step-by-step guide to purchasing or listing gaming accounts and in-game assets securely with IGMART Escrow.",
+    steps: [
+      {
+        name: "Browse & Purchase",
+        text: "Select your desired account, currency, or service. Payment is safely held in IGMART Escrow.",
+        url: "/marketplace",
+      },
+      {
+        name: "Receive Delivery",
+        text: "Receive automated instant credentials or communicate with the seller through our encrypted chatbox.",
+      },
+      {
+        name: "Confirm & Release Funds",
+        text: "Inspect and verify your asset. Once confirmed, payment is released to the seller.",
+      },
+    ],
+  });
+
   return (
     <div className="bg-background min-h-[calc(100vh-76px)] py-16">
+      <JsonLd data={howToSchema} />
       <div className="container max-w-4xl space-y-16">
         {/* Hero */}
         <div className="text-center space-y-4">

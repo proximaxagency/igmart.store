@@ -42,9 +42,19 @@ export const metadata: Metadata = {
     creator: "@igmartstore",
     images: ["https://igmart.store/og-image.jpg"],
   },
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-video-preview": -1, "max-image-preview": "large", "max-snippet": -1 } },
   manifest: "/manifest.webmanifest",
-  verification: { google: "REPLACE_WITH_GOOGLE_SEARCH_CONSOLE_TOKEN" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";

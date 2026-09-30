@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionHeading } from "@/components/ui/index";
+
+export const metadata: Metadata = {
+  title: "HTML Sitemap — Directory of Pages | IGMART",
+  description: "Complete sitemap directory of all marketplace pages, games, seller hubs, help center, and legal documentation on IGMART.",
+  alternates: {
+    canonical: "https://igmart.store/sitemap",
+  },
+};
 
 export default function SitemapPage() {
   const sections = [
