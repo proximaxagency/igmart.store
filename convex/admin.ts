@@ -450,15 +450,54 @@ export const listDisputedOrders = query({
 
 // ── ADMIN LISTING REVIEW QUEUE ────────────────────────────────────────────
 
+export const getListingAdminStats = query({
+  args: { excludeSeeded: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
+    const user = await getAuthUser(ctx);
+    if (!user || (user.role !== "admin" && user.role !== "super_admin" && user.role !== "moderator")) {
+      return { total: 0, pending: 0, active: 0, paused: 0, rejected: 0, totalValue: 0 };
+    }
+    const shouldExcludeSeeded = args.excludeSeeded !== false;
+    const all = await ctx.db.query("listings").collect();
+    const listings = shouldExcludeSeeded ? all.filter((l) => !l.isSeeded) : all;
+
+    let pending = 0;
+    let active = 0;
+    let paused = 0;
+    let rejected = 0;
+    let totalValue = 0;
+
+    for (const l of listings) {
+      if (l.status === "pending_review") pending++;
+      else if (l.status === "active") {
+        active++;
+        totalValue += l.price || 0;
+      } else if (l.status === "paused" || l.status === "removed") paused++;
+      else if (l.status === "rejected") rejected++;
+    }
+
+    return {
+      total: listings.length,
+      pending,
+      active,
+      paused,
+      rejected,
+      totalValue,
+    };
+  },
+});
+
 export const listPendingListings = query({
   args: {
     status: v.optional(v.union(
+      v.literal("all"),
       v.literal("pending_review"),
       v.literal("active"),
       v.literal("rejected"),
       v.literal("removed"),
       v.literal("paused"),
     )),
+    gameId: v.optional(v.id("games")),
     excludeSeeded: v.optional(v.boolean()), // default true — hides seed/dummy data
   },
   handler: async (ctx, args) => {
@@ -470,10 +509,21 @@ export const listPendingListings = query({
     const filterStatus = args.status ?? "pending_review";
     const shouldExcludeSeeded = args.excludeSeeded !== false; // true unless explicitly set false
 
-    const listings = await ctx.db.query("listings")
-      .withIndex("by_status", (q) => q.eq("status", filterStatus))
-      .order("desc")
-      .take(500); // take more so we can filter after
+    let listings;
+    if (filterStatus === "all") {
+      listings = await ctx.db.query("listings")
+        .order("desc")
+        .take(500);
+    } else {
+      listings = await ctx.db.query("listings")
+        .withIndex("by_status", (q) => q.eq("status", filterStatus))
+        .order("desc")
+        .take(500);
+    }
+
+    if (args.gameId) {
+      listings = listings.filter((l) => l.gameId === args.gameId);
+    }
 
     // Filter out seed data unless admin opts in
     const filtered = shouldExcludeSeeded
@@ -481,7 +531,7 @@ export const listPendingListings = query({
       : listings;
 
     const hydrated = [];
-    for (const listing of filtered.slice(0, 100)) {
+    for (const listing of filtered.slice(0, 150)) {
       const seller = await ctx.db.get(listing.sellerId);
       const game = await ctx.db.get(listing.gameId);
       const resolvedImages = [];
@@ -524,7 +574,6 @@ export const approveListing = mutation({
 
     const listing = await ctx.db.get(args.listingId);
     if (!listing) throw new Error("Listing not found");
-    if (listing.status !== "pending_review") throw new Error("Listing is not pending review");
 
     await ctx.db.patch(args.listingId, {
       status: "active",
@@ -596,6 +645,128 @@ export const rejectListing = mutation({
   },
 });
 
+export const unlistListing = mutation({
+  args: {
+    listingId: v.id("listings"),
+    reason: v.optional(v.string()),
+    status: v.optional(v.union(v.literal("paused"), v.literal("removed"))),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin", "moderator"]);
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) throw new Error("Listing not found");
+
+    const targetStatus = args.status ?? "paused";
+    const now = Date.now();
+    const reason = args.reason?.trim() || "Unlisted by administration for moderation review.";
+
+    await ctx.db.patch(args.listingId, {
+      status: targetStatus,
+      updatedAt: now,
+    });
+
+    // Notify seller
+    await ctx.db.insert("notifications", {
+      userId: listing.sellerId,
+      type: "listing_rejected",
+      title: "Listing Unlisted by Admin",
+      body: `Your listing "${listing.title.substring(0, 60)}" was unlisted from the marketplace. Reason: ${reason}`,
+      link: "/seller/dashboard",
+      isRead: false,
+      createdAt: now,
+    });
+
+    // Audit log
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: "listing.unlist",
+      targetType: "listing",
+      targetId: args.listingId,
+      metadata: {
+        title: listing.title,
+        reason,
+        previousStatus: listing.status,
+        newStatus: targetStatus,
+      },
+      createdAt: now,
+    });
+
+    return { success: true };
+  },
+});
+
+export const relistListing = mutation({
+  args: {
+    listingId: v.id("listings"),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin", "moderator"]);
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) throw new Error("Listing not found");
+
+    const now = Date.now();
+    await ctx.db.patch(args.listingId, {
+      status: "active",
+      updatedAt: now,
+    });
+
+    // Notify seller
+    await ctx.db.insert("notifications", {
+      userId: listing.sellerId,
+      type: "listing_approved",
+      title: "Listing Relisted!",
+      body: `Your listing "${listing.title.substring(0, 60)}" has been relisted and is now active and live on the marketplace.`,
+      link: `/listing/${listing._id}`,
+      isRead: false,
+      createdAt: now,
+    });
+
+    // Audit log
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: "listing.relist",
+      targetType: "listing",
+      targetId: args.listingId,
+      metadata: {
+        title: listing.title,
+        previousStatus: listing.status,
+      },
+      createdAt: now,
+    });
+
+    return { success: true };
+  },
+});
+
+export const updateListingBadge = mutation({
+  args: {
+    listingId: v.id("listings"),
+    badge: v.optional(v.union(v.literal("HOT"), v.literal("SALE"), v.literal("POPULAR"), v.literal("NEW"), v.literal("NONE"))),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin", "moderator"]);
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) throw new Error("Listing not found");
+
+    const newBadge = (!args.badge || args.badge === "NONE") ? undefined : args.badge;
+    await ctx.db.patch(args.listingId, {
+      badge: newBadge,
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: "listing.update_badge",
+      targetType: "listing",
+      targetId: args.listingId,
+      metadata: { title: listing.title, badge: newBadge },
+      createdAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
 export const bulkApproveListings = mutation({
   args: { listingIds: v.array(v.id("listings")) },
   handler: async (ctx, args) => {
@@ -624,6 +795,86 @@ export const bulkApproveListings = mutation({
       metadata: { count, ids: args.listingIds },
       createdAt: Date.now(),
     });
+    return { success: true, count };
+  },
+});
+
+export const bulkUnlistListings = mutation({
+  args: {
+    listingIds: v.array(v.id("listings")),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin"]);
+    const now = Date.now();
+    const reason = args.reason?.trim() || "Bulk unlisted by administration.";
+    let count = 0;
+
+    for (const id of args.listingIds) {
+      const listing = await ctx.db.get(id);
+      if (!listing || listing.status === "paused" || listing.status === "removed") continue;
+
+      await ctx.db.patch(id, { status: "paused", updatedAt: now });
+      await ctx.db.insert("notifications", {
+        userId: listing.sellerId,
+        type: "listing_rejected",
+        title: "Listing Unlisted",
+        body: `Your listing "${listing.title.substring(0, 60)}" has been unlisted. Reason: ${reason}`,
+        link: "/seller/dashboard",
+        isRead: false,
+        createdAt: now,
+      });
+      count++;
+    }
+
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: "listing.bulk_unlist",
+      targetType: "listing",
+      targetId: "bulk",
+      metadata: { count, ids: args.listingIds, reason },
+      createdAt: now,
+    });
+
+    return { success: true, count };
+  },
+});
+
+export const bulkRelistListings = mutation({
+  args: {
+    listingIds: v.array(v.id("listings")),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "super_admin"]);
+    const now = Date.now();
+    let count = 0;
+
+    for (const id of args.listingIds) {
+      const listing = await ctx.db.get(id);
+      if (!listing || listing.status === "active") continue;
+
+      await ctx.db.patch(id, { status: "active", updatedAt: now });
+      await ctx.db.insert("notifications", {
+        userId: listing.sellerId,
+        type: "listing_approved",
+        title: "Listing Relisted!",
+        body: `Your listing "${listing.title.substring(0, 60)}" is now live on the marketplace.`,
+        link: `/listing/${id}`,
+        isRead: false,
+        createdAt: now,
+      });
+      count++;
+    }
+
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: "listing.bulk_relist",
+      targetType: "listing",
+      targetId: "bulk",
+      metadata: { count, ids: args.listingIds },
+      createdAt: now,
+    });
+
     return { success: true, count };
   },
 });

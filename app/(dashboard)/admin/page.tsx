@@ -19,6 +19,7 @@ export default function AdminDashboardPage() {
   const { format } = useCurrency();
 
   const metrics = useQuery(api.admin.getAdminMetrics, isAuthenticated ? {} : "skip");
+  const listingStats = useQuery(api.admin.getListingAdminStats, isAuthenticated ? {} : "skip");
   const auditLogs = useQuery(api.admin.listAuditLogs, isAuthenticated ? { limit: 12 } : "skip");
 
   return (
@@ -44,6 +45,11 @@ export default function AdminDashboardPage() {
             className="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-md shadow-primary/20"
           >
             Review Listings
+            {listingStats && listingStats.pending > 0 && (
+              <span className="bg-warning text-black text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                {listingStats.pending}
+              </span>
+            )}
             <ArrowUpRight size={14} />
           </Link>
           <Link
@@ -59,6 +65,31 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* ── Pending Listings Action Banner ── */}
+      {listingStats && listingStats.pending > 0 && (
+        <div className="p-4 rounded-2xl bg-warning/10 border border-warning/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-warning/20 text-warning flex items-center justify-center shrink-0">
+              <Clock size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-text">
+                {listingStats.pending} Listing{listingStats.pending > 1 ? "s" : ""} Awaiting Moderation Approval
+              </p>
+              <p className="text-xs text-text-muted">
+                New seller submissions require review before appearing live on the marketplace.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/admin/listings"
+            className="px-4 py-2 rounded-xl bg-warning hover:bg-warning/90 text-black text-xs font-bold transition-colors text-center shrink-0"
+          >
+            Open Review Queue →
+          </Link>
+        </div>
+      )}
 
       {/* ── Key Metrics Grid ── */}
       {metrics === undefined ? (
