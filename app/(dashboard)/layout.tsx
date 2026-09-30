@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, ShieldCheck, Box, Package, DollarSign, BarChart3,
-  MessageSquare, Settings, ArrowLeft, Shield, Menu, X, ChevronRight
+  MessageSquare, Settings, ArrowLeft, Shield, Menu, X, ChevronRight,
+  Coins, CheckCircle2
 } from "lucide-react";
 import { useConvexAuth } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
@@ -23,6 +24,7 @@ export default function SellerDashboardLayout({ children }: { children: React.Re
   const allLinks = [
     ...(isAdmin ? [{ href: "/admin", label: "Admin", icon: Shield, badge: "STAFF" }] : []),
     { href: "/seller/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/seller/wallet", label: "Wallet", icon: Coins, isGold: true },
     { href: "/seller/listings", label: "Listings", icon: Package, badge: undefined },
     { href: "/seller/verification", label: "KYC", icon: ShieldCheck, badge: "KYC" },
     { href: "/seller/inventory", label: "Inventory", icon: Box },
@@ -36,9 +38,9 @@ export default function SellerDashboardLayout({ children }: { children: React.Re
   // Bottom bar: show first 4 most important + "More" button
   const bottomLinks = [
     { href: "/seller/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/seller/wallet", label: "Wallet", icon: Coins },
     { href: "/seller/dashboard/orders", label: "Orders", icon: DollarSign },
     { href: "/seller/earnings", label: "Earnings", icon: DollarSign },
-    { href: "/seller/inventory", label: "Inventory", icon: Box },
     { href: "/messages", label: "Messages", icon: MessageSquare },
   ];
 
@@ -48,6 +50,11 @@ export default function SellerDashboardLayout({ children }: { children: React.Re
     return <>{children}</>;
   }
 
+  const usernameDisplay = dbUser?.displayName || dbUser?.username || "Game_Vault";
+  const userRegisteredDate = dbUser?.createdAt
+    ? new Date(dbUser.createdAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })
+    : "2/4/25";
+
   return (
     <div className="bg-background min-h-[calc(100vh-76px)]">
       <div className="container flex flex-col md:flex-row gap-6 lg:gap-8 py-6 lg:py-10 pb-24 md:pb-10">
@@ -55,12 +62,34 @@ export default function SellerDashboardLayout({ children }: { children: React.Re
         {/* ── Desktop Sidebar (always visible md+) ── */}
         <aside className="hidden md:block w-full md:w-[240px] lg:w-[260px] flex-shrink-0">
           <div className="bg-card border border-border rounded-2xl p-5 md:sticky md:top-[90px] shadow-sm">
-            <div className="mb-5 pb-4 border-b border-border flex items-center justify-between">
+            {/* Eldorado Seller Profile Header */}
+            <div className="flex items-center gap-3 mb-4 p-2.5 rounded-xl bg-surface border border-border/50">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 via-primary to-purple-600 flex items-center justify-center font-heading font-black text-white text-sm shadow flex-shrink-0 overflow-hidden">
+                {dbUser?.avatarUrl ? (
+                  <img src={dbUser.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  usernameDisplay.charAt(0).toUpperCase()
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="font-heading font-bold text-xs text-text truncate">
+                    {usernameDisplay}
+                  </p>
+                  <CheckCircle2 size={13} className="text-cyan-400 flex-shrink-0" />
+                </div>
+                <p className="text-[10px] text-text-muted mt-0.5">
+                  Registered: {userRegisteredDate}
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-4 pb-3 border-b border-border flex items-center justify-between">
               <div>
                 <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 font-black uppercase tracking-wider px-2 py-0.5 rounded-md">
                   Seller Hub
                 </span>
-                <p className="font-heading font-black text-lg text-text mt-1.5">Merchant Center</p>
+                <p className="font-heading font-black text-base text-text mt-1">Merchant Center</p>
               </div>
               <Link
                 href="/"
@@ -75,18 +104,23 @@ export default function SellerDashboardLayout({ children }: { children: React.Re
               {allLinks.map((link) => {
                 const active = isActive(link.href);
                 const Icon = link.icon;
+                const isGold = (link as any).isGold;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
                     className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                       active
-                        ? "bg-primary text-white shadow-sm"
+                        ? isGold
+                          ? "bg-amber-400 text-black font-black shadow-md shadow-amber-400/20"
+                          : "bg-primary text-white shadow-sm"
+                        : isGold
+                        ? "text-amber-400/90 hover:bg-amber-400/10 hover:text-amber-300"
                         : "text-text-secondary hover:bg-elevated hover:text-text"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon size={16} />
+                      <Icon size={16} className={!active && isGold ? "text-amber-400" : undefined} />
                       <span>{link.label}</span>
                     </div>
                     {link.badge && (
