@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Gamepad2, CheckCircle2, Loader2 } from "lucide-react";
 
@@ -65,11 +66,22 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--gradient-brand)" }}>
-              <Gamepad2 size={22} className="text-white" />
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-6 group">
+            <Image
+              src="/logo.png"
+              alt="IGMART Logo"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-xl object-cover shadow-[0_0_15px_rgba(124,58,237,0.35)] group-hover:scale-105 transition-transform"
+            />
+            <div className="flex items-center gap-1.5 text-left">
+              <span className="font-heading font-black text-2xl text-text group-hover:text-primary-hover transition-colors">
+                IGMART
+              </span>
+              <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded">
+                .STORE
+              </span>
             </div>
-            <span className="font-heading font-black text-xl text-text">IGMART</span>
           </Link>
           <h1 className="text-2xl font-heading font-black text-text mb-1">Create your account</h1>
           <p className="text-sm text-text-muted">Join thousands of gamers buying and selling accounts</p>

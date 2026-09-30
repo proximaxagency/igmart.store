@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!category) return { title: "Category Not Found" };
   return {
     title: `${category.name} | IGMART`,
-    description: `Browse ${category.name} across 300+ games on IGMART.`,
+    description: `Browse verified ${category.name} across top games on IGMART. 100% Escrow Protection.`,
   };
 }
 

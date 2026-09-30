@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 
 const footerCols = [
@@ -150,13 +151,13 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-border mt-8 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div
-              className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
-              style={{ background: "var(--gradient-brand)" }}
-              aria-hidden="true"
-            >
-              <span className="text-[9px] text-white font-black">IG</span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="IGMART Logo"
+              width={24}
+              height={24}
+              className="w-6 h-6 rounded object-cover flex-shrink-0"
+            />
             <p className="text-[12px] text-text-muted">
               © {new Date().getFullYear()} IGMART.STORE — All rights reserved.
             </p>

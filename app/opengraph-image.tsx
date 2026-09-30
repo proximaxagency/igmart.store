@@ -69,7 +69,7 @@ export default async function Image() {
               color: "transparent",
             }}
           >
-            The #1 Gaming Marketplace
+            The Premier Gaming Marketplace
           </h1>
           <p
             style={{
@@ -80,7 +80,7 @@ export default async function Image() {
               lineHeight: 1.4,
             }}
           >
-            Buy & Sell Verified Game Accounts, Currency, Rare Items & Boosting
+            Buy & Sell Verified Accounts across 5 Top Mobile & Online Games
           </p>
         </div>
 
@@ -95,13 +95,13 @@ export default async function Image() {
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <span style={{ fontSize: "28px", fontWeight: "900", color: "#7C3AED" }}>3M+</span>
-            <span style={{ fontSize: "14px", color: "#64748B" }}>Active Gamers</span>
+            <span style={{ fontSize: "28px", fontWeight: "900", color: "#7C3AED" }}>5</span>
+            <span style={{ fontSize: "14px", color: "#64748B" }}>Top Games</span>
           </div>
           <div style={{ width: "1px", height: "40px", backgroundColor: "rgba(255, 255, 255, 0.1)" }} />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <span style={{ fontSize: "28px", fontWeight: "900", color: "#F59E0B" }}>18,000+</span>
-            <span style={{ fontSize: "14px", color: "#64748B" }}>Verified Sellers</span>
+            <span style={{ fontSize: "28px", fontWeight: "900", color: "#F59E0B" }}>100%</span>
+            <span style={{ fontSize: "14px", color: "#64748B" }}>Escrow Protected</span>
           </div>
           <div style={{ width: "1px", height: "40px", backgroundColor: "rgba(255, 255, 255, 0.1)" }} />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>

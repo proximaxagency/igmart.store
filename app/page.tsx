@@ -10,8 +10,8 @@ import HomepageClient from "@/components/home/HomepageClient";
 import { Zap, ShieldCheck, MessageSquare, Scale, Star, ArrowRight, BadgeCheck, Clock, Wallet } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "IGMART — #1 Gaming Account Marketplace | Buy & Sell Game Accounts",
-  description: "Buy and sell verified gaming accounts across 300+ games. Secure escrow, instant delivery, verified sellers. Join 3M+ gamers on IGMART.",
+  title: "IGMART — Premier Gaming Marketplace | Buy & Sell Top Game Accounts",
+  description: "Buy and sell verified accounts for Clash of Clans, Pokémon GO, Free Fire, Roblox, and Clash Royale. 100% Escrow Protection, instant delivery, verified sellers.",
 };
 
 const trustItems = [
@@ -22,9 +22,9 @@ const trustItems = [
 ];
 
 const howItWorks = [
-  { step: "01", title: "Find Your Account", desc: "Search across 300+ games. Filter by game, price, hero level, rank, and delivery speed.", action: { label: "Browse Accounts", href: "/marketplace/accounts" } },
+  { step: "01", title: "Find Your Account", desc: "Search across 5 top mobile & online games. Filter by town hall, rank, hero level, and delivery speed.", action: { label: "Browse Accounts", href: "/marketplace/accounts" } },
   { step: "02", title: "Pay with Escrow", desc: "Your funds are held safely until you receive and confirm the account is exactly as described.", action: { label: "How It Works", href: "/how-it-works" } },
-  { step: "03", title: "Sell & Earn", desc: "List your gaming accounts in minutes. Join 18K+ verified sellers and start earning from your assets.", action: { label: "Start Selling", href: "/sell" } },
+  { step: "03", title: "Sell & Earn", desc: "List your gaming accounts in minutes. Join verified sellers and start earning safely from your assets.", action: { label: "Start Selling", href: "/sell" } },
 ];
 
 const whyBuyHere = [
@@ -79,8 +79,8 @@ export default function HomePage() {
 
           {/* Sub */}
           <p className="text-text-muted text-base sm:text-lg max-w-xl mx-auto mb-8 leading-relaxed">
-            The #1 marketplace for verified gaming accounts across{" "}
-            <strong className="text-text font-semibold">300+ games</strong> — with escrow protection, instant delivery, and 3M+ trusted players.
+            The premier marketplace for verified gaming accounts across{" "}
+            <strong className="text-text font-semibold">5 top games</strong> — with escrow protection, instant delivery, and hand-vetted sellers.
           </p>
 
           <HomepageClient action="search" />
@@ -88,9 +88,9 @@ export default function HomePage() {
           {/* Stats strip */}
           <div className="flex flex-wrap justify-center gap-5 sm:gap-10 mt-10">
             {[
-              { label: "3M+ Gamers", icon: "🎮" },
-              { label: "300+ Games", icon: "🕹️" },
-              { label: "45K+ Accounts", icon: "👤" },
+              { label: "5 Top Games", icon: "🎮" },
+              { label: "100% Escrow Safe", icon: "🛡️" },
+              { label: "Verified Accounts", icon: "👤" },
               { label: "Instant Delivery", icon: "⚡" },
             ].map((b) => (
               <div key={b.label} className="flex items-center gap-2" aria-hidden="true">
@@ -290,7 +290,7 @@ export default function HomePage() {
             <span className="text-gradient-brand">Real Money</span>
           </h2>
           <p className="text-text-muted text-base max-w-xl mx-auto mb-8 leading-relaxed">
-            Join 18,000+ verified sellers on IGMART. List your gaming accounts in minutes and earn from assets you no longer use.
+            Join verified sellers on IGMART. List your gaming accounts in minutes and earn from assets you no longer use with guaranteed escrow protection.
           </p>
           <HomepageClient action="sellcta" />
         </div>

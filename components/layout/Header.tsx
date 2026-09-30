@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Search, Bell, ShoppingBag, Menu, X, User, Heart,
@@ -166,16 +167,22 @@ export default function Header() {
 
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0 lg:mr-6">
-          <div
-            className="w-8 h-8 rounded-md flex items-center justify-center font-heading font-black text-white text-base tracking-tighter transition-opacity group-hover:opacity-90"
-            style={{ background: "var(--gradient-brand)" }}
-            aria-hidden="true"
-          >
-            IG
+          <Image
+            src="/logo.png"
+            alt="IGMART Logo"
+            width={34}
+            height={34}
+            className="w-8 h-8 rounded-lg object-cover shadow-[0_0_12px_rgba(124,58,237,0.4)] group-hover:scale-105 transition-transform"
+            priority
+          />
+          <div className="flex items-center gap-1.5">
+            <span className="font-heading font-black text-[20px] tracking-wide text-text group-hover:text-primary-hover transition-colors">
+              IGMART
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/25 px-1.5 py-0.5 rounded">
+              .STORE
+            </span>
           </div>
-          <span className="font-heading font-black text-[20px] tracking-wide text-text">
-            IGMART
-          </span>
         </Link>
 
         {/* Desktop Nav — centered absolutely */}
@@ -350,13 +357,19 @@ export default function Header() {
             {/* Panel header */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
               <Link href="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5">
-                <div
-                  className="w-7 h-7 rounded flex items-center justify-center font-heading font-black text-white text-sm"
-                  style={{ background: "var(--gradient-brand)" }}
-                >
-                  IG
+                <Image
+                  src="/logo.png"
+                  alt="IGMART Logo"
+                  width={28}
+                  height={28}
+                  className="w-7 h-7 rounded-md object-cover shadow-sm"
+                />
+                <div className="flex items-center gap-1.5">
+                  <span className="font-heading font-black text-lg text-text">IGMART</span>
+                  <span className="text-[9px] font-black uppercase text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1 py-0.5 rounded">
+                    .STORE
+                  </span>
                 </div>
-                <span className="font-heading font-black text-lg text-text">IGMART</span>
               </Link>
               <button
                 onClick={() => setMenuOpen(false)}

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Start Selling Gaming Assets & Accounts | IGMART Merchant Gateway",
-    description: "Sell gaming accounts, currency, and boosting to 3M+ verified gamers. Enjoy 100% escrow protection and instant withdrawals.",
+    description: "Sell gaming accounts, currency, and items to verified buyers across 5 top games. Enjoy 100% escrow protection and instant withdrawals.",
     url: "https://igmart.store/sell",
   },
 };

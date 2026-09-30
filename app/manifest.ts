@@ -2,10 +2,10 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "IGMART — The #1 Gaming Marketplace",
+    name: "IGMART — Premier Gaming Marketplace",
     short_name: "IGMART",
     description:
-      "Buy, sell and trade gaming accounts, items, currency, boosting and services across 300+ games. Secure escrow, verified sellers, 24/7 support.",
+      "Buy, sell and trade verified gaming accounts and items across top games: Clash of Clans, Pokémon GO, Free Fire, Roblox, and Clash Royale. 100% Escrow Protection.",
     start_url: "/",
     display: "standalone",
     background_color: "#0a0a0f",

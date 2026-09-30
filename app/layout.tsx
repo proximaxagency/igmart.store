@@ -21,14 +21,14 @@ const redHatDisplay = Red_Hat_Display({
 });
 
 export const metadata: Metadata = {
-  title: { default: "IGMART — The #1 Gaming Marketplace", template: "%s | IGMART" },
-  description: "Buy, sell and trade gaming accounts, items, currency, boosting and services across 300+ games. Secure transactions, verified sellers, 24/7 support.",
-  keywords: "gaming marketplace, buy game accounts, sell game items, boosting services, game currency, IGMART, game account trading, buy sell gaming assets",
+  title: { default: "IGMART — Premier Gaming Marketplace", template: "%s | IGMART" },
+  description: "Buy, sell and trade verified gaming accounts and assets across 5 top games: Clash of Clans, Pokémon GO, Free Fire, Roblox, and Clash Royale. 100% Escrow Protection.",
+  keywords: "clash of clans accounts, pokemon go accounts, free fire accounts, roblox accounts, clash royale accounts, buy game accounts, sell gaming assets, IGMART escrow",
   metadataBase: new URL("https://igmart.store"),
   alternates: { canonical: "https://igmart.store" },
   openGraph: {
-    title: "IGMART — The #1 Gaming Marketplace",
-    description: "The premier destination for buying and selling gaming assets across 300+ games.",
+    title: "IGMART — Premier Gaming Marketplace",
+    description: "The dedicated marketplace for verified gaming accounts across 5 top games. 100% Escrow Protection.",
     url: "https://igmart.store",
     siteName: "IGMART",
     type: "website",
@@ -37,8 +37,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "IGMART — The #1 Gaming Marketplace",
-    description: "Buy, sell and trade gaming assets across 300+ games.",
+    title: "IGMART — Premier Gaming Marketplace",
+    description: "Buy, sell and trade verified gaming accounts across 5 top games.",
     creator: "@igmartstore",
     images: ["https://igmart.store/og-image.jpg"],
   },
@@ -47,6 +47,8 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],

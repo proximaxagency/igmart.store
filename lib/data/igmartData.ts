@@ -2,57 +2,57 @@
 // All demo/seed data. Replace with real Convex queries when backend is connected.
 
 export const GAMES = [
-  { id: "clash-of-clans", name: "Clash of Clans", slug: "clash-of-clans", category: "Strategy", image: "/clash-of-clans-poster.jpg", sellers: 840, listings: 14500, rating: 4.9, popular: true },
-  { id: "pokemon-go", name: "Pokémon GO", slug: "pokemon-go", category: "AR / Adventure", image: "/pokemon-go-poster.png", sellers: 1640, listings: 38500, rating: 4.9, popular: true },
-  { id: "free-fire", name: "Free Fire", slug: "free-fire", category: "Battle Royale", image: "/free-fire-poster.png", sellers: 1150, listings: 24800, rating: 4.9, popular: true },
-  { id: "roblox", name: "Roblox", slug: "roblox", category: "Sandbox", image: "/roblox-poster.png", sellers: 1420, listings: 34500, rating: 4.7, popular: true },
-  { id: "clash-royale", name: "Clash Royale", slug: "clash-royale", category: "Card Battler", image: "/clash-royale-poster.png", sellers: 620, listings: 9800, rating: 4.8, popular: true },
+  { id: "clash-of-clans", name: "Clash of Clans", slug: "clash-of-clans", category: "Strategy", image: "/clash-of-clans-poster.jpg", sellers: 48, listings: 180, rating: 4.9, popular: true },
+  { id: "pokemon-go", name: "Pokémon GO", slug: "pokemon-go", category: "AR / Adventure", image: "/pokemon-go-poster.png", sellers: 64, listings: 240, rating: 4.9, popular: true },
+  { id: "free-fire", name: "Free Fire", slug: "free-fire", category: "Battle Royale", image: "/free-fire-poster.png", sellers: 38, listings: 150, rating: 4.9, popular: true },
+  { id: "roblox", name: "Roblox", slug: "roblox", category: "Sandbox", image: "/roblox-poster.png", sellers: 52, listings: 210, rating: 4.7, popular: true },
+  { id: "clash-royale", name: "Clash Royale", slug: "clash-royale", category: "Card Battler", image: "/clash-royale-poster.png", sellers: 28, listings: 110, rating: 4.8, popular: true },
 ];
 
 export const CATEGORIES = [
-  { id: "accounts", name: "Accounts", slug: "accounts", icon: "👤", description: "Buy and sell gaming accounts", count: 45231 },
+  { id: "accounts", name: "Accounts", slug: "accounts", icon: "👤", description: "Buy and sell gaming accounts", count: 890 },
 ];
 
 export const LISTINGS = [
   {
     id: "lst_001", title: "Clash of Clans TH16 Max Base — 95/95/70/45 Heroes + Sceneries", game: "Clash of Clans", category: "accounts",
-    price: 149.99, originalPrice: 199.99, seller: "ClashVault_Pro", sellerRating: 4.98, sellerOrders: 3421,
-    rating: 4.9, reviews: 312, delivery: "Instant", image: "/clash-of-clans-poster.jpg",
+    price: 149.99, originalPrice: 199.99, seller: "ClashVault_Pro", sellerRating: 4.98, sellerOrders: 480,
+    rating: 4.9, reviews: 42, delivery: "Instant", image: "/clash-of-clans-poster.jpg",
     badge: "HOT", description: "Fully maxed Town Hall 16 base. All heroes maxed, epic equipments Lv 27, 8000+ gems, champion sceneries. Clean Supercell ID with full email access.",
     verified: true, slug: "coc-th16-max-account",
   },
   {
     id: "lst_002", title: "Pokémon GO Lv 50 Mystic — 450+ Shinies · Shundo Rayquaza & Mewtwo · 12M Stardust", game: "Pokémon GO", category: "accounts",
-    price: 219.00, originalPrice: 280.00, seller: "ProTrader_IN", sellerRating: 4.96, sellerOrders: 2190,
-    rating: 5.0, reviews: 245, delivery: "Instant", image: "/pokemon-go-poster.png",
+    price: 219.00, originalPrice: 280.00, seller: "ProTrader_IN", sellerRating: 4.96, sellerOrders: 310,
+    rating: 5.0, reviews: 35, delivery: "Instant", image: "/pokemon-go-poster.png",
     badge: "POPULAR", description: "Elite Level 50 Mystic account. Features Armored Mewtwo, Shundo Rayquaza & Groudon, 450+ Shinies, 42 Hundos (100% IV), 12,000,000+ Stardust, max item & Pokémon storage. Clean PTC login with instant email change.",
     verified: true, slug: "pokemon-go-level-50-shundo-mewtwo-armored",
   },
   {
     id: "lst_003", title: "Free Fire Sakura Season 1 VIP Account — Titan SCAR + Hip Hop Bundle", game: "Free Fire", category: "accounts",
-    price: 129.99, originalPrice: 160.00, seller: "FF_LegendStore", sellerRating: 4.95, sellerOrders: 4120,
-    rating: 4.9, reviews: 480, delivery: "Instant", image: "/free-fire-poster.png",
+    price: 129.99, originalPrice: 160.00, seller: "FF_LegendStore", sellerRating: 4.95, sellerOrders: 280,
+    rating: 4.9, reviews: 48, delivery: "Instant", image: "/free-fire-poster.png",
     badge: "SALE", description: "Ultra-rare OG Season 1 Sakura Bundle, Hip Hop Bundle, Maxed Titan SCAR, 12 Evo Guns maxed, Grandmaster badge. Instant transfer.",
     verified: true, slug: "free-fire-sakura-s1-og",
   },
   {
     id: "lst_004", title: "Pokémon GO Lv 48 Valor Beast — Apex Shadow Ho-Oh & Lugia · 280+ Legendaries · 38 Hundos", game: "Pokémon GO", category: "accounts",
-    price: 260.00, originalPrice: 320.00, seller: "GlobalVault", sellerRating: 4.94, sellerOrders: 1840,
-    rating: 4.8, reviews: 164, delivery: "Instant", image: "/pokemon-go-poster.png",
+    price: 260.00, originalPrice: 320.00, seller: "GlobalVault", sellerRating: 4.94, sellerOrders: 190,
+    rating: 4.8, reviews: 24, delivery: "Instant", image: "/pokemon-go-poster.png",
     badge: "HOT", description: "Master League PvP champion account. Apex Shadow Ho-Oh & Lugia with Sacred Fire+ / Aeroblast+, complete shiny regional dex, 2016 legacy movesets, 6.5M Stardust. Name change available, safe Gmail login.",
     verified: true, slug: "pokemon-go-level-48-apex-shadow-ho-oh",
   },
   {
     id: "lst_005", title: "Roblox 2016 Veteran Account — Korblox Deathspeaker + Headless Horseman", game: "Roblox", category: "accounts",
-    price: 189.99, originalPrice: null, seller: "BloxMarket", sellerRating: 4.92, sellerOrders: 5120,
-    rating: 4.9, reviews: 520, delivery: "Instant", image: "/roblox-poster.png",
+    price: 189.99, originalPrice: null, seller: "BloxMarket", sellerRating: 4.92, sellerOrders: 580,
+    rating: 4.9, reviews: 62, delivery: "Instant", image: "/roblox-poster.png",
     badge: "POPULAR", description: "Created in 2016. Contains Korblox Deathspeaker, Headless Horseman, 150k+ RAP limiteds, Blox Fruits maxed with Kitsune & Leopard, 15,000 Robux.",
     verified: true, slug: "roblox-korblox-headless-2016",
   },
   {
     id: "lst_007", title: "Clash Royale Ultimate Champion 9000 Trophies — All Lv 15 Cards + Evos", game: "Clash Royale", category: "accounts",
-    price: 85.00, originalPrice: 110.00, seller: "RoyaleDecks", sellerRating: 4.91, sellerOrders: 1450,
-    rating: 4.8, reviews: 138, delivery: "Instant", image: "/clash-royale-poster.png",
+    price: 85.00, originalPrice: 110.00, seller: "RoyaleDecks", sellerRating: 4.91, sellerOrders: 150,
+    rating: 4.8, reviews: 28, delivery: "Instant", image: "/clash-royale-poster.png",
     badge: null, description: "9000 Trophies, Top 1000 Global Finish Badge, 80+ Cards at Elite Level 15, all Evolutions unlocked with 2.5M Gold and 15,000 Gems.",
     verified: true, slug: "clash-royale-9000-trophies-max",
   },

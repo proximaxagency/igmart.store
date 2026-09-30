@@ -53,7 +53,7 @@ export default function SellOnboardingPage() {
             Turn Your Gaming Assets Into <span className="bg-gradient-to-r from-primary to-accent-secondary bg-clip-text text-transparent">Real Income</span>
           </h1>
           <p className="text-text-muted text-sm sm:text-lg max-w-2xl mx-auto mb-8 leading-relaxed">
-            Sell accounts, in-game currency, and boosting services to over 3 million verified gamers. Enjoy 100% escrow protection, automated delivery, and instant withdrawals.
+            Sell accounts, in-game currency, and boosting services to verified gamers across 5 top games. Enjoy 100% escrow protection, automated delivery, and instant withdrawals.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
@@ -86,8 +86,8 @@ export default function SellOnboardingPage() {
               <p className="font-heading font-black text-xl text-warning mt-1">&lt; 15 Mins</p>
             </div>
             <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-              <span className="text-[11px] text-text-muted font-bold uppercase tracking-wider block">Active Buyers</span>
-              <p className="font-heading font-black text-xl text-purple-400 mt-1">3M+ Gamers</p>
+              <span className="text-[11px] text-text-muted font-bold uppercase tracking-wider block">Game Focus</span>
+              <p className="font-heading font-black text-xl text-purple-400 mt-1">5 Top Games</p>
             </div>
           </div>
         </div>
