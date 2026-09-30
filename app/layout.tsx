@@ -53,7 +53,7 @@ import { UserSync } from "@/components/providers/UserSync";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${manrope.variable} ${redHatDisplay.variable}`}>
+    <html lang="en" className={`${manrope.variable} ${redHatDisplay.variable}`} data-scroll-behavior="smooth">
       <head>
         <JsonLd data={getOrganizationSchema()} />
         <JsonLd data={getWebSiteSchema()} />

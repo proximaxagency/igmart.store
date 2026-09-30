@@ -573,6 +573,7 @@ function CreateListingContent() {
                     src={selectedGame.imageUrl}
                     alt={selectedGame.name}
                     fill
+                    sizes="32px"
                     className="object-cover"
                   />
                 ) : (
@@ -612,7 +613,7 @@ function CreateListingContent() {
                       >
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-800 relative border border-slate-700/60 shrink-0">
                           {game.imageUrl && (
-                            <Image src={game.imageUrl} alt={game.name} fill className="object-cover" />
+                            <Image src={game.imageUrl} alt={game.name} fill sizes="32px" className="object-cover" />
                           )}
                         </div>
                         <div className="min-w-0 flex-1">

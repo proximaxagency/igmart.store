@@ -41,8 +41,8 @@ export const GAME_FIELDS: Record<string, { emoji: string; color: string; fields:
         placeholder: "Town Hall",
         icon: "🏰",
         required: true,
-        options: ["Town Hall", "TH18 (Nov 2025)", "TH17", "TH16", "TH15", "TH14", "TH13", "TH12", "TH11", "TH10", "TH9", "TH8", "TH7", "TH6"],
-        hint: "TH18 released Nov 2025",
+        options: ["Town Hall", "TH18 (Nov 2025)", "TH17", "TH16", "TH15", "TH14", "TH13"],
+        hint: "TH13+ verified accounts only (TH13, TH14, TH15, TH16, TH17, TH18)",
       },
       {
         key: "gems",

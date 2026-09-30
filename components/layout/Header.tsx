@@ -13,6 +13,7 @@ import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { useConvexAuth } from "@convex-dev/auth/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter } from "next/navigation";
+import NotificationPanel from "@/components/notifications/NotificationPanel";
 
 
 export default function Header() {
@@ -226,75 +227,8 @@ export default function Header() {
 
           {user ? (
             <div className="flex items-center gap-1">
-              {/* Notifications */}
-              <div
-                className="relative hidden sm:block"
-                onMouseEnter={() => setActiveDropdown("notifications")}
-                onMouseLeave={handleDropdownLeave}
-              >
-                <button
-                  aria-label="View notifications"
-                  aria-expanded={activeDropdown === "notifications"}
-                  className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${activeDropdown === "notifications" ? "text-text bg-elevated" : "text-text-muted hover:text-text hover:bg-elevated"}`}
-                >
-                  <Bell size={19} />
-                  {notifications && notifications.filter(n => !n.isRead).length > 0 && (
-                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-danger rounded-full" aria-hidden="true" />
-                  )}
-                </button>
-
-                {activeDropdown === "notifications" && (
-                  <div
-                    className="absolute top-[calc(100%+8px)] right-0 z-[200]"
-                    onMouseEnter={() => setActiveDropdown("notifications")}
-                    onMouseLeave={handleDropdownLeave}
-                  >
-                    <div className="bg-surface border border-border rounded-xl w-[320px] shadow-[var(--shadow-xl)] overflow-hidden flex flex-col">
-                      <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-background">
-                        <p className="text-sm font-bold text-text">Notifications</p>
-                        {notifications && notifications.some(n => !n.isRead) && (
-                          <button 
-                            onClick={() => markAllAsRead()}
-                            className="text-[11px] font-semibold text-primary hover:underline"
-                          >
-                            Mark all as read
-                          </button>
-                        )}
-                      </div>
-                      <div className="max-h-[360px] overflow-y-auto">
-                        {notifications === undefined ? (
-                          <div className="p-8 text-center text-text-muted text-sm">Loading...</div>
-                        ) : notifications.length === 0 ? (
-                          <div className="p-8 text-center text-text-muted text-sm">No notifications yet.</div>
-                        ) : (
-                          notifications.map((n) => (
-                            <Link
-                              key={n._id}
-                              href={n.link || "#"}
-                              onClick={(e) => {
-                                if (!n.isRead) markAsRead({ notificationId: n._id });
-                                setActiveDropdown(null);
-                              }}
-                              className={`block p-4 border-b border-border hover:bg-elevated/50 transition-colors ${!n.isRead ? "bg-primary/5" : ""}`}
-                            >
-                              <div className="flex gap-3">
-                                {!n.isRead && <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />}
-                                <div>
-                                  <p className={`text-sm ${!n.isRead ? "font-bold text-text" : "font-medium text-text-secondary"}`}>{n.title}</p>
-                                  <p className="text-xs text-text-muted mt-1 leading-relaxed">{n.body}</p>
-                                  <p className="text-[10px] text-text-muted mt-2 font-medium">
-                                    {new Date(n.createdAt).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                            </Link>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Notifications Panel (Interactive, Click-toggle, No gap glitch) */}
+              <NotificationPanel />
 
               {/* Messages */}
               <Link
@@ -319,7 +253,7 @@ export default function Header() {
                 <ShoppingBag size={19} />
               </Link>
 
-              {/* User Dropdown */}
+              {/* User Dropdown (Glitch-free, hover bridge + click toggle) */}
               <div
                 ref={dropdownRef}
                 className="relative hidden lg:block ml-1"
@@ -327,6 +261,7 @@ export default function Header() {
                 onMouseLeave={handleDropdownLeave}
               >
                 <button
+                  onClick={() => setActiveDropdown(activeDropdown === "user" ? null : "user")}
                   aria-label="Account menu"
                   aria-haspopup="true"
                   aria-expanded={activeDropdown === "user"}
@@ -342,7 +277,7 @@ export default function Header() {
 
                 {activeDropdown === "user" && (
                   <div
-                    className="absolute top-[calc(100%+8px)] right-0 z-[200]"
+                    className="absolute top-full right-0 pt-2 z-[200]"
                     onMouseEnter={handleDropdownEnter}
                     onMouseLeave={handleDropdownLeave}
                   >
