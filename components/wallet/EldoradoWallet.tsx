@@ -4,10 +4,11 @@ import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexAuth } from "@convex-dev/auth/react";
+import Link from "next/link";
 import {
   Coins, Download, ExternalLink, Copy, Check, ChevronDown,
-  X, ShieldCheck, ArrowUpRight, ArrowDownRight, Clock,
-  DollarSign, AlertCircle, Info, Landmark, CreditCard, Send
+  X, ShieldCheck, ShieldAlert, ArrowUpRight, ArrowDownRight, Clock,
+  DollarSign, AlertCircle, Info, Landmark, CreditCard, Send, Lock
 } from "lucide-react";
 
 interface TransactionRow {
@@ -87,9 +88,16 @@ const DEFAULT_ELDORADO_TRANSACTIONS: TransactionRow[] = [
 
 export default function EldoradoWallet() {
   const { isAuthenticated } = useConvexAuth();
+  const dbUser = useQuery(api.users.getCurrentUser, isAuthenticated ? {} : "skip");
+  const kycStatus = useQuery(api.seller.getKYCStatus, isAuthenticated ? {} : "skip");
   const balances = useQuery(api.transactions.getMyBalances, isAuthenticated ? {} : "skip");
   const liveTransactions = useQuery(api.transactions.getMyTransactions, isAuthenticated ? {} : "skip");
   const requestWithdrawal = useMutation(api.seller.requestWithdrawal);
+
+  // KYC Approval Status (Admin is always approved, or user.isVerified or kycStatus is "approved")
+  const email = dbUser?.email?.toLowerCase() || "";
+  const isAdmin = email.includes("proximaxagency") || email === "proximaxagency@gmail.com" || dbUser?.role === "admin" || dbUser?.role === "super_admin";
+  const isKycApproved = isAdmin || !!(dbUser?.isVerified || kycStatus?.status === "approved");
 
   // Filter states
   const [filterType, setFilterType] = useState<string>("All");
@@ -241,20 +249,32 @@ export default function EldoradoWallet() {
             </div>
             <button
               onClick={() => setWithdrawModalOpen(true)}
-              className="bg-[#22283a] hover:bg-[#2c344d] text-white px-5 py-2.5 rounded-lg text-xs font-bold border border-white/10 transition-all shadow-sm active:scale-95 flex-shrink-0"
+              className="bg-[#22283a] hover:bg-[#2c344d] text-white px-5 py-2.5 rounded-lg text-xs font-bold border border-white/10 transition-all shadow-sm active:scale-95 flex-shrink-0 flex items-center gap-1.5"
             >
+              {!isKycApproved && <Lock size={12} className="text-amber-400" />}
               Withdraw
             </button>
           </div>
 
-          <div className="text-xs text-gray-400 pt-3 border-t border-[#1e2436]/60 flex items-center gap-1.5 flex-wrap">
-            <span>Withdrawals require $10 in completed sales.</span>
-            <button
-              onClick={() => setLearnMoreOpen(true)}
-              className="text-sky-400 hover:text-sky-300 font-semibold underline transition-colors"
-            >
-              Learn more
-            </button>
+          <div className="text-xs text-gray-400 pt-3 border-t border-[#1e2436]/60 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span>Withdrawals require $10 in completed sales.</span>
+              <button
+                onClick={() => setLearnMoreOpen(true)}
+                className="text-sky-400 hover:text-sky-300 font-semibold underline transition-colors"
+              >
+                Learn more
+              </button>
+            </div>
+            {!isKycApproved && (
+              <Link
+                href="/seller/verification"
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400 hover:text-amber-300 transition-colors"
+              >
+                <ShieldAlert size={12} />
+                <span>KYC Verification Required</span>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -511,7 +531,78 @@ export default function EldoradoWallet() {
               </button>
             </div>
 
-            {withdrawSuccess ? (
+            {/* First-time Seller KYC Verification Gate */}
+            {!isKycApproved ? (
+              <div className="py-2 space-y-4">
+                <div className="p-4 rounded-xl bg-amber-400/10 border border-amber-400/25 flex items-start gap-3">
+                  <ShieldAlert size={22} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h4 className="font-heading font-bold text-sm text-white flex items-center gap-2">
+                      Identity Verification (KYC) Required
+                      <span className="text-[10px] bg-amber-400/20 text-amber-300 font-bold px-1.5 py-0.5 rounded uppercase">
+                        First Payout
+                      </span>
+                    </h4>
+                    <p className="text-xs text-gray-300 leading-relaxed">
+                      To safeguard marketplace integrity and prevent unauthorized fund routing, all first-time seller payouts require completed KYC identity verification.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Status overview */}
+                <div className="bg-[#0e121c] border border-[#1e2436] rounded-xl p-4 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">KYC Status:</span>
+                    <span className={`font-bold px-2 py-0.5 rounded text-[11px] ${
+                      kycStatus?.status === "pending"
+                        ? "bg-amber-400/20 text-amber-300"
+                        : kycStatus?.status === "rejected"
+                        ? "bg-rose-500/20 text-rose-400"
+                        : "bg-gray-800 text-gray-300"
+                    }`}>
+                      {kycStatus?.status === "pending"
+                        ? "Under Review"
+                        : kycStatus?.status === "rejected"
+                        ? "Changes Requested"
+                        : "Not Verified"}
+                    </span>
+                  </div>
+                  {kycStatus?.status === "pending" && (
+                    <p className="text-[11px] text-gray-400 leading-relaxed">
+                      Your identity documents have been submitted and are being reviewed by the compliance department. Withdrawals will unlock automatically upon approval.
+                    </p>
+                  )}
+                  {kycStatus?.status === "rejected" && (
+                    <p className="text-[11px] text-rose-400 leading-relaxed">
+                      {kycStatus.adminNotes || "Verification was rejected. Please re-submit your documents with clearer photos."}
+                    </p>
+                  )}
+                  {(!kycStatus || kycStatus?.status === "unverified") && (
+                    <p className="text-[11px] text-gray-400 leading-relaxed">
+                      Submit your valid government photo ID and address proof to unlock immediate lifetime payouts across all supported methods.
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-2 flex flex-col gap-2">
+                  <Link
+                    href="/seller/verification"
+                    onClick={() => setWithdrawModalOpen(false)}
+                    className="w-full bg-amber-400 hover:bg-amber-300 text-black font-bold py-2.5 rounded-xl text-xs transition-all shadow-md text-center flex items-center justify-center gap-2"
+                  >
+                    <ShieldCheck size={15} />
+                    {kycStatus?.status === "pending" ? "View KYC Submission" : "Complete KYC Verification"}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setWithdrawModalOpen(false)}
+                    className="w-full bg-[#1e2436] hover:bg-[#283048] text-gray-300 font-semibold py-2.5 rounded-xl text-xs transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : withdrawSuccess ? (
               <div className="py-8 text-center space-y-3">
                 <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
                   <Check size={28} />

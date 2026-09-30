@@ -118,6 +118,20 @@ export const requestWithdrawal = mutation({
   handler: async (ctx, args) => {
     const user = await requireAuthUser(ctx);
 
+    // KYC Check: First-time seller withdrawal requires approved KYC verification
+    const email = user.email?.toLowerCase() || "";
+    const isAdmin = email.includes("proximaxagency") || user.role === "admin" || user.role === "super_admin";
+
+    const kyc = await ctx.db
+      .query("sellerVerifications")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .first();
+
+    const isVerified = isAdmin || user.isVerified || kyc?.status === "approved";
+    if (!isVerified) {
+      throw new Error("KYC_REQUIRED: First-time withdrawal requires approved identity verification (KYC). Please complete verification at /seller/verification.");
+    }
+
     const available = user.walletBalance ?? 0;
     if (args.amount <= 0 || args.amount > available) {
       throw new Error("Insufficient available balance for withdrawal");
