@@ -1,0 +1,65 @@
+/* IGMART.STORE — Design Tokens */
+:root {
+  /* Core backgrounds */
+  --ig-primary:   #181A1F;
+  --ig-dark:      #0F1116;
+  --ig-surface:   #12151C;
+  --ig-card:      #171A21;
+  --ig-elevated:  #1F232B;
+  --ig-border:    #272A30;
+  --ig-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* Text */
+  --ig-text:      #FAFAFA;
+  --ig-text-2:    #E4E4E7;
+  --ig-muted:     #A1A1AA;
+  --ig-muted-2:   #71717A;
+
+  /* Brand accents */
+  --ig-blue:      #2563EB;
+  --ig-blue-bright: #3381FF;
+  --ig-blue-glow: rgba(37, 99, 235, 0.25);
+  --ig-green:     #4ADE80;
+  --ig-green-dark:#16A34A;
+  --ig-red:       #EF4343;
+  --ig-red-dark:  #DC2626;
+  --ig-orange:    #F59E0B;
+  --ig-yellow:    #FBBF24;
+  --ig-purple:    #8B5CF6;
+  --ig-cyan:      #06B6D4;
+
+  /* Gradients */
+  --ig-gradient-brand: linear-gradient(135deg, #2563EB 0%, #3381FF 50%, #06B6D4 100%);
+  --ig-gradient-fire: linear-gradient(135deg, #EF4343 0%, #F59E0B 100%);
+  --ig-gradient-hero: linear-gradient(180deg, rgba(15,17,22,0) 0%, rgba(15,17,22,0.7) 60%, #0F1116 100%);
+
+  /* Borders */
+  --ig-border-color: #272A30;
+  --ig-border-accent: rgba(51, 129, 255, 0.35);
+
+  /* Radius */
+  --ig-radius-xs:   4px;
+  --ig-radius-sm:   6px;
+  --ig-radius-md:   10px;
+  --ig-radius-lg:   14px;
+  --ig-radius-xl:   20px;
+  --ig-radius-pill: 999px;
+
+  /* Shadows */
+  --ig-shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+  --ig-shadow-md:  0 4px 16px rgba(0,0,0,0.5);
+  --ig-shadow-lg:  0 8px 32px rgba(0,0,0,0.6);
+  --ig-shadow-xl:  0 16px 64px rgba(0,0,0,0.7);
+  --ig-glow-blue:  0 0 24px rgba(37,99,235,0.4);
+  --ig-glow-red:   0 0 24px rgba(239,67,67,0.4);
+
+  /* Layout */
+  --ig-container:  1280px;
+  --ig-header-h:   64px;
+  --ig-announce-h: 36px;
+
+  /* Transitions */
+  --ig-ease:       150ms ease;
+  --ig-ease-md:    250ms ease;
+  --ig-ease-lg:    400ms ease;
+}
