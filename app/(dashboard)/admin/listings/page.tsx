@@ -15,10 +15,9 @@ import {
 import { ConvexImage } from "@/components/shared/ConvexImage";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 
-type StatusFilter = "all" | "pending_review" | "active" | "paused" | "rejected" | "removed";
+type StatusFilter = "pending_review" | "active" | "paused" | "rejected" | "removed";
 
 const STATUS_OPTIONS: { value: StatusFilter; label: string; color: string; activeColor: string }[] = [
-  { value: "all", label: "All Listings", color: "text-text-muted border-border bg-card", activeColor: "text-primary border-primary/50 bg-primary/10" },
   { value: "pending_review", label: "Pending Review", color: "text-warning border-warning/30 bg-warning/5", activeColor: "text-warning border-warning bg-warning/15" },
   { value: "active", label: "Live Active", color: "text-success border-success/30 bg-success/5", activeColor: "text-success border-success bg-success/15" },
   { value: "paused", label: "Unlisted / Paused", color: "text-amber-400 border-amber-500/30 bg-amber-500/5", activeColor: "text-amber-400 border-amber-500 bg-amber-500/15" },
@@ -67,45 +66,48 @@ export default function AdminListingsPage() {
   const [bulkUnlistModalOpen, setBulkUnlistModalOpen] = useState(false);
   const [bulkUnlistReason, setBulkUnlistReason] = useState(UNLIST_REASONS[0]);
 
-  const [badgeModal, setBadgeModal] = useState<{ id: Id<"listings">; title: string; currentBadge?: string } | null>(null);
-  const [selectedBadge, setSelectedBadge] = useState<typeof BADGE_OPTIONS[number] | "NONE">("NONE");
+  const [badgeModal, setBadgeModal] = useState<{ id: Id<"listings">; title: string } | null>(null);
+  const [selectedBadge, setSelectedBadge] = useState<typeof BADGE_OPTIONS[number] | "">("");
 
   const [detailsModal, setDetailsModal] = useState<any | null>(null);
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
-  // Queries
-  const stats = useQuery(api.admin.getListingAdminStats, { excludeSeeded: !showSeeded });
+  // Queries using existing cloud-deployed Convex functions
+  const adminMetrics = useQuery(api.admin.getAdminMetrics);
   const games = useQuery(api.listings.getGames);
   const listings = useQuery(api.admin.listPendingListings, {
     status: statusFilter,
-    gameId: gameFilter !== "all" ? (gameFilter as Id<"games">) : undefined,
     excludeSeeded: !showSeeded
   });
 
-  // Mutations
+  // Cloud-deployed Mutations
   const approveListing = useMutation(api.admin.approveListing);
   const rejectListing = useMutation(api.admin.rejectListing);
-  const unlistListing = useMutation(api.admin.unlistListing);
-  const relistListing = useMutation(api.admin.relistListing);
-  const updateBadge = useMutation(api.admin.updateListingBadge);
+  const updateListingStatus = useMutation(api.admin.updateListingStatus);
   const bulkApprove = useMutation(api.admin.bulkApproveListings);
-  const bulkUnlist = useMutation(api.admin.bulkUnlistListings);
-  const bulkRelist = useMutation(api.admin.bulkRelistListings);
 
   const showFeedback = (type: "success" | "error", msg: string) => {
     setFeedback({ type, msg });
     setTimeout(() => setFeedback(null), 5000);
   };
 
-  const filtered = listings?.filter(l =>
-    !searchTerm ||
-    l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    l.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    l.sellerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    l.gameName.toLowerCase().includes(searchTerm.toLowerCase())
-  ) ?? [];
+  const filtered = listings?.filter(l => {
+    const matchesSearch = !searchTerm ||
+      l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.sellerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.gameName.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesGame = gameFilter === "all" || l.gameId === gameFilter;
+
+    return matchesSearch && matchesGame;
+  }) ?? [];
+
+  // Calculate stats for current view
+  const currentViewCount = filtered.length;
+  const currentViewTotalValue = filtered.reduce((sum, l) => sum + (l.price || 0), 0);
 
   // Actions
   const handleApprove = async (id: Id<"listings">, badge?: typeof BADGE_OPTIONS[number]) => {
@@ -143,10 +145,10 @@ export default function AdminListingsPage() {
     const finalReason = customUnlistReason.trim() || unlistReason;
     setActionLoading(unlistModal.id);
     try {
-      await unlistListing({
+      await updateListingStatus({
         listingId: unlistModal.id,
-        reason: finalReason,
         status: unlistTargetStatus,
+        reason: finalReason,
       });
       showFeedback("success", `Listing unlisted (${unlistTargetStatus}). Seller has been notified.`);
       setUnlistModal(null);
@@ -162,28 +164,14 @@ export default function AdminListingsPage() {
   const handleRelist = async (id: Id<"listings">) => {
     setActionLoading(id);
     try {
-      await relistListing({ listingId: id });
+      await updateListingStatus({
+        listingId: id,
+        status: "active",
+      });
       showFeedback("success", "Listing relisted! It is now live on the marketplace.");
       setSelected(prev => { const s = new Set(prev); s.delete(id); return s; });
     } catch (e: any) {
       showFeedback("error", e.message || "Failed to relist listing.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleUpdateBadge = async () => {
-    if (!badgeModal) return;
-    setActionLoading(badgeModal.id);
-    try {
-      await updateBadge({
-        listingId: badgeModal.id,
-        badge: selectedBadge === "NONE" ? undefined : selectedBadge,
-      });
-      showFeedback("success", selectedBadge === "NONE" ? "Badge removed from listing." : `Badge updated to "${selectedBadge}".`);
-      setBadgeModal(null);
-    } catch (e: any) {
-      showFeedback("error", e.message || "Failed to update badge.");
     } finally {
       setActionLoading(null);
     }
@@ -207,11 +195,16 @@ export default function AdminListingsPage() {
     if (selected.size === 0) return;
     setActionLoading("bulk");
     try {
-      const result = await bulkUnlist({
-        listingIds: Array.from(selected) as Id<"listings">[],
-        reason: bulkUnlistReason,
-      });
-      showFeedback("success", `${result.count} listings have been unlisted.`);
+      let count = 0;
+      for (const id of Array.from(selected) as Id<"listings">[]) {
+        await updateListingStatus({
+          listingId: id,
+          status: "paused",
+          reason: bulkUnlistReason,
+        });
+        count++;
+      }
+      showFeedback("success", `${count} listings unlisted successfully.`);
       setSelected(new Set());
       setBulkUnlistModalOpen(false);
     } catch (e: any) {
@@ -225,10 +218,15 @@ export default function AdminListingsPage() {
     if (selected.size === 0) return;
     setActionLoading("bulk");
     try {
-      const result = await bulkRelist({
-        listingIds: Array.from(selected) as Id<"listings">[],
-      });
-      showFeedback("success", `${result.count} listings relisted and active!`);
+      let count = 0;
+      for (const id of Array.from(selected) as Id<"listings">[]) {
+        await updateListingStatus({
+          listingId: id,
+          status: "active",
+        });
+        count++;
+      }
+      showFeedback("success", `${count} listings relisted and live!`);
       setSelected(new Set());
     } catch (e: any) {
       showFeedback("error", e.message || "Bulk relist failed.");
@@ -262,11 +260,11 @@ export default function AdminListingsPage() {
             Listing Moderation & Governance
             <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5">
               <ShieldCheck size={13} />
-              Full Catalog Controls
+              Admin Controls
             </span>
           </h1>
           <p className="text-text-muted text-xs sm:text-sm mt-1">
-            Review pending listings, unlist or pause active items, assign promotional badges, and govern seller inventory.
+            Review pending listings, unlist or pause active items, and govern marketplace seller inventory.
           </p>
         </div>
 
@@ -277,7 +275,7 @@ export default function AdminListingsPage() {
             target="_blank"
             className="px-3.5 py-2 rounded-xl bg-card hover:bg-elevated text-text border border-border text-xs font-bold transition-colors flex items-center gap-1.5"
           >
-            Create Test Listing
+            Create Listing
             <ArrowUpRight size={13} />
           </Link>
           <Link
@@ -292,20 +290,20 @@ export default function AdminListingsPage() {
       </div>
 
       {/* ── Stats Summary Bar ── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        {/* Total */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* Live Active */}
         <button
-          onClick={() => { setStatusFilter("all"); setSelected(new Set()); }}
-          className={`p-4 rounded-2xl border text-left transition-all ${statusFilter === "all" ? "border-primary bg-primary/10 shadow-sm" : "bg-card border-border hover:border-primary/40"}`}
+          onClick={() => { setStatusFilter("active"); setSelected(new Set()); }}
+          className={`p-4 rounded-2xl border text-left transition-all ${statusFilter === "active" ? "border-success bg-success/15 shadow-sm" : "bg-card border-border hover:border-success/50"}`}
         >
-          <div className="flex items-center justify-between text-text-muted text-xs font-bold uppercase tracking-wider mb-2">
-            <span>Total Catalog</span>
-            <Package size={14} className="text-primary" />
+          <div className="flex items-center justify-between text-success text-xs font-bold uppercase tracking-wider mb-2">
+            <span>Live Marketplace</span>
+            <CheckCircle size={14} />
           </div>
-          <div className="font-heading font-black text-2xl text-text">
-            {stats ? stats.total : <Loader2 size={18} className="animate-spin inline text-primary/40" />}
+          <div className="font-heading font-black text-2xl text-success">
+            {adminMetrics ? adminMetrics.activeListings : <Loader2 size={18} className="animate-spin inline text-success/40" />}
           </div>
-          <p className="text-[11px] text-text-muted mt-1">All database listings</p>
+          <p className="text-[11px] text-text-muted mt-1">Active verified offers</p>
         </button>
 
         {/* Pending Review */}
@@ -313,32 +311,14 @@ export default function AdminListingsPage() {
           onClick={() => { setStatusFilter("pending_review"); setSelected(new Set()); }}
           className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden ${statusFilter === "pending_review" ? "border-warning bg-warning/15 shadow-sm" : "bg-card border-border hover:border-warning/50"}`}
         >
-          {stats && stats.pending > 0 && (
-            <span className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-warning animate-pulse" />
-          )}
           <div className="flex items-center justify-between text-warning text-xs font-bold uppercase tracking-wider mb-2">
             <span>Pending Review</span>
             <Clock size={14} />
           </div>
           <div className="font-heading font-black text-2xl text-warning">
-            {stats ? stats.pending : <Loader2 size={18} className="animate-spin inline text-warning/40" />}
+            {statusFilter === "pending_review" && listings !== undefined ? listings.length : "Queue"}
           </div>
-          <p className="text-[11px] text-text-muted mt-1">Awaiting approval</p>
-        </button>
-
-        {/* Live Active */}
-        <button
-          onClick={() => { setStatusFilter("active"); setSelected(new Set()); }}
-          className={`p-4 rounded-2xl border text-left transition-all ${statusFilter === "active" ? "border-success bg-success/15 shadow-sm" : "bg-card border-border hover:border-success/50"}`}
-        >
-          <div className="flex items-center justify-between text-success text-xs font-bold uppercase tracking-wider mb-2">
-            <span>Live Active</span>
-            <CheckCircle size={14} />
-          </div>
-          <div className="font-heading font-black text-2xl text-success">
-            {stats ? stats.active : <Loader2 size={18} className="animate-spin inline text-success/40" />}
-          </div>
-          <p className="text-[11px] text-text-muted mt-1">Visible on store</p>
+          <p className="text-[11px] text-text-muted mt-1">Awaiting staff approval</p>
         </button>
 
         {/* Unlisted / Paused */}
@@ -351,21 +331,21 @@ export default function AdminListingsPage() {
             <PauseCircle size={14} />
           </div>
           <div className="font-heading font-black text-2xl text-amber-400">
-            {stats ? stats.paused : <Loader2 size={18} className="animate-spin inline text-amber-400/40" />}
+            {statusFilter === "paused" && listings !== undefined ? listings.length : "Unlisted"}
           </div>
-          <p className="text-[11px] text-text-muted mt-1">Hidden from public</p>
+          <p className="text-[11px] text-text-muted mt-1">Hidden from public store</p>
         </button>
 
-        {/* Inventory Value */}
+        {/* Total in Current Tab */}
         <div className="p-4 rounded-2xl border border-border bg-card">
           <div className="flex items-center justify-between text-text-muted text-xs font-bold uppercase tracking-wider mb-2">
-            <span>Catalog Value</span>
-            <DollarSign size={14} className="text-success" />
+            <span>Tab Inventory Value</span>
+            <DollarSign size={14} className="text-primary" />
           </div>
           <div className="font-heading font-black text-2xl text-text">
-            {stats ? format(stats.totalValue) : <Loader2 size={18} className="animate-spin inline text-primary/40" />}
+            {format(currentViewTotalValue)}
           </div>
-          <p className="text-[11px] text-text-muted mt-1">Total active inventory</p>
+          <p className="text-[11px] text-text-muted mt-1">{currentViewCount} items in view</p>
         </div>
       </div>
 
@@ -395,14 +375,9 @@ export default function AdminListingsPage() {
                 className={`text-xs font-bold px-3.5 py-2 rounded-xl border transition-all whitespace-nowrap flex items-center gap-1.5 ${isActive ? opt.activeColor : opt.color + " hover:border-primary/40"}`}
               >
                 <span>{opt.label}</span>
-                {opt.value === "pending_review" && stats && stats.pending > 0 && (
-                  <span className="bg-warning text-black text-[10px] font-black px-1.5 py-0.5 rounded-full">
-                    {stats.pending}
-                  </span>
-                )}
-                {opt.value === "active" && stats && (
+                {statusFilter === opt.value && listings && (
                   <span className="text-[10px] text-text-muted">
-                    ({stats.active})
+                    ({listings.length})
                   </span>
                 )}
               </button>
@@ -474,7 +449,7 @@ export default function AdminListingsPage() {
                 </button>
               )}
 
-              {(statusFilter === "active" || statusFilter === "all") && (
+              {statusFilter === "active" && (
                 <button
                   onClick={() => setBulkUnlistModalOpen(true)}
                   disabled={actionLoading === "bulk"}
@@ -520,8 +495,8 @@ export default function AdminListingsPage() {
             <p className="font-heading font-bold text-base text-text">No listings found</p>
             <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto">
               {statusFilter === "pending_review"
-                ? "All caught up! There are currently no new listings awaiting admin approval."
-                : "No listings match your current filters and search criteria."}
+                ? "All caught up! There are currently no new listings awaiting review."
+                : "No listings found for this status tab."}
             </p>
           </div>
         ) : (
@@ -646,8 +621,7 @@ export default function AdminListingsPage() {
 
                       {/* Status & Badge */}
                       <td className="p-4 whitespace-nowrap">
-                        <div className="flex flex-col gap-1.5 items-start">
-                          {/* Status Pill */}
+                        <div className="flex flex-col gap-1 items-start">
                           <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                             isActive ? "text-success border-success/30 bg-success/10" :
                             isPending ? "text-warning border-warning/30 bg-warning/10" :
@@ -658,22 +632,11 @@ export default function AdminListingsPage() {
                             {l.status.replace("_", " ")}
                           </span>
 
-                          {/* Promotional Badge Button */}
-                          <button
-                            onClick={() => {
-                              setBadgeModal({ id: l._id, title: l.title, currentBadge: l.badge });
-                              setSelectedBadge(l.badge ? (l.badge as any) : "NONE");
-                            }}
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-colors flex items-center gap-1 ${
-                              l.badge
-                                ? "bg-primary/10 border-primary/40 text-primary hover:bg-primary/20"
-                                : "bg-elevated border-border text-text-muted hover:border-primary/40"
-                            }`}
-                            title="Click to assign promotional badge"
-                          >
-                            <Tag size={10} />
-                            <span>{l.badge ? `Badge: ${l.badge}` : "+ Add Badge"}</span>
-                          </button>
+                          {l.badge && (
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                              {l.badge}
+                            </span>
+                          )}
                         </div>
                       </td>
 
@@ -702,8 +665,8 @@ export default function AdminListingsPage() {
                             <>
                               <button
                                 onClick={() => {
-                                  setBadgeModal({ id: l._id, title: l.title, currentBadge: l.badge });
-                                  setSelectedBadge("NONE");
+                                  setBadgeModal({ id: l._id, title: l.title });
+                                  setSelectedBadge("");
                                 }}
                                 disabled={actionLoading === l._id}
                                 className="flex items-center gap-1 text-xs font-bold text-success border border-success/30 hover:bg-success/15 px-2.5 py-1.5 rounded-lg transition-colors"
@@ -962,22 +925,20 @@ export default function AdminListingsPage() {
             </div>
 
             <div className="text-center">
-              <h3 className="font-heading font-black text-lg text-text">
-                {badgeModal.currentBadge !== undefined ? "Promotional Badge" : "Approve Listing"}
-              </h3>
+              <h3 className="font-heading font-black text-lg text-text">Approve Listing</h3>
               <p className="text-xs text-text-muted line-clamp-2 mt-1">"{badgeModal.title}"</p>
             </div>
 
             <div>
               <label className="text-xs font-bold text-text-muted block mb-2 text-center">
-                Choose Promotional Tag
+                Optional Promotional Badge
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {BADGE_OPTIONS.map(b => (
                   <button
                     key={b}
                     type="button"
-                    onClick={() => setSelectedBadge(b)}
+                    onClick={() => setSelectedBadge(selectedBadge === b ? "" : b)}
                     className={`text-xs font-black py-2.5 px-3 rounded-xl border transition-all flex items-center justify-center gap-1.5 ${
                       selectedBadge === b
                         ? "border-primary bg-primary/15 text-primary shadow-sm"
@@ -989,18 +950,6 @@ export default function AdminListingsPage() {
                   </button>
                 ))}
               </div>
-
-              <button
-                type="button"
-                onClick={() => setSelectedBadge("NONE")}
-                className={`w-full text-xs font-semibold py-2 mt-2 rounded-xl border transition-all ${
-                  selectedBadge === "NONE"
-                    ? "border-border bg-border text-text font-bold"
-                    : "border-border/60 bg-elevated/40 text-text-muted hover:text-text"
-                }`}
-              >
-                No Promotional Badge
-              </button>
             </div>
 
             <div className="flex gap-2 pt-2">
@@ -1011,18 +960,12 @@ export default function AdminListingsPage() {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  if (statusFilter === "pending_review") {
-                    handleApprove(badgeModal.id, selectedBadge === "NONE" ? undefined : selectedBadge);
-                  } else {
-                    handleUpdateBadge();
-                  }
-                }}
+                onClick={() => handleApprove(badgeModal.id, selectedBadge ? (selectedBadge as any) : undefined)}
                 disabled={!!actionLoading}
                 className="flex-1 bg-primary hover:bg-primary-hover text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-primary/20"
               >
                 {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                {statusFilter === "pending_review" ? "Approve & Go Live" : "Save Badge"}
+                Approve & Go Live
               </button>
             </div>
           </div>
