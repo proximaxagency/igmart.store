@@ -46,7 +46,11 @@ export default function SellerDashboardLayout({ children }: { children: React.Re
 
   const isActive = (href: string) => pathname === href;
 
-  if (pathname.startsWith("/messages")) {
+  if (
+    pathname.startsWith("/messages") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/account")
+  ) {
     return <>{children}</>;
   }
 

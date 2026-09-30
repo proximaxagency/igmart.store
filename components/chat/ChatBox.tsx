@@ -188,7 +188,7 @@ export function ChatBox({ conversationId, onBack, compact = false }: ChatBoxProp
               )}
             </div>
             <p className="text-[11px] text-text-muted truncate">
-              {convDetails.participantsData.map((p) => p.displayName).join(" â€¢ ")}
+              {convDetails.participantsData.map((p) => p.displayName).join(" • ")}
             </p>
           </div>
         </div>
@@ -217,7 +217,7 @@ export function ChatBox({ conversationId, onBack, compact = false }: ChatBoxProp
         <div className="bg-primary/5 border-b border-border/80 px-4 py-2 flex items-center justify-between text-xs gap-3">
           <div className="flex items-center gap-2 truncate">
             <span className="font-bold text-text truncate">{orderDetails.listingTitle}</span>
-            <span className="text-text-muted">â€¢</span>
+            <span className="text-text-muted">•</span>
             <span className="font-extrabold text-primary">${orderDetails.totalAmount.toFixed(2)}</span>
           </div>
           <span className="bg-surface border border-border px-2 py-0.5 rounded-md font-bold text-[10px] text-text-secondary uppercase">
