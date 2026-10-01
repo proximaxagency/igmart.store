@@ -52,6 +52,12 @@ export default function AdminGamesManagementPage() {
           <p className="text-text-muted text-xs sm:text-sm mt-1">
             Toggle which games appear for buyers and sellers on the main website. All existing listings and account data remain 100% safe and intact.
           </p>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-success/15 text-success border border-success/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+              Cross-Device Cloud Sync Active (Mobile & Desktop)
+            </span>
+          </div>
         </div>
 
         {/* Action presets */}

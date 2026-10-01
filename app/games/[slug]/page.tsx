@@ -12,6 +12,7 @@ import { useParams } from "next/navigation";
 
 import { GAMES, POKEMON_LISTINGS } from "@/lib/data/igmartData";
 import { detectGameFromListing } from "@/lib/gameDetection";
+import { useGameVisibility } from "@/lib/gamesVisibility";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -38,6 +39,7 @@ export default function GameDetailPage() {
   const params = useParams();
   const rawSlug = (params?.slug as string) ?? "";
   const normalizedSlug = getNormalizedSlug(rawSlug);
+  const { isGameVisible, isLoaded } = useGameVisibility();
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("recommended");
   const [minPrice, setMinPrice] = useState("");
@@ -148,6 +150,29 @@ export default function GameDetailPage() {
         <div className="flex flex-col items-center gap-4">
           <Loader2 size={36} className="animate-spin text-primary" />
           <p className="text-text-muted font-semibold text-sm">Loading game…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Temporarily paused/hidden game by admin
+  if (isLoaded && !isGameVisible(normalizedSlug)) {
+    return (
+      <div className="bg-background min-h-screen flex flex-col items-center justify-center gap-6 text-center px-4">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+          <SlidersHorizontal size={30} />
+        </div>
+        <h1 className="font-heading font-black text-2xl text-text">Game Catalog Temporarily Offline</h1>
+        <p className="text-text-muted max-w-md text-sm">
+          Trading for this game is temporarily paused by marketplace administration. All existing seller accounts and orders remain completely safe and preserved.
+        </p>
+        <div className="flex gap-3">
+          <Link href="/games" className="px-5 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors">
+            Browse Active Games
+          </Link>
+          <Link href="/marketplace" className="px-5 py-2.5 rounded-xl border border-border text-text font-semibold text-sm hover:border-primary/50 transition-colors">
+            All Marketplace
+          </Link>
         </div>
       </div>
     );

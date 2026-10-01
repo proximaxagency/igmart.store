@@ -234,6 +234,7 @@ function SkeletonCard() {
 
 /* ─────────────────────────── Main Page ─────────────────────────── */
 export default function MarketplacePage() {
+  const { isGameVisible } = useGameVisibility();
   const [sort, setSort] = useState("recommended");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -273,14 +274,15 @@ export default function MarketplacePage() {
   const listings = useMemo(() => {
     let result = rawListings ? [...rawListings] : [];
 
-    // Filter out all disallowed (e.g. PUBG/BGMI) listings completely
+    // Filter out all disallowed listings AND listings for games hidden by admin
     result = result.filter(l => {
       const detected = detectGameFromListing(l);
-      return !detected.isDisallowed;
+      if (detected.isDisallowed) return false;
+      return isGameVisible(detected.slug);
     });
 
-    // Include pokemon listings in overall marketplace if not present in Convex
-    if (POKEMON_LISTINGS && POKEMON_LISTINGS.length > 0) {
+    // Include pokemon listings in overall marketplace if visible and not present in Convex
+    if (isGameVisible("pokemon-go") && POKEMON_LISTINGS && POKEMON_LISTINGS.length > 0) {
       const hasPokemon = result.some(l => {
         const detected = detectGameFromListing(l);
         return detected.slug === "pokemon-go";
@@ -351,7 +353,7 @@ export default function MarketplacePage() {
     }
 
     return result;
-  }, [rawListings, activeGame, search, deliveries, minPrice, maxPrice, sort]);
+  }, [rawListings, activeGame, search, deliveries, minPrice, maxPrice, sort, isGameVisible]);
 
   // Reset page when filters change
   useMemo(() => { setPage(1); }, [search, deliveries, minPrice, maxPrice, sort, activeGame]);

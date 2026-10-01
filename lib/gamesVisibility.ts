@@ -48,7 +48,7 @@ export function getActiveGameSlugs(): string[] {
   return DEFAULT_ACTIVE_SLUGS;
 }
 
-// Save active slugs to both localStorage and cookie, then broadcast
+// Save active slugs to both localStorage and cookie, then broadcast and sync to server
 export function saveActiveGameSlugs(slugs: string[]): void {
   if (typeof window === "undefined") return;
 
@@ -57,6 +57,15 @@ export function saveActiveGameSlugs(slugs: string[]): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
     document.cookie = `${STORAGE_KEY}=${encodeURIComponent(JSON.stringify(clean))}; path=/; max-age=31536000; SameSite=Lax`;
     window.dispatchEvent(new CustomEvent(VISIBILITY_EVENT, { detail: clean }));
+
+    // Sync to centralized server API so mobile devices and other browsers update immediately
+    fetch("/api/games-visibility", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ activeSlugs: clean }),
+    }).catch((err) => {
+      console.warn("[GameVisibility] Server sync failed:", err);
+    });
   } catch (e) {
     console.error("[GameVisibility] Failed to save game settings:", e);
   }
@@ -64,13 +73,43 @@ export function saveActiveGameSlugs(slugs: string[]): void {
 
 // React hook for consuming and updating game visibility state
 export function useGameVisibility() {
-  const [activeSlugs, setActiveSlugs] = useState<string[]>(DEFAULT_ACTIVE_SLUGS);
+  const [activeSlugs, setActiveSlugs] = useState<string[]>(getActiveGameSlugs());
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     setActiveSlugs(getActiveGameSlugs());
     setIsLoaded(true);
 
+    // Sync from server API so phone immediately picks up changes made on laptop/admin
+    const syncFromServer = async () => {
+      try {
+        const res = await fetch("/api/games-visibility", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.activeSlugs) && data.activeSlugs.length > 0) {
+            setActiveSlugs((current) => {
+              const currentSorted = [...current].sort().join(",");
+              const newSorted = [...data.activeSlugs].sort().join(",");
+              if (currentSorted !== newSorted) {
+                try {
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify(data.activeSlugs));
+                  document.cookie = `${STORAGE_KEY}=${encodeURIComponent(JSON.stringify(data.activeSlugs))}; path=/; max-age=31536000; SameSite=Lax`;
+                } catch (_) {}
+                return data.activeSlugs;
+              }
+              return current;
+            });
+          }
+        }
+      } catch (err) {
+        // Silently preserve local state if network is unavailable
+      }
+    };
+
+    // Immediate initial sync
+    syncFromServer();
+
+    // Listen to local tab changes
     const handleUpdate = (e: any) => {
       if (e.detail && Array.isArray(e.detail)) {
         setActiveSlugs(e.detail);
@@ -81,9 +120,25 @@ export function useGameVisibility() {
 
     window.addEventListener(VISIBILITY_EVENT, handleUpdate);
     window.addEventListener("storage", handleUpdate);
+
+    // Re-sync when user focuses tab or switches back to browser on mobile
+    window.addEventListener("focus", syncFromServer);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncFromServer();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Periodic heartbeat sync every 10 seconds to keep mobile tabs completely updated
+    const interval = setInterval(syncFromServer, 10000);
+
     return () => {
       window.removeEventListener(VISIBILITY_EVENT, handleUpdate);
       window.removeEventListener("storage", handleUpdate);
+      window.removeEventListener("focus", syncFromServer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      clearInterval(interval);
     };
   }, []);
 

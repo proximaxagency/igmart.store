@@ -6,10 +6,12 @@ echo ========================================================
 echo.
 set "PATH=C:\Users\harshdeep\AppData\Local\Programs\Git\cmd;C:\Users\harshdeep\AppData\Local\Programs\Git\mingw64\bin;%PATH%"
 set "GCM_CREDENTIAL_STORE=wincredman"
-cd /d "C:\Users\harshdeep\Desktop\igmart.store-main"
+cd /d "%~dp0"
 git config --global credential.helper manager
 git config --global credential.credentialStore wincredman
-git push -u origin main --force
+git add -A
+git commit -m "fix: listing ReferenceError crash and sync game visibility across devices via server API"
+git push -u origin main
 echo.
 if %ERRORLEVEL% EQU 0 (
     echo ========================================================

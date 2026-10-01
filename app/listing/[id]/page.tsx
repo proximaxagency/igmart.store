@@ -147,6 +147,14 @@ export default function ListingPage() {
     isConvexId ? { limit: 100 } : "skip"
   );
 
+  // Resolve game metadata safely
+  const detected = useMemo(() => {
+    if (!listing) return { name: "Gaming Account", slug: "other" };
+    return detectGameFromListing(listing);
+  }, [listing]);
+  const gameName = detected.name;
+  const gameSlug = detected.slug;
+
   // Filter out current listing, shuffle, take 8
   const recommendations = useMemo(() => {
     if (!isConvexId) {
@@ -216,10 +224,6 @@ export default function ListingPage() {
       </div>
     );
   }
-
-  const detected = detectGameFromListing(listing);
-  const gameName = detected.name;
-  const gameSlug = detected.slug;
 
   return (
     <div className="bg-background min-h-screen pb-28 lg:pb-16">
