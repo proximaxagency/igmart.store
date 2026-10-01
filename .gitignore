@@ -47,3 +47,4 @@ next-env.d.ts
 scratch/
 *.zip
 .convex/local/
+.game-visibility.json
