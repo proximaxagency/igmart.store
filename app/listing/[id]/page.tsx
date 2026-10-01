@@ -13,6 +13,7 @@ import { useConvexAuth } from "@convex-dev/auth/react";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 
 import { ConvexImage, useResolvedImageUrl } from "@/components/shared/ConvexImage";
+import { detectGameFromListing } from "@/lib/gameDetection";
 
 function getBadgeVariant(badge: string): "hot" | "sale" | "popular" | "new" {
   if (badge === "HOT") return "hot";
@@ -28,21 +29,19 @@ function RecoCard({ listing }: { listing: Record<string, unknown> }) {
     images?: string[]; deliveryTime?: string; badge?: string; gameName?: string;
   };
   const { format } = useCurrency();
+  const detected = detectGameFromListing(l);
+
   return (
     <Link
       href={`/listing/${l._id}`}
       className="group flex-shrink-0 w-[220px] sm:w-[240px] bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-200"
     >
       <div className="relative aspect-[4/3] bg-elevated overflow-hidden">
-        {l.images?.[0] ? (
-          <ConvexImage
-            src={l.images[0]}
-            alt={l.title}
-            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl">🎮</div>
-        )}
+        <ConvexImage
+          src={l.images?.[0] || detected.poster}
+          alt={l.title}
+          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+        />
         {l.badge && (
           <div className="absolute top-2 left-2">
             <Badge variant={getBadgeVariant(l.badge)}>{l.badge}</Badge>
@@ -142,10 +141,10 @@ export default function ListingPage() {
   const activeRawImage = listing?.images?.[activeImg];
   const activeImageSrc = useResolvedImageUrl(activeRawImage, "/clash-of-clans-poster.jpg");
 
-  // Fetch all active listings for same game (for recommendations)
+  // Fetch active listings for same game (for recommendations)
   const allActiveListings = useQuery(
     api.listings.listActiveListings,
-    isConvexId && listing?.gameId ? { gameId: listing.gameId as Id<"games">, limit: 50 } : "skip"
+    isConvexId ? { limit: 100 } : "skip"
   );
 
   // Filter out current listing, shuffle, take 8
@@ -156,9 +155,9 @@ export default function ListingPage() {
     if (!allActiveListings || !id) return [];
     const others = allActiveListings.filter((l) => {
       if (l._id === id) return false;
-      const gn = (l.gameName || "").toLowerCase();
-      const t = (l.title || "").toLowerCase();
-      return !gn.includes("pubg") && !gn.includes("bgmi") && !t.includes("pubg") && !t.includes("bgmi");
+      const detectedOther = detectGameFromListing(l);
+      if (detectedOther.isDisallowed) return false;
+      return detectedOther.slug === gameSlug;
     });
     // Fisher-Yates shuffle for variety
     const arr = [...others];
@@ -167,7 +166,7 @@ export default function ListingPage() {
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr.slice(0, 8);
-  }, [isConvexId, allActiveListings, id]);
+  }, [isConvexId, allActiveListings, id, gameSlug]);
 
   useEffect(() => {
     if (isConvexId && listing && id) {
@@ -218,16 +217,9 @@ export default function ListingPage() {
     );
   }
 
-  const gameName = listing.gameName ?? "Game Asset";
-  const gameSlug = (() => {
-    const normalized = gameName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    if (normalized.includes("pokemon") || normalized.includes("pokimon") || normalized.includes("pogo")) return "pokemon-go";
-    if (normalized.includes("free-fire")) return "free-fire";
-    if (normalized.includes("clash-of-clans")) return "clash-of-clans";
-    if (normalized.includes("clash-royale")) return "clash-royale";
-    if (normalized.includes("roblox")) return "roblox";
-    return normalized;
-  })();
+  const detected = detectGameFromListing(listing);
+  const gameName = detected.name;
+  const gameSlug = detected.slug;
 
   return (
     <div className="bg-background min-h-screen pb-28 lg:pb-16">

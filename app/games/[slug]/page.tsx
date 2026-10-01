@@ -11,6 +11,7 @@ import { Loader2, SlidersHorizontal, Search, ChevronLeft, ChevronRight } from "l
 import { useParams } from "next/navigation";
 
 import { GAMES, POKEMON_LISTINGS } from "@/lib/data/igmartData";
+import { detectGameFromListing } from "@/lib/gameDetection";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -99,13 +100,16 @@ export default function GameDetailPage() {
     let filtered: any[] = [];
     if (allListings && allListings.length > 0) {
       filtered = allListings.filter((l) => {
-        const gn = (l.gameName || "").toLowerCase();
-        const t = (l.title || "").toLowerCase();
-        if (gn.includes("pubg") || gn.includes("bgmi") || t.includes("pubg") || t.includes("bgmi")) return false;
-        return l.gameId === game._id || gn.includes(game.name.toLowerCase());
+        const detected = detectGameFromListing(l);
+        if (detected.isDisallowed) return false;
+        return (
+          detected.slug === normalizedSlug ||
+          detected.name.toLowerCase() === game.name.toLowerCase() ||
+          (l.gameName && l.gameName.toLowerCase().includes(game.name.toLowerCase()))
+        );
       });
     }
-    if (filtered.length === 0 && game.slug === "pokemon-go") {
+    if (filtered.length === 0 && (normalizedSlug === "pokemon-go" || game.slug === "pokemon-go")) {
       filtered = POKEMON_LISTINGS;
     }
     if (search.trim()) {
@@ -171,7 +175,7 @@ export default function GameDetailPage() {
   }
 
   const posterSrc = game.imageUrl ?? "/clash-of-clans-poster.jpg";
-  const listingCount = game.metrics?.activeListings ?? gameListings.length;
+  const listingCount = gameListings.length > 0 ? gameListings.length : (game.metrics?.activeListings ?? 0);
   const sellerCount = game.metrics?.totalSellers ?? 0;
   const rating = game.metrics?.rating ?? 4.9;
 
@@ -199,9 +203,18 @@ export default function GameDetailPage() {
             <span className="text-border-strong">/</span>
             <span className="text-text text-xs sm:text-sm font-bold">{game.name}</span>
           </div>
-          <h1 className="font-heading font-black text-3xl sm:text-4xl lg:text-5xl text-text mb-6">
-            {game.name} Marketplace
-          </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h1 className="font-heading font-black text-3xl sm:text-4xl lg:text-5xl text-text">
+              {game.name} Marketplace
+            </h1>
+            <Link
+              href={`/marketplace?game=${game.slug}`}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-primary/40 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all w-fit shadow-sm"
+            >
+              <span>View in All Marketplace</span>
+              <span>&rarr;</span>
+            </Link>
+          </div>
 
           <div className="flex flex-wrap gap-3 sm:gap-4">
             {[
@@ -321,7 +334,7 @@ export default function GameDetailPage() {
                       key={listing._id}
                       id={listing._id}
                       title={listing.title}
-                      game={listing.gameName ?? game.name}
+                      game={detectGameFromListing(listing).name || game.name}
                       price={listing.price}
                       originalPrice={listing.originalPrice}
                       seller={(listing as any).sellerName ?? "Verified Seller"}

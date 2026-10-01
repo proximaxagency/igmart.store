@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useQuery } from "convex/react";
@@ -12,6 +12,7 @@ import { GAMES, CATEGORIES, POKEMON_LISTINGS } from "@/lib/data/igmartData";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { ConvexImage } from "@/components/shared/ConvexImage";
 import { useGameVisibility } from "@/lib/gamesVisibility";
+import { detectGameFromListing } from "@/lib/gameDetection";
 
 const SORT_OPTIONS = [
   { label: "Recommended", value: "recommended" },
@@ -174,10 +175,11 @@ function GameRail({
 /* ─────────────────────────── Listing Card ─────────────────────────── */
 function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
   const l = listing as {
-    _id: string; title: string; gameName?: string; price: number;
-    images?: string[]; deliveryTime?: string; _creationTime: number;
+    _id: string; title: string; gameName?: string; gameId?: string; gameSlug?: string; price: number;
+    images?: string[]; deliveryTime?: string; _creationTime: number; description?: string;
   };
   const { format } = useCurrency();
+  const detected = detectGameFromListing(l);
 
   return (
     <Link
@@ -186,19 +188,17 @@ function ListingGridCard({ listing }: { listing: Record<string, unknown> }) {
     >
       <div className="aspect-[4/3] bg-elevated relative overflow-hidden">
         <ConvexImage
-          src={l.images?.[0]}
+          src={l.images?.[0] || detected.poster}
           alt={l.title}
           loading="lazy"
           className="w-full h-full object-cover object-top will-change-transform group-hover:scale-105 transition-transform duration-300"
         />
         {/* Game name tag */}
-        {l.gameName && (
-          <div className="absolute top-2.5 left-2.5">
-            <span className="text-[10px] font-black uppercase tracking-wider bg-black/60 backdrop-blur-sm text-primary px-2 py-1 rounded-md border border-primary/30">
-              {l.gameName}
-            </span>
-          </div>
-        )}
+        <div className="absolute top-2.5 left-2.5">
+          <span className="text-[10px] font-black uppercase tracking-wider bg-black/60 backdrop-blur-sm text-primary px-2 py-1 rounded-md border border-primary/30">
+            {detected.name}
+          </span>
+        </div>
       </div>
       <div className="p-4">
         <p className="text-sm font-bold text-text line-clamp-2 leading-snug group-hover:text-primary-hover transition-colors mb-3">{l.title}</p>
@@ -243,56 +243,72 @@ export default function MarketplacePage() {
   const [page, setPage] = useState(1);
   const [activeGame, setActiveGame] = useState<string | null>(null);
 
+  // Read ?game= param from URL on initial client mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const g = searchParams.get("game");
+      if (g) {
+        setActiveGame(g);
+      }
+    }
+  }, []);
+
   const rawListings = useQuery(api.listings.listActiveListings, { limit: 500 });
 
   const handleGameSelect = useCallback((slug: string | null) => {
     setActiveGame(slug);
     setPage(1);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (slug) {
+        url.searchParams.set("game", slug);
+      } else {
+        url.searchParams.delete("game");
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
   }, []);
 
   const listings = useMemo(() => {
     let result = rawListings ? [...rawListings] : [];
 
-    // Filter out all PUBG and BGMI listings completely
+    // Filter out all disallowed (e.g. PUBG/BGMI) listings completely
     result = result.filter(l => {
-      const gn = (l.gameName || "").toLowerCase();
-      const t = (l.title || "").toLowerCase();
-      return !gn.includes("pubg") && !gn.includes("bgmi") && !t.includes("pubg") && !t.includes("bgmi") && !t.includes("glacier m416") && !t.includes("godzilla awm");
+      const detected = detectGameFromListing(l);
+      return !detected.isDisallowed;
     });
 
     // Include pokemon listings in overall marketplace if not present in Convex
     if (POKEMON_LISTINGS && POKEMON_LISTINGS.length > 0) {
-      const hasPokemon = result.some(l => l.gameName?.toLowerCase().includes("pokemon"));
+      const hasPokemon = result.some(l => {
+        const detected = detectGameFromListing(l);
+        return detected.slug === "pokemon-go";
+      });
       if (!hasPokemon && (!activeGame || activeGame === "pokemon-go")) {
         result = [...result, ...(POKEMON_LISTINGS as any[])];
       }
     }
 
-    // Game filter
+    // Accurate game filter by detected game slug
     if (activeGame) {
-      const game = GAMES.find(g => g.slug === activeGame);
-      if (game) {
-        if (game.slug === "pokemon-go") {
-          result = result.filter(l =>
-            l.gameName?.toLowerCase().includes("pokemon") ||
-            l.gameName?.toLowerCase().includes("pokémon") ||
-            l.gameName?.toLowerCase().includes("pokimon") ||
-            l.gameName?.toLowerCase().includes("pogo")
-          );
-        } else {
-          result = result.filter(l =>
-            l.gameName?.toLowerCase().includes(game.name.toLowerCase())
-          );
-        }
-      }
+      result = result.filter(l => {
+        const detected = detectGameFromListing(l);
+        return detected.slug === activeGame;
+      });
     }
 
     // Search filter
     if (search.trim()) {
       const q = search.toLowerCase();
-      result = result.filter(
-        (l) => l.title.toLowerCase().includes(q) || l.gameName?.toLowerCase().includes(q)
-      );
+      result = result.filter((l) => {
+        const detected = detectGameFromListing(l);
+        return (
+          l.title.toLowerCase().includes(q) ||
+          detected.name.toLowerCase().includes(q) ||
+          (l.description && l.description.toLowerCase().includes(q))
+        );
+      });
     }
 
     // Delivery filter
@@ -314,9 +330,9 @@ export default function MarketplacePage() {
     } else if (sort === "price_desc") {
       result.sort((a, b) => b.price - a.price);
     } else if (sort === "recommended" && !activeGame && !search.trim() && deliveries.length === 0) {
-      // Apply 50% CoC quota on the top page
-      const cocListings = result.filter(l => l.gameName?.toLowerCase().includes("clash of clans"));
-      const otherListings = result.filter(l => !l.gameName?.toLowerCase().includes("clash of clans"));
+      // Balanced distribution on top page
+      const cocListings = result.filter(l => detectGameFromListing(l).slug === "clash-of-clans");
+      const otherListings = result.filter(l => detectGameFromListing(l).slug !== "clash-of-clans");
       
       const mixed = [];
       let cIdx = 0;

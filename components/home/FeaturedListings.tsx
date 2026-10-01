@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { ListingCard } from "@/components/shared/ListingCard";
 import { useGameVisibility } from "@/lib/gamesVisibility";
+import { detectGameFromListing } from "@/lib/gameDetection";
 
 // ── Skeleton placeholder while data loads ──────────────────────────────
 function ListingCardSkeleton() {
@@ -27,8 +28,8 @@ function ListingCardSkeleton() {
 
 export function FeaturedListings() {
   const { isGameVisible } = useGameVisibility();
-  // Fetch only what we display — no over-fetching
-  const rawListings = useQuery(api.listings.listActiveListings, { limit: 20 });
+  // Fetch active listings
+  const rawListings = useQuery(api.listings.listActiveListings, { limit: 50 });
 
   // Show 8 skeletons while loading
   if (rawListings === undefined) {
@@ -42,18 +43,9 @@ export function FeaturedListings() {
   }
 
   const validListings = rawListings.filter((l) => {
-    const gn = (l.gameName || "").toLowerCase();
-    const slug = (l.gameSlug || gn.replace(/\s+/g, "-")).toLowerCase();
-    const t = (l.title || "").toLowerCase();
-    const notPubg = (
-      !gn.includes("pubg") &&
-      !gn.includes("bgmi") &&
-      !t.includes("pubg") &&
-      !t.includes("bgmi") &&
-      !t.includes("glacier m416") &&
-      !t.includes("godzilla awm")
-    );
-    return notPubg && (isGameVisible(slug) || isGameVisible(gn));
+    const detected = detectGameFromListing(l);
+    if (detected.isDisallowed) return false;
+    return isGameVisible(detected.slug);
   });
 
   if (validListings.length === 0) {
@@ -65,8 +57,8 @@ export function FeaturedListings() {
   }
 
   // 50% quota for CoC (4 CoC listings, 4 Other listings)
-  const cocListings = validListings.filter(l => l.gameName?.toLowerCase().includes("clash of clans"));
-  const otherListings = validListings.filter(l => !l.gameName?.toLowerCase().includes("clash of clans"));
+  const cocListings = validListings.filter(l => detectGameFromListing(l).slug === "clash-of-clans");
+  const otherListings = validListings.filter(l => detectGameFromListing(l).slug !== "clash-of-clans");
 
   const displayListings = [];
   let cIdx = 0;
@@ -84,21 +76,24 @@ export function FeaturedListings() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-      {displayListings.map((listing, index) => (
-        <ListingCard
-          key={listing._id}
-          id={listing._id}
-          title={listing.title}
-          game={listing.gameName ?? "Unknown Game"}
-          price={listing.price}
-          originalPrice={listing.originalPrice}
-          rating={listing.sellerRating ?? 5}
-          seller={listing.sellerName ?? "Verified Seller"}
-          image={listing.images?.[0] ?? "/clash-of-clans-poster.jpg"}
-          badge={listing.badge}
-          delivery={listing.deliveryTime}
-        />
-      ))}
+      {displayListings.map((listing) => {
+        const detected = detectGameFromListing(listing);
+        return (
+          <ListingCard
+            key={listing._id}
+            id={listing._id}
+            title={listing.title}
+            game={detected.name}
+            price={listing.price}
+            originalPrice={listing.originalPrice}
+            rating={listing.sellerRating ?? 5}
+            seller={listing.sellerName ?? "Verified Seller"}
+            image={listing.images?.[0] ?? detected.poster}
+            badge={listing.badge}
+            delivery={listing.deliveryTime}
+          />
+        );
+      })}
     </div>
   );
 }
