@@ -16,6 +16,7 @@ import { useConvexAuth, useAuthActions } from "@convex-dev/auth/react";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { GAME_FIELDS, type GameField } from "@/lib/gameFields";
 import { GAMES } from "@/lib/data/igmartData";
+import { useGameVisibility } from "@/lib/gamesVisibility";
 
 function CreateListingContent() {
   const router = useRouter();
@@ -26,6 +27,7 @@ function CreateListingContent() {
 
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const { signIn } = useAuthActions();
+  const { isGameVisible } = useGameVisibility();
 
   const games = useQuery((api.listings as any).getGames) as any[] | undefined;
   const categories = useQuery((api.listings as any).getCategories) as any[] | undefined;
@@ -85,9 +87,10 @@ function CreateListingContent() {
     return mapped.filter((g) => {
       const slug = (g.slug || "").toLowerCase();
       const name = (g.name || "").toLowerCase();
-      return !slug.includes("pubg") && !slug.includes("bgmi") && !name.includes("pubg") && !name.includes("bgmi");
+      const notPubg = !slug.includes("pubg") && !slug.includes("bgmi") && !name.includes("pubg") && !name.includes("bgmi");
+      return notPubg && isGameVisible(slug);
     });
-  }, [games]);
+  }, [games, isGameVisible]);
 
   const [formData, setFormData] = useState({
     title: "",

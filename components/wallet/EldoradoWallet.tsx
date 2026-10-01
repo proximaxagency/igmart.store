@@ -111,8 +111,14 @@ export default function EldoradoWallet() {
 
   // Withdraw form state
   const [withdrawAmount, setWithdrawAmount] = useState<string>("");
-  const [withdrawMethod, setWithdrawMethod] = useState<"bank" | "crypto" | "payoneer" | "skrill">("bank");
-  const [payoutDetails, setPayoutDetails] = useState<string>("");
+  const [withdrawMethod, setWithdrawMethod] = useState<"bank" | "paypal" | "crypto" | "upi">("bank");
+  const [bankHolder, setBankHolder] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankIban, setBankIban] = useState("");
+  const [paypalEmail, setPaypalEmail] = useState("");
+  const [cryptoAddress, setCryptoAddress] = useState("");
+  const [upiId, setUpiId] = useState("");
+  const [upiName, setUpiName] = useState("");
   const [isSubmittingWithdrawal, setIsSubmittingWithdrawal] = useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
@@ -194,9 +200,38 @@ export default function EldoradoWallet() {
       setWithdrawError("Requested amount exceeds available balance.");
       return;
     }
-    if (!payoutDetails.trim()) {
-      setWithdrawError("Please enter valid payout recipient details.");
-      return;
+
+    let backendMethod: "bank" | "crypto" | "payoneer" | "skrill" = "bank";
+    let formattedDetails = "";
+
+    if (withdrawMethod === "bank") {
+      if (!bankHolder.trim() || !bankName.trim() || !bankIban.trim()) {
+        setWithdrawError("Please fill in account holder, bank name, and account/IBAN number.");
+        return;
+      }
+      backendMethod = "bank";
+      formattedDetails = `[Bank Wire] Name: ${bankHolder.trim()} | Bank: ${bankName.trim()} | Acct/IBAN: ${bankIban.trim()}`;
+    } else if (withdrawMethod === "paypal") {
+      if (!paypalEmail.trim() || !paypalEmail.includes("@")) {
+        setWithdrawError("Please enter a valid PayPal account email address.");
+        return;
+      }
+      backendMethod = "payoneer";
+      formattedDetails = `[PayPal] Email: ${paypalEmail.trim()}`;
+    } else if (withdrawMethod === "crypto") {
+      if (!cryptoAddress.trim() || !cryptoAddress.startsWith("0x")) {
+        setWithdrawError("Please enter a valid BSC BEP-20 wallet address starting with 0x.");
+        return;
+      }
+      backendMethod = "crypto";
+      formattedDetails = `[USDT BEP20] Address: ${cryptoAddress.trim()} (BNB Smart Chain)`;
+    } else if (withdrawMethod === "upi") {
+      if (!upiId.trim() || !upiId.includes("@")) {
+        setWithdrawError("Please enter a valid UPI VPA ID (e.g., username@okhdfcbank).");
+        return;
+      }
+      backendMethod = "bank";
+      formattedDetails = `[UPI] VPA: ${upiId.trim()} | Name: ${upiName.trim() || "Beneficiary"}`;
     }
 
     setIsSubmittingWithdrawal(true);
@@ -204,8 +239,8 @@ export default function EldoradoWallet() {
       if (isAuthenticated) {
         await requestWithdrawal({
           amount: val,
-          method: withdrawMethod,
-          payoutDetails: payoutDetails.trim(),
+          method: backendMethod,
+          payoutDetails: formattedDetails,
         });
       }
       setWithdrawSuccess(true);
@@ -213,7 +248,13 @@ export default function EldoradoWallet() {
         setWithdrawSuccess(false);
         setWithdrawModalOpen(false);
         setWithdrawAmount("");
-        setPayoutDetails("");
+        setBankHolder("");
+        setBankName("");
+        setBankIban("");
+        setPaypalEmail("");
+        setCryptoAddress("");
+        setUpiId("");
+        setUpiName("");
       }, 2500);
     } catch (err: any) {
       setWithdrawError(err.message || "Failed to process withdrawal request.");
@@ -292,6 +333,68 @@ export default function EldoradoWallet() {
             <p className="font-heading font-black text-3xl sm:text-4xl text-white tracking-tight">
               ${displayPending.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── HIGHLIGHTED PAYOUT OPTIONS BANNER ── */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-emerald-500/10 border border-amber-400/25 rounded-2xl p-5 mb-8 shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+              Verified Payout Rails
+            </span>
+            <h2 className="font-heading font-black text-sm sm:text-base text-white">
+              We Pay Out In: Bank Wire Transfer · PayPal · USDT (BEP20) · UPI
+            </h2>
+          </div>
+          <button
+            onClick={() => setWithdrawModalOpen(true)}
+            className="text-xs font-bold text-amber-400 hover:text-amber-300 underline inline-flex items-center gap-1 shrink-0"
+          >
+            <span>Request Withdrawal</span>
+            <ArrowUpRight size={14} />
+          </button>
+        </div>
+        <p className="text-xs text-gray-300 mb-3.5">
+          Fast and flexible withdrawal settlements with dedicated accounting review. Select your preferred global or local channel.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          <div className="bg-[#0e121c]/90 border border-[#1e2436] rounded-xl p-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-400/15 text-amber-400 flex items-center justify-center shrink-0">
+              <Landmark size={16} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white">Bank Wire</p>
+              <p className="text-[10px] text-gray-400">Direct SWIFT / ACH</p>
+            </div>
+          </div>
+          <div className="bg-[#0e121c]/90 border border-[#1e2436] rounded-xl p-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0">
+              <CreditCard size={16} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white">PayPal</p>
+              <p className="text-[10px] text-gray-400">Instant Global USD</p>
+            </div>
+          </div>
+          <div className="bg-[#0e121c]/90 border border-[#1e2436] rounded-xl p-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
+              <Coins size={16} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white">USDT (BEP20)</p>
+              <p className="text-[10px] text-gray-400">BNB Chain (Low Gas)</p>
+            </div>
+          </div>
+          <div className="bg-[#0e121c]/90 border border-[#1e2436] rounded-xl p-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-purple-500/15 text-purple-400 flex items-center justify-center shrink-0">
+              <Send size={16} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white">UPI</p>
+              <p className="text-[10px] text-gray-400">Direct INR VPA Pay</p>
+            </div>
           </div>
         </div>
       </div>
@@ -655,10 +758,10 @@ export default function EldoradoWallet() {
                   <label className="block text-gray-300 font-semibold mb-1.5">Payout Method</label>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { id: "bank", label: "Bank Transfer", icon: Landmark },
-                      { id: "crypto", label: "Crypto (USDT)", icon: Coins },
-                      { id: "payoneer", label: "Payoneer", icon: CreditCard },
-                      { id: "skrill", label: "Skrill", icon: Send },
+                      { id: "bank", label: "Bank Wire", icon: Landmark },
+                      { id: "paypal", label: "PayPal", icon: CreditCard },
+                      { id: "crypto", label: "USDT (BEP20)", icon: Coins },
+                      { id: "upi", label: "UPI (INR)", icon: Send },
                     ].map((m) => {
                       const Icon = m.icon;
                       const active = withdrawMethod === m.id;
@@ -681,29 +784,123 @@ export default function EldoradoWallet() {
                   </div>
                 </div>
 
-                {/* Recipient details */}
-                <div>
-                  <label className="block text-gray-300 font-semibold mb-1.5">
-                    {withdrawMethod === "bank"
-                      ? "Bank Account (IBAN / Account Number & SWIFT)"
-                      : withdrawMethod === "crypto"
-                      ? "USDT TRC20 / ERC20 Wallet Address"
-                      : "Account Email Address"}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={payoutDetails}
-                    onChange={(e) => setPayoutDetails(e.target.value)}
-                    placeholder={
-                      withdrawMethod === "bank"
-                        ? "US1234567890123456 / CHASE..."
-                        : withdrawMethod === "crypto"
-                        ? "0x... or T..."
-                        : "finance@merchant.com"
-                    }
-                    className="w-full bg-[#0e121c] border border-[#1e2436] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 transition-colors"
-                  />
+                {/* Recipient details per method */}
+                <div className="space-y-3">
+                  {withdrawMethod === "bank" && (
+                    <>
+                      <div>
+                        <label className="block text-gray-300 font-semibold mb-1">
+                          Account Holder Full Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={bankHolder}
+                          onChange={(e) => setBankHolder(e.target.value)}
+                          placeholder="e.g. Johnathan Smith"
+                          className="w-full bg-[#0e121c] border border-[#1e2436] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-300 font-semibold mb-1">
+                          Bank Name & SWIFT / BIC Code
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={bankName}
+                          onChange={(e) => setBankName(e.target.value)}
+                          placeholder="e.g. JPMorgan Chase / CHASUS33"
+                          className="w-full bg-[#0e121c] border border-[#1e2436] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-300 font-semibold mb-1">
+                          IBAN or Account Number
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={bankIban}
+                          onChange={(e) => setBankIban(e.target.value)}
+                          placeholder="e.g. GB29NWBK60161331926819 or 123456789"
+                          className="w-full bg-[#0e121c] border border-[#1e2436] rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-400 transition-colors"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {withdrawMethod === "paypal" && (
+                    <div>
+                      <label className="block text-gray-300 font-semibold mb-1">
+                        PayPal Account Email Address
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={paypalEmail}
+                        onChange={(e) => setPaypalEmail(e.target.value)}
+                        placeholder="your-paypal-email@domain.com"
+                        className="w-full bg-[#0e121c] border border-[#1e2436] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 transition-colors"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        Funds will be credited directly to your PayPal account in USD.
+                      </p>
+                    </div>
+                  )}
+
+                  {withdrawMethod === "crypto" && (
+                    <div>
+                      <label className="block text-gray-300 font-semibold mb-1">
+                        USDT BEP-20 Wallet Address (BNB Smart Chain)
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={cryptoAddress}
+                        onChange={(e) => setCryptoAddress(e.target.value)}
+                        placeholder="0x..."
+                        className="w-full bg-[#0e121c] border border-[#1e2436] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-amber-400 transition-colors"
+                      />
+                      <p className="text-[10px] text-amber-400/90 mt-1 flex items-center gap-1">
+                        <Info size={11} /> Only BNB Smart Chain (BEP20) is supported. Never input Ethereum (ERC20) or Tron addresses here.
+                      </p>
+                    </div>
+                  )}
+
+                  {withdrawMethod === "upi" && (
+                    <>
+                      <div>
+                        <label className="block text-gray-300 font-semibold mb-1">
+                          UPI ID / Virtual Payment Address (VPA)
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={upiId}
+                          onChange={(e) => setUpiId(e.target.value)}
+                          placeholder="e.g. mobileNumber@upi or name@oksbi"
+                          className="w-full bg-[#0e121c] border border-[#1e2436] rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-400 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-300 font-semibold mb-1">
+                          Beneficiary Registered Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={upiName}
+                          onChange={(e) => setUpiName(e.target.value)}
+                          placeholder="e.g. Rahul Sharma"
+                          className="w-full bg-[#0e121c] border border-[#1e2436] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400 transition-colors"
+                        />
+                      </div>
+                      <p className="text-[10px] text-purple-300/90 mt-1">
+                        USD balance is converted to INR automatically using live market exchange rates.
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {withdrawError && (
@@ -760,9 +957,10 @@ export default function EldoradoWallet() {
               <div className="p-3 bg-[#0e121c] rounded-xl border border-[#1e2436]">
                 <p className="font-bold text-white mb-1">Payout Processing Timelines</p>
                 <ul className="list-disc list-inside text-gray-400 space-y-1 mt-1">
-                  <li>Crypto (USDT): 1 - 4 hours</li>
-                  <li>Bank Wire (SEPA/ACH): 1 - 2 business days</li>
-                  <li>Payoneer & Skrill: Same-day</li>
+                  <li>USDT (BEP20): 1 - 4 hours (Low fee Binance Smart Chain)</li>
+                  <li>PayPal: Same-day direct credit (Global USD)</li>
+                  <li>UPI (India): Instant real-time VPA settlement</li>
+                  <li>Bank Wire (SWIFT / ACH): 1 - 2 business days</li>
                 </ul>
               </div>
             </div>

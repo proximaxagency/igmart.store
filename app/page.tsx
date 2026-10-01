@@ -6,6 +6,7 @@ import { Badge, Stars, SectionHeading, Button } from "@/components/ui/index";
 import { GameCard } from "@/components/shared/GameCard";
 import { ListingCard } from "@/components/shared/ListingCard";
 import { FeaturedListings } from "@/components/home/FeaturedListings";
+import { HomePopularGames } from "@/components/home/HomePopularGames";
 import HomepageClient from "@/components/home/HomepageClient";
 import { Zap, ShieldCheck, MessageSquare, Scale, Star, ArrowRight, BadgeCheck, Clock, Wallet } from "lucide-react";
 
@@ -138,11 +139,7 @@ export default function HomePage() {
               All games <ArrowRight size={15} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-            {popularGames.map((game) => (
-              <GameCard key={game.id} id={game.id} name={game.name} slug={game.slug} image={game.image} sellers={game.sellers} />
-            ))}
-          </div>
+          <HomePopularGames />
         </div>
       </section>
 

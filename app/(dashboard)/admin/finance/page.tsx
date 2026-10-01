@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -26,7 +26,9 @@ export default function AdminFinancePage() {
         <h1 className="font-heading font-black text-2xl text-text flex items-center gap-2">
           <DollarSign className="text-success" size={24} /> Payout & Withdrawal Approval Queue
         </h1>
-        <p className="text-text-muted text-xs mt-0.5">Audit requested seller payouts across Bank Wire, Payoneer, Skrill, and Crypto</p>
+        <p className="text-text-muted text-xs mt-0.5">
+          Audit requested seller payouts across Bank Wire, PayPal, USDT (BEP20), and UPI rails
+        </p>
       </div>
 
       <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
@@ -36,12 +38,12 @@ export default function AdminFinancePage() {
           </div>
         ) : withdrawals.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[700px]">
+            <table className="w-full text-left border-collapse min-w-[760px]">
               <thead>
                 <tr className="bg-surface border-b border-border text-xs uppercase tracking-wider text-text-muted font-bold">
                   <th className="p-4 pl-6">Seller</th>
                   <th className="p-4">Amount</th>
-                  <th className="p-4">Method</th>
+                  <th className="p-4">Rail / Method</th>
                   <th className="p-4">Payout Details</th>
                   <th className="p-4 pr-6 text-right">Action</th>
                 </tr>
@@ -54,8 +56,22 @@ export default function AdminFinancePage() {
                       <p className="text-[11px] text-text-muted">{w.userEmail}</p>
                     </td>
                     <td className="p-4 text-sm font-black text-success">${w.amount.toFixed(2)}</td>
-                    <td className="p-4 text-xs font-bold uppercase text-text">{w.method}</td>
-                    <td className="p-4 text-xs font-mono text-text-muted max-w-[200px] truncate">{w.payoutDetails}</td>
+                    <td className="p-4 text-xs font-bold text-text">
+                      <span className="inline-block px-2 py-0.5 rounded bg-surface border border-border text-[11px]">
+                        {w.payoutDetails?.startsWith("[PayPal]")
+                          ? "PayPal"
+                          : w.payoutDetails?.startsWith("[USDT")
+                          ? "USDT (BEP20)"
+                          : w.payoutDetails?.startsWith("[UPI]")
+                          ? "UPI (INR)"
+                          : w.payoutDetails?.startsWith("[Bank")
+                          ? "Bank Wire"
+                          : w.method.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="p-4 text-xs font-mono text-text break-words max-w-[280px]">
+                      {w.payoutDetails}
+                    </td>
                     <td className="p-4 pr-6 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button

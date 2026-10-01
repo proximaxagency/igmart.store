@@ -7,7 +7,7 @@ import {
   Shield, MessageSquare, Users, Database, AlertTriangle, Settings,
   ArrowLeft, ShieldAlert, Loader2, ShieldCheck, DollarSign, FileText,
   LayoutDashboard, Upload, Menu, X, ChevronRight, CheckCircle2,
-  ExternalLink, Sparkles
+  ExternalLink, Sparkles, Gamepad2
 } from "lucide-react";
 import { useConvexAuth } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
@@ -37,6 +37,7 @@ const ADMIN_NAV_GROUPS: NavGroup[] = [
     groupName: "MARKETPLACE",
     items: [
       { href: "/admin/listings", label: "Listing Moderation", icon: Database },
+      { href: "/admin/games", label: "Game Visibility", icon: Gamepad2, badge: "SHOW/HIDE", badgeColor: "bg-primary/15 text-primary border border-primary/30" },
       { href: "/admin/verifications", label: "Seller KYC Queue", icon: ShieldCheck },
       { href: "/admin/bulk-upload", label: "Bulk Upload", icon: Upload },
     ],

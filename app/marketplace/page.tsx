@@ -11,6 +11,7 @@ import {
 import { GAMES, CATEGORIES, POKEMON_LISTINGS } from "@/lib/data/igmartData";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { ConvexImage } from "@/components/shared/ConvexImage";
+import { useGameVisibility } from "@/lib/gamesVisibility";
 
 const SORT_OPTIONS = [
   { label: "Recommended", value: "recommended" },
@@ -118,6 +119,8 @@ function GameRail({
   activeGame: string | null;
   setActiveGame: (slug: string | null) => void;
 }) {
+  const { visibleGames } = useGameVisibility();
+
   return (
     <div className="flex gap-3 overflow-x-auto pb-1 hide-scrollbar">
       {/* All Games pill */}
@@ -132,7 +135,7 @@ function GameRail({
         🎮 All Games
       </button>
 
-      {GAMES.map((game) => (
+      {visibleGames.map((game) => (
         <button
           key={game.id}
           onClick={() => setActiveGame(game.slug === activeGame ? null : game.slug)}

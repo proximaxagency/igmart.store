@@ -4,7 +4,7 @@ import Link from "next/link";
 import { 
   TrendingUp, DollarSign, Package, Star, Plus, ShieldCheck, Box, 
   ArrowUpRight, AlertCircle, CheckCircle2, Store, Zap, Loader2, Sparkles, 
-  MessageSquare, Edit, Eye, Clock, Truck, X
+  MessageSquare, Edit, Eye, Clock, Truck, X, Coins, Landmark, CreditCard, Send, Wallet
 } from "lucide-react";
 import { Badge } from "@/components/ui/index";
 import { useQuery } from "convex/react";
@@ -172,7 +172,83 @@ function SellerDashboardContent() {
         </div>
       </div>
 
-      {/* Pending Fulfillment Alert */}
+      {/* ── Highlighted Payout Rails Banner ── */}
+      <div className="bg-gradient-to-r from-primary/15 via-card to-accent-secondary/15 border border-primary/30 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="bg-primary/20 text-primary border border-primary/30 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <Sparkles size={11} /> Fast Merchant Settlements
+              </span>
+              <span className="text-xs text-text-muted">• 24-Hour Release</span>
+            </div>
+            <h2 className="font-heading font-black text-base sm:text-lg text-text">
+              We Pay Out In: Bank Wire Transfer · PayPal · USDT (BEP20) · UPI
+            </h2>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Withdraw your revenues directly to your preferred payment rail with 100% verified escrow settlement.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <Link
+              href="/seller/earnings"
+              className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all shadow-md shadow-primary/20 flex items-center gap-1.5"
+            >
+              <DollarSign size={14} /> Request Payout
+            </Link>
+            <Link
+              href="/seller/wallet"
+              className="px-4 py-2.5 rounded-xl bg-elevated hover:bg-border text-text border border-border text-xs font-bold transition-all flex items-center gap-1.5"
+            >
+              <Wallet size={14} /> Wallet Station
+            </Link>
+          </div>
+        </div>
+
+        {/* 4 Badges row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-border/60">
+          <div className="bg-surface/80 border border-border/60 rounded-xl p-2.5 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Landmark size={15} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-text truncate">Bank Wire</p>
+              <p className="text-[10px] text-text-muted truncate">Global SWIFT / Direct</p>
+            </div>
+          </div>
+
+          <div className="bg-surface/80 border border-border/60 rounded-xl p-2.5 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+              <CreditCard size={15} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-text truncate">PayPal</p>
+              <p className="text-[10px] text-text-muted truncate">Instant Global USD</p>
+            </div>
+          </div>
+
+          <div className="bg-surface/80 border border-border/60 rounded-xl p-2.5 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+              <Coins size={15} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-text truncate">USDT (BEP20)</p>
+              <p className="text-[10px] text-text-muted truncate">BNB Smart Chain</p>
+            </div>
+          </div>
+
+          <div className="bg-surface/80 border border-border/60 rounded-xl p-2.5 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+              <Send size={15} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-text truncate">UPI</p>
+              <p className="text-[10px] text-text-muted truncate">Instant INR Transfer</p>
+            </div>
+          </div>
+        </div>
+      </div>
       {pendingOrders.length > 0 && (
         <div className="bg-danger/10 border border-danger/30 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 animate-in fade-in">
           <div className="flex items-center gap-3">

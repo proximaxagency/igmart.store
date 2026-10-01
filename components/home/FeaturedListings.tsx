@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { ListingCard } from "@/components/shared/ListingCard";
+import { useGameVisibility } from "@/lib/gamesVisibility";
 
 // ── Skeleton placeholder while data loads ──────────────────────────────
 function ListingCardSkeleton() {
@@ -25,6 +26,7 @@ function ListingCardSkeleton() {
 }
 
 export function FeaturedListings() {
+  const { isGameVisible } = useGameVisibility();
   // Fetch only what we display — no over-fetching
   const rawListings = useQuery(api.listings.listActiveListings, { limit: 20 });
 
@@ -41,8 +43,9 @@ export function FeaturedListings() {
 
   const validListings = rawListings.filter((l) => {
     const gn = (l.gameName || "").toLowerCase();
+    const slug = (l.gameSlug || gn.replace(/\s+/g, "-")).toLowerCase();
     const t = (l.title || "").toLowerCase();
-    return (
+    const notPubg = (
       !gn.includes("pubg") &&
       !gn.includes("bgmi") &&
       !t.includes("pubg") &&
@@ -50,6 +53,7 @@ export function FeaturedListings() {
       !t.includes("glacier m416") &&
       !t.includes("godzilla awm")
     );
+    return notPubg && (isGameVisible(slug) || isGameVisible(gn));
   });
 
   if (validListings.length === 0) {
