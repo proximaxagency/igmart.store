@@ -195,7 +195,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           6. HOW IT WORKS
       ══════════════════════════════════════════ */}
-      <section aria-labelledby="how-heading" className="bg-surface py-14 lg:py-20 border-t border-border">
+      <section aria-labelledby="how-heading" className="bg-surface py-14 lg:py-20 border-t border-border overflow-hidden">
         <div className="container">
           <SectionHeading eyebrow="Getting Started" title="How IGMART Works" center />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">

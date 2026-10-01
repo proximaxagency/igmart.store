@@ -250,7 +250,7 @@ export default function NotificationPanel() {
 
       {/* ── Popover Panel (No gap glitch, solid container) ── */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-[340px] sm:w-[380px] bg-[#121622] border border-[#1e2436] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] z-[250] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute -right-2 sm:right-0 top-full mt-2 w-[calc(100vw-24px)] max-w-[380px] sm:w-[380px] bg-[#121622] border border-[#1e2436] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] z-[250] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
           {/* Header */}
           <div className="p-4 border-b border-[#1e2436] bg-[#0e121c]/90 flex items-center justify-between">
             <div className="flex items-center gap-2">

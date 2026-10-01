@@ -26,9 +26,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     <div className="bg-background min-h-[calc(100vh-64px)]">
 
       {/* Mobile tab bar — horizontal scroll */}
-      <div className="md:hidden bg-surface border-b border-border sticky top-16 z-[50]">
-        <div className="container">
-          <div className="flex overflow-x-auto hide-scrollbar -mx-4 px-4">
+      <div className="md:hidden bg-surface border-b border-border sticky top-16 z-[50] overflow-hidden">
+        <div className="container overflow-x-auto hide-scrollbar">
+          <div className="flex gap-1 py-1">
             {navLinks.map(({ href, label, icon: Icon }) => {
               const active = pathname === href;
               return (

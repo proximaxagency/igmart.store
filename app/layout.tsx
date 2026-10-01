@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Red_Hat_Display } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
@@ -19,6 +19,13 @@ const redHatDisplay = Red_Hat_Display({
   variable: "--font-redhat",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#0f1116",
+};
 
 export const metadata: Metadata = {
   title: { default: "IGMART — Premier Gaming Marketplace", template: "%s | IGMART" },
@@ -65,17 +72,17 @@ import { UserSync } from "@/components/providers/UserSync";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${manrope.variable} ${redHatDisplay.variable}`} data-scroll-behavior="smooth">
+    <html lang="en" className={`${manrope.variable} ${redHatDisplay.variable} overflow-x-hidden`} data-scroll-behavior="smooth">
       <head>
         <JsonLd data={getOrganizationSchema()} />
         <JsonLd data={getWebSiteSchema()} />
       </head>
-      <body>
+      <body className="overflow-x-hidden min-h-screen relative flex flex-col w-full max-w-[100vw]">
         <ConvexClientProvider>
           <CurrencyProvider>
             <UserSync />
             <Header />
-            <main id="main-content">{children}</main>
+            <main id="main-content" className="flex-1 w-full max-w-full overflow-x-hidden">{children}</main>
             <Footer />
             <CookieBanner />
             <BackToTop />

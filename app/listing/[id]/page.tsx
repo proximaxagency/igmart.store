@@ -440,7 +440,7 @@ export default function ListingPage() {
 
         {/* ── YOU MAY ALSO LIKE ─────────────────────────────────────────────── */}
         {recommendations.length > 0 && (
-          <section className="mt-10 pt-8 border-t border-border">
+          <section className="mt-10 pt-8 border-t border-border overflow-hidden">
             <div className="flex items-center justify-between mb-5">
               <div>
                 <p className="text-xs font-black text-primary uppercase tracking-widest mb-1">More from {gameName}</p>
@@ -455,7 +455,7 @@ export default function ListingPage() {
             </div>
 
             {/* Horizontally scrollable card row */}
-            <div className="flex gap-4 overflow-x-auto pb-3 hide-scrollbar -mx-1 px-1">
+            <div className="flex gap-4 overflow-x-auto pb-3 hide-scrollbar">
               {recommendations.map((rec) => (
                 <RecoCard key={rec._id} listing={rec as Record<string, unknown>} />
               ))}

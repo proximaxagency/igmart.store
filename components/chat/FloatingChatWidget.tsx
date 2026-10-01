@@ -11,13 +11,20 @@ import {
 import { useConvexAuth } from "@convex-dev/auth/react";
 import { ChatBox } from "./ChatBox";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function FloatingChatWidget() {
   const { isAuthenticated } = useConvexAuth();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [activeConvId, setActiveConvId] = useState<Id<"conversations"> | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "orders" | "support">("all");
   const [startingSupport, setStartingSupport] = useState(false);
+
+  const hasBottomBar =
+    pathname.startsWith("/listing/") ||
+    pathname.startsWith("/seller") ||
+    pathname.startsWith("/account");
 
   // Guest support state
   const [guestName, setGuestName] = useState("");
@@ -73,11 +80,13 @@ export function FloatingChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-[200] bg-gradient-to-r from-primary to-accent-secondary text-white p-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2.5 cursor-pointer border border-white/20 group"
+          className={`fixed ${
+            hasBottomBar ? "bottom-20 right-4" : "bottom-5 right-4"
+          } sm:bottom-6 sm:right-6 z-[120] bg-gradient-to-r from-primary to-accent-secondary text-white p-3 sm:p-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 cursor-pointer border border-white/20 group`}
           aria-label="Open Support Chat"
         >
           <div className="relative">
-            <Headphones size={22} className="group-hover:scale-110 transition-transform" />
+            <Headphones size={20} className="group-hover:scale-110 transition-transform sm:w-[22px] sm:h-[22px]" />
             {isAuthenticated && unreadCount > 0 ? (
               <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-danger text-white text-[10px] font-black rounded-full flex items-center justify-center ring-2 ring-background px-1">
                 {unreadCount > 99 ? "99+" : unreadCount}
@@ -94,7 +103,13 @@ export function FloatingChatWidget() {
 
       {/* ── CHAT DOCK ── */}
       {isOpen && (
-        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[200] w-[calc(100vw-32px)] sm:w-[420px] h-[590px] max-h-[calc(100vh-80px)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div
+          className={`fixed ${
+            hasBottomBar
+              ? "bottom-20 right-3 sm:bottom-6 sm:right-6 max-h-[calc(100vh-140px)]"
+              : "bottom-4 right-3 sm:bottom-6 sm:right-6 max-h-[calc(100vh-80px)]"
+          } z-[200] w-[calc(100vw-24px)] sm:w-[420px] h-[580px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200`}
+        >
 
           {/* Header */}
           <div className="p-3.5 bg-gradient-to-r from-primary/10 to-accent-secondary/10 border-b border-border flex items-center justify-between shrink-0">
